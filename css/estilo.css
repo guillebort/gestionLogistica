@@ -1,0 +1,60 @@
+/* css/estilo.css */
+
+/* --- Estilos Generales --- */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+}
+
+/* --- Efectos de las Tarjetas (Cards) --- */
+.card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: none;
+}
+
+/* Al pasar el ratón por encima, las tarjetas "flotan" */
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.15) !important;
+}
+
+/* --- Tabla del Carrito --- */
+.subtotal {
+    font-weight: bold;
+    color: #198754; /* Verde éxito */
+}
+
+/* --- Panel de Login (Admin) --- */
+.login-container {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+}
+
+/* --- Ajuste para el Pie de Página (Custom Tag) --- */
+mi-pie footer {
+    border-top: 4px solid #0d6efd; /* Línea azul decorativa */
+}
+
+.img-carrusel {
+    height: 400px;
+    object-fit: cover;
+    background-color: #ccc;
+}
+
+/* Para el ancho de la columna de paquetes en carrito.html */
+.col-paquetes {
+    width: 150px;
+}
+
+/* Para quitar el borde al mapa de Google en contacto.html */
+.mapa-contacto {
+    border: 0;
+}
+
+/* estilo para el apartado del repartidor*/
+.mapa-reparto {
+    border: 0;
+    width: 100%;
+    height: 100%;
+}

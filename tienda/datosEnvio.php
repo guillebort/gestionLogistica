@@ -1,27 +1,29 @@
-<%@page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" import="tienda.*"%>
-<%
-    // 1. Seguridad: Verificar sesión y carrito
-    Integer idUsuario = (Integer) session.getAttribute("codigo");
-    if (idUsuario == null || session.getAttribute("carritoJSON") == null) {
-        response.sendRedirect("productos.html");
-        return;
-    }
+<?php
+session_start();
+require_once '../modelos/AccesoBD.php';
 
-    // 2. Obtener datos del cliente para el autocompletado
-    AccesoBD con = AccesoBD.getInstance();
-    UsuarioBD u = con.obtenerUsuarioBD(idUsuario);
-%>
+// 1. Seguridad: Verificar sesión y carrito
+$idUsuario = $_SESSION['codigo'] ?? null;
+if ($idUsuario == null || !isset($_SESSION['carritoJSON'])) {
+    header("Location: productos.php");
+    exit;
+}
+
+// 2. Obtener datos del cliente para el autocompletado
+$con = AccesoBD::getInstance();
+$u = $con->obtenerUsuarioBD($idUsuario);
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <title>Datos de Envío y Ruta - LogisTFG</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/estilo.css">
+    <link rel="stylesheet" href="../css/estilo.css">
 </head>
 <body class="bg-light">
-    <mi-cabecera></mi-cabecera>
-    <mi-menu data-user="<%= u.getNombre() %>"></mi-menu>
+    
+    <?php include '../includes/menu.php'; ?>
 
     <main class="container my-5">
         <div class="row justify-content-center">
@@ -36,25 +38,25 @@
                         <h4 class="mb-0">📋 Información del Envío</h4>
                     </div>
                     <div class="card-body p-4 p-md-5">
-                        <form action="guardarRuta.php" method="POST">
+                        <form action="../controladores/guardarRuta.php" method="POST">
                             
                             <h5 class="text-secondary mb-3">Información de Contacto</h5>
                             <div class="row g-3 mb-4">
                                 <div class="col-md-6">
                                     <label class="form-label small fw-bold">Nombre</label>
-                                    <input type="text" class="form-control" name="nombre" value="<%= u.getNombre() %>" required>
+                                    <input type="text" class="form-control" name="nombre" value="<?= htmlspecialchars($u->getNombre()) ?>" required>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label small fw-bold">Apellidos</label>
-                                    <input type="text" class="form-control" name="apellidos" value="<%= u.getApellidos() %>" required>
+                                    <input type="text" class="form-control" name="apellidos" value="<?= htmlspecialchars($u->getApellidos()) ?>" required>
                                 </div>
                                 <div class="col-md-7">
                                     <label class="form-label small fw-bold">Correo Electrónico</label>
-                                    <input type="email" class="form-control bg-light" value="<%= u.getUsuario() %>" required>
+                                    <input type="email" class="form-control bg-light" value="<?= htmlspecialchars($u->getUsuario()) ?>" required disabled>
                                 </div>
                                 <div class="col-md-5">
                                     <label class="form-label small fw-bold">Teléfono</label>
-                                    <input type="tel" class="form-control" name="telefono" value="<%= u.getTelefono() %>" required>
+                                    <input type="tel" class="form-control" name="telefono" value="<?= htmlspecialchars($u->getTelefono()) ?>" required>
                                 </div>
                             </div>
 
@@ -88,7 +90,7 @@
                                 <button type="submit" class="btn btn-dark btn-lg shadow-sm">
                                     Confirmar Ruta y Continuar al Pago ➔
                                 </button>
-                                <a href="carrito.html" class="btn btn-link text-muted">Volver al carrito</a>
+                                <a href="carrito.php" class="btn btn-link text-muted">Volver al carrito</a>
                             </div>
                         </form>
                     </div>
@@ -97,9 +99,8 @@
         </div>
     </main>
 
-    <mi-pie></mi-pie>
+    <?php include '../includes/pie.php'; ?>
     
-    <script src="js/mis-etiquetas.js"></script>
-    <script src="js/logica.js?v=<%= System.currentTimeMillis() %>"></script>
+    <script src="../js/logica.js?v=<?= time() ?>"></script>
 </body>
 </html>

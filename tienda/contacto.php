@@ -1,22 +1,22 @@
-<%@page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<?php
+session_start();
+$nombreMenu = $_SESSION["nombreUsuario"] ?? null;
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contacto - LogisTFG</title>
-    <link rel="icon" type="image/ico" href="img/icono.ico" sizes="64x64">
+    <link rel="icon" type="image/ico" href="../img/icono.ico" sizes="64x64">
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/estilo.css">
+    <link rel="stylesheet" href="../css/estilo.css">
 </head>
 <body class="bg-light">
 
     <mi-cabecera></mi-cabecera>
-    <% 
-    String nombreMenu = (String) session.getAttribute("nombreUsuario"); 
-%>
-<mi-menu data-user="<%= (nombreMenu != null) ? nombreMenu : "" %>"></mi-menu>
+    <mi-menu data-user="<?php echo ($nombreMenu != null) ? htmlspecialchars($nombreMenu) : ""; ?>"></mi-menu>
 
     <main class="container my-5">
         <div class="row mb-4">
@@ -31,14 +31,14 @@
                 <div class="card shadow-sm h-100">
                     <div class="card-body p-4">
                         <h4 class="card-title mb-4">Envíanos un mensaje</h4>
-                        <%
-                            String msjContacto = (String) session.getAttribute("mensajeContacto");
-                            if (msjContacto != null) {
-                                session.removeAttribute("mensajeContacto");
-                        %>
-                            <div class="alert alert-info text-center"><%= msjContacto %></div>
-                        <% } %>
-                        <form action="enviarContacto.php" method="POST">
+                        <?php
+                            $msjContacto = $_SESSION["mensajeContacto"] ?? null;
+                            if ($msjContacto != null) {
+                                unset($_SESSION["mensajeContacto"]);
+                        ?>
+                            <div class="alert alert-info text-center"><?php echo htmlspecialchars($msjContacto); ?></div>
+                        <?php } ?>
+                        <form action="../controladores/contactoController.php" method="POST">
                             <div class="mb-3">
                                 <label for="nombre_contacto" class="form-label">Nombre o Empresa</label>
                                 <input type="text" class="form-control" id="nombre_contacto" name="nombre" required placeholder="Tu nombre">
@@ -81,7 +81,6 @@
                         <div class="ratio ratio-16x9">
                             <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3078.653426749712!2d-0.4268682846313837!3d39.50529557948145!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xd604f434a179375%3A0xaad6585bd02c918!2sEscola%20T%C3%A8cnica%20Superior%20d'Enginyeria%20(ETSE-UV)!5e0!3m2!1ses!2ses!4v1680000000000!5m2!1ses!2ses" class="mapa-contacto" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
                         </div>
-
                     </div>
                 </div>
             </div>
@@ -91,7 +90,6 @@
     <mi-pie></mi-pie>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="./js/mis-etiquetas.js"></script>
-    <!--<script src="./js/logica.js"></script>-->
+    <script src="../js/mis-etiquetas.js"></script>
 </body>
 </html>

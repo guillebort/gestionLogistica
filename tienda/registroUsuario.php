@@ -1,11 +1,13 @@
-<%@page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<?php
+session_start();
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <title>Registro - LogisTFG</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/estilo.css">
+    <link rel="stylesheet" href="../css/estilo.css">
 </head>
 <body class="bg-light">
 
@@ -20,14 +22,14 @@
                         <h4>Registro de Nuevo Cliente</h4>
                     </div>
                     <div class="card-body">
-                        <form method="post" action="registro.php" onsubmit="return verificarPasswords()">
-                        <% 
+                        <form method="post" action="../controladores/registro.php" onsubmit="return verificarPasswords()">
+                        <?php 
                             // Recogemos la ruta por si viene de comprar en la tienda
-                            String urlDest = request.getParameter("url"); 
-                            if(urlDest != null) { 
-                        %>
-                            <input type="hidden" name="url" value="<%= urlDest %>">
-                        <% } %>
+                            $urlDest = $_GET["url"] ?? null; 
+                            if($urlDest != null) { 
+                        ?>
+                            <input type="hidden" name="url" value="<?php echo htmlspecialchars($urlDest); ?>">
+                        <?php } ?>
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label>Nombre:</label>
@@ -79,14 +81,14 @@
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label>Repetir Contraseña:</label>
-                                    <input id="pass2" type="password" class="form-control" required/>
+                                    <input id="pass2" name="clave2" type="password" class="form-control" required/>
                                 </div>
                             </div>
                             <div id="errorPass" class="text-danger mb-3" style="display: none;">Las contraseñas no coinciden.</div>
 
                             <div class="d-grid gap-2 mt-4">
                                 <button type="submit" class="btn btn-success btn-lg">Crear Cuenta</button>
-                                <a href="login.html" class="btn btn-outline-secondary">Cancelar y volver</a>
+                                <a href="loginUsuario.php" class="btn btn-outline-secondary">Cancelar y volver</a>
                             </div>
                         </form>
                     </div>
@@ -107,6 +109,6 @@
         }
     </script>
 
-    <script src="./js/mis-etiquetas.js"></script>
+    <script src="../js/mis-etiquetas.js"></script>
 </body>
 </html>

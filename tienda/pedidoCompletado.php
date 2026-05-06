@@ -1,23 +1,24 @@
-<%@page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%
+<?php
+    session_start();
     // 1. CAPA DE SEGURIDAD PROFESIONAL:
     // Si no hay mensaje de éxito en la sesión, significa que no viene de FinalizarPedidoServlet.
     // Redirigimos a productos para evitar que vean una página de "victoria" vacía.
-    String mensajeExito = (String) session.getAttribute("mensaje");
-    if (mensajeExito == null) {
-        response.sendRedirect("productos.html");
-        return; 
+    $mensajeExito = $_SESSION["mensaje"] ?? null;
+    if ($mensajeExito == null) {
+        header("Location: productos.php");
+        exit; 
     }
-    // Una vez leído, lo eliminamos para que el mensaje sea "de un solo uso" (Flash Attribute)
-    session.removeAttribute("mensaje");
-%>
+    // Una vez leído, lo eliminamos para que el mensaje sea "de un solo uso"
+    unset($_SESSION["mensaje"]);
+    $nombreUsuario = $_SESSION['nombreUsuario'] ?? '';
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <title>Confirmación de Reserva - LogisTFG</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/estilo.css">
+    <link rel="stylesheet" href="../css/estilo.css">
     <style>
         .success-icon { font-size: 5rem; color: #198754; animation: scaleUp 0.5s ease-out; }
         @keyframes scaleUp { from { transform: scale(0); } to { transform: scale(1); } }
@@ -26,7 +27,7 @@
 <body class="bg-light">
 
     <mi-cabecera></mi-cabecera>
-    <mi-menu data-user="${nombreUsuario}"></mi-menu>
+    <mi-menu data-user="<?php echo htmlspecialchars($nombreUsuario); ?>"></mi-menu>
 
     <main class="container my-5 text-center">
         <div class="card shadow-lg border-0 mx-auto" style="max-width: 650px; border-radius: 15px;">
@@ -39,7 +40,7 @@
                 <div class="p-4 mb-4" style="background-color: #f8f9fa; border: 2px dashed #dee2e6; border-radius: 10px;">
                     <p class="text-uppercase small fw-bold text-secondary mb-2">Referencia de Seguimiento</p>
                     <div class="h4 text-primary font-monospace mb-0">
-                        <%= mensajeExito %>
+                        <?php echo htmlspecialchars($mensajeExito); ?>
                     </div>
                 </div>
 
@@ -50,15 +51,15 @@
                 </div>
 
                 <div class="d-grid gap-3 d-sm-flex justify-content-sm-center mt-2">
-                    <a href="usuario.html" class="btn btn-dark btn-lg px-5">Ver mis pedidos</a>
-                    <a href="productos.html" class="btn btn-outline-secondary btn-lg px-4">Nueva reserva</a>
+                    <a href="usuario.php" class="btn btn-dark btn-lg px-5">Ver mis pedidos</a>
+                    <a href="productos.php" class="btn btn-outline-secondary btn-lg px-4">Nueva reserva</a>
                 </div>
             </div>
         </div>
     </main>
 
     <mi-pie></mi-pie>
-    <script src="js/mis-etiquetas.js"></script>
+    <script src="../js/mis-etiquetas.js"></script>
     <script>
         // Limpiamos el carrito local para asegurar que la webapp esté lista para el siguiente pedido
         window.onload = function() {

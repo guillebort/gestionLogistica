@@ -1,19 +1,22 @@
+<?php
+session_start();
+$nombreMenu = $_SESSION["nombreUsuario"] ?? null;
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nuestra Empresa - LogisTFG</title>
-    <link rel="icon" type="image/ico" href="img/icono.ico" sizes="64x64">
+    <link rel="icon" type="image/ico" href="../img/icono.ico" sizes="64x64">
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/estilo.css">
+    <link rel="stylesheet" href="../css/estilo.css">
 </head>
 <body class="bg-light">
 
     <mi-cabecera></mi-cabecera>
-    
-<mi-menu data-user="<%= (nombreMenu != null) ? nombreMenu : "" %>"></mi-menu>
+    <mi-menu data-user="<?php echo ($nombreMenu != null) ? htmlspecialchars($nombreMenu) : ""; ?>"></mi-menu>
 
     <main class="container my-5">
         <div class="row mb-5">
@@ -67,7 +70,6 @@
     <mi-pie></mi-pie>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="./js/mis-etiquetas.js"></script>
-    <script src="./js/logica.js"></script>
+    <script src="../js/mis-etiquetas.js"></script>
 </body>
 </html>

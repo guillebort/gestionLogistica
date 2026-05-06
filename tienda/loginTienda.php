@@ -1,13 +1,15 @@
-<%@page language="java" contentType="text/html; charset=UTF-8" import="tienda.*" pageEncoding="UTF-8"%>
+<?php
+session_start();
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acceso y Registro - LogisTFG</title>
-    <link rel="icon" type="image/ico" href="img/icono.ico" sizes="64x64">
+    <link rel="icon" type="image/ico" href="../img/icono.ico" sizes="64x64">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/estilo.css">
+    <link rel="stylesheet" href="../css/estilo.css">
 </head>
 <body class="bg-light">
 
@@ -22,12 +24,14 @@
                         <h4 class="mb-0">Identificación para el Pedido</h4>
                     </div>
                     <div class="card-body p-4">
-                        <form method="post" action="login.php">
-                            <% 
-                                String urlDestino = request.getParameter("url");
-                                if (urlDestino == null || urlDestino.trim().isEmpty()) urlDestino = "productos.html";
-                            %>
-                            <input type="hidden" name="url" value="<%= urlDestino %>">
+                        <form method="post" action="../controladores/login.php">
+                            <?php 
+                                $urlDestino = $_GET["url"] ?? null;
+                                if ($urlDestino == null || trim($urlDestino) === '') {
+                                    $urlDestino = "productos.php";
+                                }
+                            ?>
+                            <input type="hidden" name="url" value="<?php echo htmlspecialchars($urlDestino); ?>">
                             <input type="hidden" name="tipoAcceso" value="Acceso">
                             
                             <div class="mb-3">
@@ -45,7 +49,7 @@
                                 <hr class="my-4">
                                 
                                 <p class="text-center text-muted small">¿No tienes cuenta de empresa?</p>
-                                <a href="registroUsuario.jsp?url=<%= urlDestino %>" class="btn btn-outline-primary">Registrarse y pagar</a>
+                                <a href="registroUsuario.php?url=<?php echo urlencode($urlDestino); ?>" class="btn btn-outline-primary">Registrarse y pagar</a>
                             </div>
                         </form>
                     </div>
@@ -57,21 +61,6 @@
     <mi-pie></mi-pie>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="./js/mis-etiquetas.js"></script>
-    <script>
-        function cambiarModo() {
-            var esRegistro = document.getElementById('radioRegistro').checked;
-            var divCampos = document.getElementById('campos_registro');
-            var btnSubmit = document.getElementById('btn_submit');
-            
-            if (esRegistro) {
-                divCampos.classList.remove('d-none');
-                btnSubmit.textContent = 'Crear Cuenta y Pagar';
-            } else {
-                divCampos.classList.add('d-none');
-                btnSubmit.textContent = 'Continuar con el Pago';
-            }
-        }
-    </script>
+    <script src="../js/mis-etiquetas.js"></script>
 </body>
 </html>

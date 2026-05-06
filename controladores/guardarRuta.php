@@ -1,5 +1,4 @@
 <?php
-// --- Archivo: guardarRuta.php ---
 session_start();
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $_SESSION['direccionOrigen'] = $_POST['direccionOrigen'];
@@ -10,7 +9,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $_SESSION['latDestino'] = $_POST['latDestino'];
     $_SESSION['lonDestino'] = $_POST['lonDestino'];
 
-    header("Location: finalizarPedido.php"); // Tu vista de cobro
+    // CORREGIDO: Redirige a procesarPedido.php (tu pasarela real de pago)
+    header("Location: ../tienda/procesarPedido.php"); 
     exit;
 }
 ?>

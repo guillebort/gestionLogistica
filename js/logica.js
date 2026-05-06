@@ -94,7 +94,6 @@ function cambiarModoUsuario() {
     const btnSubmit = document.getElementById('btn_submit');
     const inputsExtra = camposRegistro.querySelectorAll('input');
     
-    // 🚀 INYECCIÓN 1: Atrapamos el formulario al que pertenece el botón
     const formulario = btnSubmit.closest('form');
 
     if (radioRegistro.checked) {
@@ -102,16 +101,16 @@ function cambiarModoUsuario() {
         btnSubmit.textContent = 'Registrarse';
         inputsExtra.forEach(input => input.setAttribute('required', 'true'));
         
-        // 🚀 INYECCIÓN 2: Desviamos los datos hacia el Servlet de Registro
-        if (formulario) formulario.action = 'registro.html';
+        // CORREGIDO: Redirigimos al controlador de registro PHP
+        if (formulario) formulario.action = '../controladores/registro.php';
         
     } else {
         camposRegistro.classList.add('d-none');
         btnSubmit.textContent = 'Entrar';
         inputsExtra.forEach(input => input.removeAttribute('required'));
         
-        // 🚀 INYECCIÓN 3: Desviamos los datos de vuelta al Servlet de Login
-        if (formulario) formulario.action = 'login.html';
+        // CORREGIDO: Redirigimos al controlador de login PHP
+        if (formulario) formulario.action = '../controladores/login.php';
     }
 }
 

@@ -1,7 +1,7 @@
 <?php
-// --- Archivo: contacto.php ---
 session_start();
-require_once 'AccesoBD.php';
+// CORREGIDO: Ruta al modelo
+require_once '../modelos/AccesoBD.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nombre = $_POST['nombre'] ?? '';
@@ -18,7 +18,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['mensajeContacto'] = "❌ Hubo un error al enviar tu mensaje. Por favor, inténtalo de nuevo.";
     }
     
-    header("Location: contacto_vista.php"); // Tu JSP equivalente en PHP
+    // CORREGIDO: La vista real es contacto.php
+    header("Location: ../tienda/contacto.php"); 
     exit;
 }
 ?>

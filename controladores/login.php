@@ -1,7 +1,7 @@
 <?php
-// --- Archivo: login.php ---
 session_start();
-require_once 'AccesoBD.php';
+// CORREGIDO: Ruta relativa al modelo
+require_once '../modelos/AccesoBD.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $usuario = $_POST['usuario'] ?? '';
@@ -17,11 +17,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $u = $con->obtenerUsuarioBD($codigo);
             $_SESSION['codigo'] = $codigo;
             $_SESSION['nombreUsuario'] = $u->getNombre();
-            header("Location: " . $urlDestino);
+            
+            // CORREGIDO: Volvemos a la carpeta tienda
+            header("Location: ../tienda/" . ltrim($urlDestino, '/'));
             exit;
         } else {
             $_SESSION['mensaje'] = "⚠️ Usuario o contraseña incorrectos.";
-            header("Location: loginUsuario.php");
+            
+            // CORREGIDO: Volvemos a la carpeta tienda
+            header("Location: ../tienda/loginUsuario.php");
             exit;
         }
     }

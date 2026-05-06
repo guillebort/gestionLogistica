@@ -20,7 +20,7 @@ class AccesoBD {
     public function abrirConexionBD() {
         if ($this->conexionBD == null) {
             $host = 'localhost';
-            $port = '3306'; // Cambia si usas el 3305 de tu Java
+            $port = '3305'; // Cambia si usas el 3305 de tu Java
             $db   = 'gestionlogistica';
             $user = 'root';
             $pass = 'root'; // Pon aquí tu contraseña real

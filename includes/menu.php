@@ -16,12 +16,12 @@ $textoEnlace = !empty($nombreUsu) ? "👋 Hola, " . htmlspecialchars($nombreUsu)
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav mx-auto">
-                <li class="nav-item"><a class="nav-link" href="../vistas/index.php">Inicio</a></li>
-                <li class="nav-item"><a class="nav-link" href="../vistas/empresa.php">Empresa</a></li>
-                <li class="nav-item"><a class="nav-link" href="../vistas/productos.php">Productos/Servicios</a></li>
-                <li class="nav-item"><a class="nav-link" href="../vistas/contacto.php">Contacto</a></li>
-                <li class="nav-item"><a class="nav-link" href="../vistas/carrito.php">🛒 Carrito</a></li>
-                <li class="nav-item"><a class="nav-link" href="../vistas/usuario.php"><?= $textoEnlace ?></a></li>
+                <li class="nav-item"><a class="nav-link" href="../tienda/index.php">Inicio</a></li>
+                <li class="nav-item"><a class="nav-link" href="../tienda/empresa.php">Empresa</a></li>
+                <li class="nav-item"><a class="nav-link" href="../tienda/productos.php">Productos/Servicios</a></li>
+                <li class="nav-item"><a class="nav-link" href="../tienda/contacto.php">Contacto</a></li>
+                <li class="nav-item"><a class="nav-link" href="../tienda/carrito.php">🛒 Carrito</a></li>
+                <li class="nav-item"><a class="nav-link" href="../tienda/usuario.php"><?= $textoEnlace ?></a></li>
             </ul>
         </div>
     </div>

@@ -116,18 +116,18 @@ class PedidoBD {
     public function getIdUsuario() { return $this->idUsuario; }
     public function setIdUsuario($idUsuario) { $this->idUsuario = $idUsuario; }
     public function getFecha() { return $this->fecha; }
-    public function setFecha($fecha) { $this.fecha = $fecha; }
+    public function setFecha($fecha) { $this->fecha = $fecha; }
     public function getImporteTotal() { return $this->importeTotal; }
-    public function setImporteTotal($importeTotal) { $this.importeTotal = $importeTotal; }
+    public function setImporteTotal($importeTotal) { $this->importeTotal = $importeTotal; }
     public function getEstado() { return $this->estado; }
-    public function setEstado($estado) { $this.estado = $estado; }
+    public function setEstado($estado) { $this->estado = $estado; }
     public function getDetalles() { return $this->detalles; }
     public function setDetalles($detalles) { $this->detalles = $detalles; }
     public function getIdRepartidor() { return $this->idRepartidor; }
-    public function setIdRepartidor($idRepartidor) { $this.idRepartidor = $idRepartidor; }
+    public function setIdRepartidor($idRepartidor) { $this->idRepartidor = $idRepartidor; }
     public function getOrigen() { return $this->origen; }
-    public function setOrigen($origen) { $this.origen = $origen; }
+    public function setOrigen($origen) { $this->origen = $origen; }
     public function getDestino() { return $this->destino; }
-    public function setDestino($destino) { $this.destino = $destino; }
+    public function setDestino($destino) { $this->destino = $destino; }
 }
 ?>

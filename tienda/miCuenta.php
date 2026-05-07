@@ -66,7 +66,7 @@ session_start();
                             <p class="lead">Has accedido correctamente a tu panel de gestión logística.</p>
                             <div class="mt-4">
                                 <a href="productos.php" class="btn btn-primary btn-lg">Ver Tarifas y Enviar</a>
-                                <a href="../controladores/logout.php" class="btn btn-danger btn-lg">Cerrar Sesión</a>
+                                <a href="#" onclick="limpiarCarritoLocal(event)" class="btn btn-outline-danger px-4">Cerrar Sesión</a>
                             </div>
                         </div>
                     </div>

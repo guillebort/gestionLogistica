@@ -113,7 +113,7 @@
                                 <div class="d-grid gap-2 d-md-flex justify-content-md-center mt-4">
                                     <button type="submit" class="btn btn-success px-4">Guardar Cambios</button>
                                     <a href="productos.php" class="btn btn-primary px-4">Ir a Tarifas</a>
-                                    <a href="../controladores/logout.php" class="btn btn-outline-danger px-4">Cerrar Sesión</a>
+                                    <a href="#" onclick="limpiarCarritoLocal(event)" class="btn btn-outline-danger px-4">Cerrar Sesión</a>
                                 </div>
                             </form>
                         </div>

@@ -1,6 +1,7 @@
 <?php
 // --- Archivo: AccesoBD.php ---
 require_once 'Modelos.php';
+require_once __DIR__ . '/../includes/config.php';
 
 class AccesoBD {
     private static $instanciaUnica = null;
@@ -19,17 +20,12 @@ class AccesoBD {
 
     public function abrirConexionBD() {
         if ($this->conexionBD == null) {
-            $host = 'localhost';
-            $port = '3305'; // Cambia si usas el 3305 de tu Java
-            $db   = 'gestionlogistica';
-            $user = 'root';
-            $pass = 'root'; // Pon aquí tu contraseña real
-            $charset = 'utf8mb4';
-
-            $dsn = "mysql:host=$host;port=$port;dbname=$db;charset=$charset";
+            // Usamos las constantes definidas en config.php
+            $dsn = "mysql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME . ";charset=" . DB_CHARSET;
+            
             try {
-                $this->conexionBD = new PDO($dsn, $user, $pass);
-                // Configurar PDO para que lance excepciones
+                $this->conexionBD = new PDO($dsn, DB_USER, DB_PASS);
+                // Configurar PDO para que lance excepciones ante cualquier error SQL
                 $this->conexionBD->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             } catch (PDOException $e) {
                 die("No se ha podido conectar a la base de datos: " . $e->getMessage());
@@ -56,27 +52,30 @@ class AccesoBD {
         return $productos;
     }
 
-    private function encriptarSHA1($clave) {
-        return sha1($clave);
-    }
-
     public function comprobarUsuarioBD($usuario, $clave) {
         try {
-            $sql = "SELECT id FROM usuarios WHERE usuario=? AND clave=?";
+            // Primero buscamos al usuario por su email/nombre
+            $sql = "SELECT id, clave FROM usuarios WHERE usuario=?";
             $stmt = $this->conexionBD->prepare($sql);
-            $stmt->execute([$usuario, $this->encriptarSHA1($clave)]);
+            $stmt->execute([$usuario]);
+            
             if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                return $row['id'];
+                // Verificamos si la contraseña plana coincide con el hash de la BD
+                if (password_verify($clave, $row['clave'])) {
+                    return $row['id'];
+                }
             }
         } catch (Exception $e) {}
-        return -1;
+        return -1; // Fallo de autenticación
     }
 
     public function registrarUsuarioBD($usuario, $clave, $nombre, $apellidos, $domicilio, $poblacion, $provincia, $cp, $telefono) {
         try {
+            $hashClave = password_hash($clave, PASSWORD_DEFAULT);
+
             $sql = "INSERT INTO usuarios (usuario, clave, nombre, apellidos, domicilio, poblacion, provincia, cp, telefono, activo, rol) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 0)";
             $stmt = $this->conexionBD->prepare($sql);
-            return $stmt->execute([$usuario, $this->encriptarSHA1($clave), $nombre, $apellidos, $domicilio, $poblacion, $provincia, $cp, $telefono]);
+            return $stmt->execute([$usuario, $hashClave, $nombre, $apellidos, $domicilio, $poblacion, $provincia, $cp, $telefono]);
         } catch (Exception $e) {
             return false;
         }
@@ -107,13 +106,18 @@ class AccesoBD {
     public function modificarUsuarioBD($id, $clave, $nombre, $apellidos, $domicilio, $poblacion, $provincia, $cp, $telefono) {
         try {
             if (empty(trim($clave))) {
+                // EL USUARIO NO QUIERE CAMBIAR LA CONTRASEÑA
                 $sql = "UPDATE usuarios SET nombre=?, apellidos=?, domicilio=?, poblacion=?, provincia=?, cp=?, telefono=? WHERE id=?";
                 $stmt = $this->conexionBD->prepare($sql);
                 return $stmt->execute([$nombre, $apellidos, $domicilio, $poblacion, $provincia, $cp, $telefono, $id]);
             } else {
+                // EL USUARIO SÍ QUIERE CAMBIAR LA CONTRASEÑA -> La encriptamos con Bcrypt
+                $hashClave = password_hash($clave, PASSWORD_DEFAULT);
+                
                 $sql = "UPDATE usuarios SET clave=?, nombre=?, apellidos=?, domicilio=?, poblacion=?, provincia=?, cp=?, telefono=? WHERE id=?";
                 $stmt = $this->conexionBD->prepare($sql);
-                return $stmt->execute([$this->encriptarSHA1($clave), $nombre, $apellidos, $domicilio, $poblacion, $provincia, $cp, $telefono, $id]);
+                // Pasamos $hashClave en lugar de la clave plana o el SHA1
+                return $stmt->execute([$hashClave, $nombre, $apellidos, $domicilio, $poblacion, $provincia, $cp, $telefono, $id]);
             }
         } catch (Exception $e) {
             return false;
@@ -298,6 +302,45 @@ class AccesoBD {
         } catch (Exception $e) {
             return false;
         }
+    }
+
+    // Obtiene todos los pedidos que acaban de entrar (Estado 1 = Pendiente)
+    public function obtenerPedidosPendientes() {
+        $lista = [];
+        try {
+            // Hacemos un JOIN para traer también el nombre del cliente y la dirección de destino
+            $sql = "SELECT p.id, p.fecha, p.importe, u.nombre as cliente, d.calle_texto as destino 
+                    FROM pedidos p 
+                    JOIN usuarios u ON p.persona = u.id
+                    JOIN direcciones d ON p.id_direccion_destino = d.id
+                    WHERE p.estado = 1 
+                    ORDER BY p.fecha ASC";
+            
+            $stmt = $this->conexionBD->query($sql);
+            
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $lista[] = $row;
+            }
+        } catch (Exception $e) {
+            error_log("Error obteniendo pedidos pendientes: " . $e->getMessage());
+        }
+        return $lista;
+    }
+
+    // Obtiene a los usuarios que son repartidores (Rol = 2)
+    public function obtenerRepartidores() {
+        $repartidores = [];
+        try {
+            $sql = "SELECT id, nombre, apellidos FROM usuarios WHERE rol = 2 AND activo = 1";
+            $stmt = $this->conexionBD->query($sql);
+            
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $repartidores[] = $row;
+            }
+        } catch (Exception $e) {
+            error_log("Error obteniendo repartidores: " . $e->getMessage());
+        }
+        return $repartidores;
     }
 }
 ?>

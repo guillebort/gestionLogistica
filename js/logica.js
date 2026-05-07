@@ -217,19 +217,14 @@ function validarModificacion() {
 }
 
 function limpiarCarritoLocal() {
-        event.preventDefault();
-
-        try {
-            // 2. Bomba nuclear: borramos TODO lo que haya guardado tu JS
-            localStorage.clear(); 
-            sessionStorage.clear();
-            console.log("Memoria del navegador fulminada.");
-        } catch (error) {
-            console.error("Fallo al borrar: ", error);
-        }
-
-        // 3. Una vez limpio, le damos permiso para viajar al Servlet de Java
-        window.location.href = 'logout.html';
+    if (event) event.preventDefault();
+    
+    // Vaciamos el carrito del navegador
+    localStorage.removeItem("mi-carrito");
+    sessionStorage.clear();
+    
+    // Viajamos al Servlet/Controlador de Java/PHP para destruir la sesión del servidor
+    window.location.href = '../controladores/logout.php';
 }
 
 // ==============================================================

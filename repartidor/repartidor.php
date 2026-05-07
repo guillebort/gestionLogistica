@@ -1,7 +1,15 @@
 <?php
 session_start();
 require_once '../modelos/AccesoBD.php';
-// Aquí podrías añadir una comprobación de ROL para que solo entren repartidores
+
+// Asumimos que Rol 0 = Cliente, Rol 1 = Admin, Rol 2 = Repartidor
+$rolUsuario = $_SESSION['rol'] ?? 0; 
+
+// Si no está logueado o su rol es 0 (Cliente), lo echamos
+if (!isset($_SESSION['codigo']) || $rolUsuario == 0) {
+    header("Location: ../tienda/index.php");
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">

@@ -371,49 +371,174 @@ class AccesoBD {
     }
 
     public function obtenerPedidosFiltrados($idUsuario, $idProducto, $fecha, $operadorFecha, $logica = 'AND') {
-    $sql = "SELECT p.*, u.nombre as cliente, e.descripcion as estado_nombre 
-            FROM pedidos p 
-            JOIN usuarios u ON p.persona = u.id 
-            JOIN estados e ON p.estado = e.id 
-            JOIN detalle d ON p.id = d.id_pedido 
-            WHERE 1=1";
-    
-    $params = [];
-    $condiciones = [];
+        $sql = "SELECT p.*, u.nombre as cliente, e.descripcion as estado_nombre 
+                FROM pedidos p 
+                JOIN usuarios u ON p.persona = u.id 
+                JOIN estados e ON p.estado = e.id 
+                JOIN detalle d ON p.id = d.id_pedido 
+                WHERE 1=1";
+        
+        $params = [];
+        $condiciones = [];
 
-    // Filtro por Usuario
-    if (!empty($idUsuario)) {
-        $condiciones[] = "p.persona = ?";
-        $params[] = $idUsuario;
+        // Filtro por Usuario
+        if (!empty($idUsuario)) {
+            $condiciones[] = "p.persona = ?";
+            $params[] = $idUsuario;
+        }
+
+        // Filtro por Producto
+        if (!empty($idProducto)) {
+            $condiciones[] = "d.id_producto = ?";
+            $params[] = $idProducto;
+        }
+
+        // Filtro por Fecha y su operador (<=, =, >=)
+        if (!empty($fecha)) {
+            $condiciones[] = "p.fecha $operadorFecha ?";
+            $params[] = $fecha;
+        }
+
+        // Si hay filtros, los unimos con la lógica seleccionada (AND/OR)
+        if (count($condiciones) > 0) {
+            $sql .= " AND (" . implode(" $logica ", $condiciones) . ")";
+        }
+
+        $sql .= " GROUP BY p.id ORDER BY p.fecha DESC";
+
+        try {
+            $stmt = $this->conexionBD->prepare($sql);
+            $stmt->execute($params);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            error_log("Error en filtrado admin: " . $e->getMessage());
+            return [];
+        }
     }
 
-    // Filtro por Producto
-    if (!empty($idProducto)) {
-        $condiciones[] = "d.id_producto = ?";
-        $params[] = $idProducto;
+    //  Obtiene la lista completa de usuarios registrados en el sistema.
+     
+    public function obtenerTodosLosUsuarios() {
+        $usuarios = [];
+        try {
+            $sql = "SELECT id, usuario, nombre, apellidos, rol, activo FROM usuarios ORDER BY id DESC";
+            $stmt = $this->conexionBD->query($sql);
+            
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $usuarios[] = $row;
+            }
+        } catch (Exception $e) {
+            error_log("Error obteniendo la lista de usuarios: " . $e->getMessage());
+        }
+        return $usuarios;
     }
 
-    // Filtro por Fecha y su operador (<=, =, >=)
-    if (!empty($fecha)) {
-        $condiciones[] = "p.fecha $operadorFecha ?";
-        $params[] = $fecha;
+    /**
+     * Cambia el estado 'activo' de un usuario (1 = Activo, 0 = Inactivo/Baja).
+     */
+    public function cambiarEstadoUsuario($idUsuario, $nuevoEstado) {
+        try {
+            $sql = "UPDATE usuarios SET activo = ? WHERE id = ?";
+            $stmt = $this->conexionBD->prepare($sql);
+            return $stmt->execute([$nuevoEstado, $idUsuario]);
+        } catch (Exception $e) {
+            error_log("Error al cambiar el estado del usuario: " . $e->getMessage());
+            return false;
+        }
     }
 
-    // Si hay filtros, los unimos con la lógica seleccionada (AND/OR)
-    if (count($condiciones) > 0) {
-        $sql .= " AND (" . implode(" $logica ", $condiciones) . ")";
+    /**
+     * Elimina un usuario SOLO si no tiene pedidos registrados en el sistema.
+     */
+    public function eliminarUsuarioSiSinPedidos($idUsuario) {
+        try {
+            // 1. Comprobamos si el usuario tiene pedidos asociados
+            $sqlCheck = "SELECT COUNT(*) as total FROM pedidos WHERE persona = ?";
+            $stmtCheck = $this->conexionBD->prepare($sqlCheck);
+            $stmtCheck->execute([$idUsuario]);
+            $resultado = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+
+            // Si tiene al menos 1 pedido, denegamos el borrado
+            if ($resultado['total'] > 0) {
+                return false;
+            }
+
+            // 2. Si no tiene pedidos, primero eliminamos sus tarjetas (si las tiene) 
+            // para evitar errores de clave foránea (foreign key)
+            $sqlTarjetas = "DELETE FROM tarjetas WHERE id_usuario = ?";
+            $stmtTarjetas = $this->conexionBD->prepare($sqlTarjetas);
+            $stmtTarjetas->execute([$idUsuario]);
+
+            // 3. Finalmente, eliminamos el usuario
+            $sqlDelete = "DELETE FROM usuarios WHERE id = ?";
+            $stmtDelete = $this->conexionBD->prepare($sqlDelete);
+            return $stmtDelete->execute([$idUsuario]);
+
+        } catch (Exception $e) {
+            error_log("Error al intentar eliminar el usuario: " . $e->getMessage());
+            return false;
+        }
     }
 
-    $sql .= " GROUP BY p.id ORDER BY p.fecha DESC";
-
-    try {
-        $stmt = $this->conexionBD->prepare($sql);
-        $stmt->execute($params);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } catch (Exception $e) {
-        error_log("Error en filtrado admin: " . $e->getMessage());
-        return [];
+    public function cambiarRolUsuario($idUsuario, $nuevoRol) {
+        try {
+            $sql = "UPDATE usuarios SET rol = ? WHERE id = ?";
+            $stmt = $this->conexionBD->prepare($sql);
+            return $stmt->execute([$nuevoRol, $idUsuario]);
+        } catch (Exception $e) {
+            error_log("Error al cambiar el rol del usuario: " . $e->getMessage());
+            return false;
+        }
     }
-}
+
+    public function obtenerMensajes() {
+        $mensajes = [];
+        try {
+            $stmt = $this->conexionBD->query("SELECT * FROM mensajes ORDER BY fecha DESC, id DESC");
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $mensajes[] = $row;
+            }
+        } catch (Exception $e) {
+            error_log("Error obteniendo mensajes: " . $e->getMessage());
+        }
+        return $mensajes;
+    }
+
+    // Obtener métricas rápidas para el Dashboard
+    public function obtenerEstadisticas() {
+        $stats = ['total_entregados' => 0, 'ingresos' => 0, 'total_pendientes' => 0];
+        try {
+            // Estado 3 = Entregado, 1 = Pendiente (Ajusta según tu tabla de estados)
+            $stmt = $this->conexionBD->query("SELECT COUNT(*) as entregados, SUM(importe) as ingresos FROM pedidos WHERE estado = 3");
+            if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $stats['total_entregados'] = $row['entregados'] ?? 0;
+                $stats['ingresos'] = $row['ingresos'] ?? 0;
+            }
+            $stmt2 = $this->conexionBD->query("SELECT COUNT(*) as pendientes FROM pedidos WHERE estado = 1");
+            if ($row2 = $stmt2->fetch(PDO::FETCH_ASSOC)) {
+                $stats['total_pendientes'] = $row2['pendientes'] ?? 0;
+            }
+        } catch (Exception $e) {}
+        return $stats;
+    }
+
+    // Actualizamos la consulta de pendientes para traer LATITUD y LONGITUD para el mapa
+    public function obtenerPedidosPendientesMapa() {
+        $lista = [];
+        try {
+            $sql = "SELECT p.id, p.fecha, p.importe, u.nombre as cliente, d.calle_texto as destino, d.latitud, d.longitud 
+                    FROM pedidos p 
+                    JOIN usuarios u ON p.persona = u.id
+                    JOIN direcciones d ON p.id_direccion_destino = d.id
+                    WHERE p.estado = 1 
+                    ORDER BY p.fecha ASC";
+            $stmt = $this->conexionBD->query($sql);
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $lista[] = $row;
+            }
+        } catch (Exception $e) {}
+        return $lista;
+    }
+
 }
 ?>

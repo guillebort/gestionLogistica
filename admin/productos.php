@@ -48,15 +48,8 @@ $listaProductos = $con->obtenerProductosBD();
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
-    <nav class="navbar navbar-dark bg-dark">
-        <div class="container-fluid">
-            <span class="navbar-brand mb-0 h1">⚙️ LogisTFG - Gestión de Catálogo</span>
-            <div>
-                <a href="index.php" class="btn btn-outline-light btn-sm me-2">Volver a Pedidos</a>
-                <span class="text-white me-3">Admin: <?= htmlspecialchars($usuarioActual->getNombre()) ?></span>
-            </div>
-        </div>
-    </nav>
+    
+    <?php include '../includes/menuAdmin.php'; ?>
 
     <main class="container my-5">
         <?php if (isset($_SESSION['mensajeAdmin'])) { ?>

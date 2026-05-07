@@ -1,8 +1,8 @@
 <?php
-    session_start();
+    
     require_once '../modelos/AccesoBD.php';
     require_once '../modelos/Modelos.php';
-
+    session_start();
     // REDIRECCIÓN MAESTRA: Si no está logueado, lo mandamos al login.
     $codigoLogueado = $_SESSION["codigo"] ?? 0;
     if ($codigoLogueado <= 0) {

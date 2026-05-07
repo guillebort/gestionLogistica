@@ -1,7 +1,7 @@
 <?php
-session_start();
-require_once '../modelos/AccesoBD.php';
 
+require_once '../modelos/AccesoBD.php';
+session_start();
 // 1. Seguridad: Verificar sesión y carrito
 $idUsuario = $_SESSION['codigo'] ?? null;
 if ($idUsuario == null || !isset($_SESSION['carritoJSON'])) {

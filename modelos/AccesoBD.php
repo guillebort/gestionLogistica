@@ -342,5 +342,32 @@ class AccesoBD {
         }
         return $repartidores;
     }
+
+    // --- NUEVAS FUNCIONES PARA EL ADMIN: PRODUCTOS ---
+
+    // 1. Añadir un nuevo servicio/producto
+    public function agregarProductoBD($descripcion, $precio, $existencias, $imagen, $caracteristicas, $colorCss) {
+        try {
+            $sql = "INSERT INTO productos (descripcion, precio, existencias, imagen, caracteristicas, color_css) VALUES (?, ?, ?, ?, ?, ?)";
+            $stmt = $this->conexionBD->prepare($sql);
+            return $stmt->execute([$descripcion, $precio, $existencias, $imagen, $caracteristicas, $colorCss]);
+        } catch (Exception $e) {
+            error_log("Error al añadir producto: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    // 2. Modificar un servicio/producto existente (poner existencias a 0 equivale a borrarlo)
+    public function modificarProductoBD($id, $descripcion, $precio, $existencias, $caracteristicas, $colorCss) {
+        try {
+            // No actualizamos la imagen por simplicidad, pero se podría añadir
+            $sql = "UPDATE productos SET descripcion=?, precio=?, existencias=?, caracteristicas=?, color_css=? WHERE id=?";
+            $stmt = $this->conexionBD->prepare($sql);
+            return $stmt->execute([$descripcion, $precio, $existencias, $caracteristicas, $colorCss, $id]);
+        } catch (Exception $e) {
+            error_log("Error al modificar producto: " . $e->getMessage());
+            return false;
+        }
+    }
 }
 ?>

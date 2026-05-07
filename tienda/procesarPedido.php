@@ -1,8 +1,8 @@
 <?php
-session_start();
+
 require_once '../modelos/AccesoBD.php';
 require_once '../modelos/Modelos.php';
-
+session_start();
 // Recuperamos los datos de la sesión
 $listaCarrito = $_SESSION["carritoJSON"] ?? [];
 $total = $_SESSION["totalPedido"] ?? 0.0;

@@ -10,7 +10,8 @@ $usuarioActual = $con->obtenerUsuarioBD($codigoLogueado);
 // 1. SEGURIDAD: Comprobamos que está logueado y que su ROL es Administrador (Ej: rol = 1)
 // Si no es admin, lo echamos al login del admin
 if ($usuarioActual == null || $usuarioActual->getRol() != 1) {
-    header("Location: login.html");
+    // Redirigimos al login de la tienda subiendo un nivel de carpeta
+    header("Location: ../tienda/loginUsuario.php");
     exit;
 }
 

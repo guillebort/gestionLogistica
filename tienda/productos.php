@@ -1,7 +1,7 @@
 <?php
-session_start();
-require_once '../modelos/AccesoBD.php'; // Llamamos al modelo
 
+require_once '../modelos/AccesoBD.php'; // Llamamos al modelo
+session_start();
 // Instanciamos la conexión y pedimos los productos
 $bd = AccesoBD::getInstance();
 $lista = $bd->obtenerProductosBD();

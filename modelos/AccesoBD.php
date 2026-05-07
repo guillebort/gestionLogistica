@@ -369,5 +369,51 @@ class AccesoBD {
             return false;
         }
     }
+
+    public function obtenerPedidosFiltrados($idUsuario, $idProducto, $fecha, $operadorFecha, $logica = 'AND') {
+    $sql = "SELECT p.*, u.nombre as cliente, e.descripcion as estado_nombre 
+            FROM pedidos p 
+            JOIN usuarios u ON p.persona = u.id 
+            JOIN estados e ON p.estado = e.id 
+            JOIN detalle d ON p.id = d.id_pedido 
+            WHERE 1=1";
+    
+    $params = [];
+    $condiciones = [];
+
+    // Filtro por Usuario
+    if (!empty($idUsuario)) {
+        $condiciones[] = "p.persona = ?";
+        $params[] = $idUsuario;
+    }
+
+    // Filtro por Producto
+    if (!empty($idProducto)) {
+        $condiciones[] = "d.id_producto = ?";
+        $params[] = $idProducto;
+    }
+
+    // Filtro por Fecha y su operador (<=, =, >=)
+    if (!empty($fecha)) {
+        $condiciones[] = "p.fecha $operadorFecha ?";
+        $params[] = $fecha;
+    }
+
+    // Si hay filtros, los unimos con la lógica seleccionada (AND/OR)
+    if (count($condiciones) > 0) {
+        $sql .= " AND (" . implode(" $logica ", $condiciones) . ")";
+    }
+
+    $sql .= " GROUP BY p.id ORDER BY p.fecha DESC";
+
+    try {
+        $stmt = $this->conexionBD->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {
+        error_log("Error en filtrado admin: " . $e->getMessage());
+        return [];
+    }
+}
 }
 ?>

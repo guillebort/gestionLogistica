@@ -1,7 +1,7 @@
 <?php
 // --- Archivo: cancelarPedido.php ---
 session_start();
-require_once 'AccesoBD.php';
+require_once '../modelos/AccesoBD.php';
 
 $idUsuario = $_SESSION['codigo'] ?? null;
 if ($idUsuario == null) {

@@ -15,8 +15,7 @@ $nombreMenu = $_SESSION["nombreUsuario"] ?? null;
 </head>
 <body class="bg-light">
 
-    <mi-cabecera></mi-cabecera>
-    <mi-menu data-user="<?php echo ($nombreMenu != null) ? htmlspecialchars($nombreMenu) : ""; ?>"></mi-menu>
+    <?php include '../includes/menu.php'; ?>
 
     <main class="container my-5">
         <div class="row mb-5">
@@ -67,9 +66,9 @@ $nombreMenu = $_SESSION["nombreUsuario"] ?? null;
         </div>
     </main>
 
-    <mi-pie></mi-pie>
+    <?php include '../includes/pie.php'; ?>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../js/mis-etiquetas.js"></script>
+    
 </body>
 </html>

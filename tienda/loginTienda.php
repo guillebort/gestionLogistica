@@ -13,8 +13,7 @@ session_start();
 </head>
 <body class="bg-light">
 
-    <mi-cabecera></mi-cabecera>
-    <mi-menu></mi-menu>
+    <?php include '../includes/menu.php'; ?>
 
     <main class="container my-5">
         <div class="row justify-content-center">
@@ -58,9 +57,9 @@ session_start();
         </div>
     </main>
 
-    <mi-pie></mi-pie>
+    <?php include '../includes/pie.php'; ?>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../js/mis-etiquetas.js"></script>
+    
 </body>
 </html>

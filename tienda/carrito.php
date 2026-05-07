@@ -12,8 +12,7 @@ $nombreUsuario = $_SESSION['nombreUsuario'] ?? '';
 </head>
 <body class="bg-light" onload="renderizarCarrito()">
 
-    <mi-cabecera></mi-cabecera>
-    <mi-menu data-user="<?php echo htmlspecialchars($nombreUsuario); ?>"></mi-menu>
+    <?php include '../includes/menu.php'; ?>
 
     <main class="container my-5">
         <div class="row mb-4">
@@ -66,8 +65,8 @@ $nombreUsuario = $_SESSION['nombreUsuario'] ?? '';
         </div>
     </main>
 
-    <mi-pie></mi-pie>
-    <script src="../js/mis-etiquetas.js"></script>
+    <?php include '../includes/pie.php'; ?>
+    
     <script src="../js/carrito.js?v=<?php echo time(); ?>"></script>
     <script src="../js/libjson.js"></script>
 </body>

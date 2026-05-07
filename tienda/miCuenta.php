@@ -11,8 +11,7 @@ session_start();
 </head>
 <body class="bg-light">
 
-    <mi-cabecera></mi-cabecera>
-    <mi-menu></mi-menu>
+    <?php include '../includes/menu.php'; ?>
 
     <main class="container my-5">
         <?php
@@ -75,7 +74,6 @@ session_start();
         <?php } ?>
     </main>
 
-    <mi-pie></mi-pie>
-    <script src="../js/mis-etiquetas.js"></script>
+    <?php include '../includes/pie.php'; ?>
 </body>
 </html>

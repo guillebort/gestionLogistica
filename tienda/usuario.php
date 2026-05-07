@@ -22,13 +22,7 @@
 </head>
 <body class="bg-light">
     
-    <mi-cabecera></mi-cabecera>
-    
-    <?php 
-        $nombreMenu = $_SESSION["nombreUsuario"] ?? null; 
-        $nombreData = ($nombreMenu != null) ? $nombreMenu : "";
-    ?>
-    <mi-menu data-user="<?php echo htmlspecialchars($nombreData); ?>"></mi-menu>
+    <?php include '../includes/menu.php'; ?>
 
     <main class="container my-5">
         <?php
@@ -188,9 +182,9 @@
         ?>
     </main>
 
-    <mi-pie></mi-pie>
+    <?php include '../includes/pie.php'; ?>
+    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../js/mis-etiquetas.js"></script>
     <script src="../js/logica.js"></script>
 </body>
 </html>

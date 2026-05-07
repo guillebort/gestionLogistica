@@ -1,7 +1,7 @@
 <?php
 // --- Archivo: modificarUsuario.php ---
 session_start();
-require_once 'AccesoBD.php';
+require_once '../modelos/AccesoBD.php';
 
 $codigo = $_SESSION['codigo'] ?? 0;
 if ($codigo <= 0) {

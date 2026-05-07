@@ -15,8 +15,7 @@ $nombreUsuario = $_SESSION['nombreUsuario'] ?? '';
 </head>
 <body>
 
-    <mi-cabecera></mi-cabecera>
-    <mi-menu data-user="<?php echo htmlspecialchars($nombreUsuario); ?>"></mi-menu>
+    <?php include '../includes/menu.php'; ?>
 
     <main class="container mt-5">
         <div class="row text-center mb-4">
@@ -54,9 +53,9 @@ $nombreUsuario = $_SESSION['nombreUsuario'] ?? '';
         </div>
     </main>
 
-    <mi-pie></mi-pie>
+    <?php include '../includes/pie.php'; ?>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../js/mis-etiquetas.js"></script>
+    
 </body>
 </html>

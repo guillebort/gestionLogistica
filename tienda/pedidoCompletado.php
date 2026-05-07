@@ -26,8 +26,7 @@
 </head>
 <body class="bg-light">
 
-    <mi-cabecera></mi-cabecera>
-    <mi-menu data-user="<?php echo htmlspecialchars($nombreUsuario); ?>"></mi-menu>
+    <?php include '../includes/menu.php'; ?>
 
     <main class="container my-5 text-center">
         <div class="card shadow-lg border-0 mx-auto" style="max-width: 650px; border-radius: 15px;">
@@ -58,14 +57,9 @@
         </div>
     </main>
 
-    <mi-pie></mi-pie>
-    <script src="../js/mis-etiquetas.js"></script>
-    <script>
-        // Limpiamos el carrito local para asegurar que la webapp esté lista para el siguiente pedido
-        window.onload = function() {
-            localStorage.removeItem("mi-carrito");
-            console.log("Estado logístico: Cesta sincronizada.");
-        };
-    </script>
+    <?php include '../includes/pie.php'; ?>
+    
+    <script src="../js/logica.js"></script>
+    
 </body>
 </html>

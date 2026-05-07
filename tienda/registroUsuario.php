@@ -11,8 +11,7 @@ session_start();
 </head>
 <body class="bg-light">
 
-    <mi-cabecera></mi-cabecera>
-    <mi-menu></mi-menu>
+    <?php include '../includes/menu.php'; ?>
 
     <main class="container my-5">
         <div class="row justify-content-center">
@@ -97,18 +96,8 @@ session_start();
         </div>
     </main>
 
-    <script>
-        function verificarPasswords() {
-            var p1 = document.getElementById("pass1").value;
-            var p2 = document.getElementById("pass2").value;
-            if (p1 !== p2) {
-                document.getElementById("errorPass").style.display = "block";
-                return false; // Detiene el envío del formulario
-            }
-            return true; // Permite el envío
-        }
-    </script>
+    <?php include '../includes/pie.php'; ?>
 
-    <script src="../js/mis-etiquetas.js"></script>
+    <script src="../js/logica.js"></script>
 </body>
 </html>

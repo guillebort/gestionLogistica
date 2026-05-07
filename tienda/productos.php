@@ -18,7 +18,6 @@ $lista = $bd->obtenerProductosBD();
 </head>
 <body class="bg-light">
 
-    <!-- Inyectamos la cabecera y el menú con PHP -->
     <?php include '../includes/menu.php'; ?>
 
     <main class="container my-5">
@@ -73,7 +72,6 @@ $lista = $bd->obtenerProductosBD();
         </div>
     </main>
 
-    <!-- Inyectamos el pie de página con PHP -->
     <?php include '../includes/pie.php'; ?>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

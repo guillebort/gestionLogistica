@@ -81,6 +81,12 @@ document.addEventListener('DOMContentLoaded', () => {
             marcarParada(paradaId, 'incidencia');
         });
     });
+
+    const successIcon = document.querySelector('.success-icon');
+    if (successIcon) {
+        localStorage.removeItem("mi-carrito");
+        console.log("Estado logístico: Cesta sincronizada.");
+    }
 });
 
 
@@ -225,6 +231,19 @@ function limpiarCarritoLocal() {
     
     // Viajamos al Servlet/Controlador de Java/PHP para destruir la sesión del servidor
     window.location.href = '../controladores/logout.php';
+}
+
+function verificarPasswords() {
+    var inputPass1 = document.getElementById("pass1");
+    var inputPass2 = document.getElementById("pass2");
+    
+    if (inputPass1 && inputPass2) {
+        if (inputPass1.value !== inputPass2.value) {
+            document.getElementById("errorPass").style.display = "block";
+            return false; // Detiene el envío del formulario
+        }
+    }
+    return true; // Permite el envío
 }
 
 // ==============================================================

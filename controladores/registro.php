@@ -1,7 +1,7 @@
 <?php
 // --- Archivo: registro.php ---
 session_start();
-require_once 'AccesoBD.php';
+require_once '../modelos/AccesoBD.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $usuario = $_POST['usuario'] ?? '';

@@ -30,8 +30,7 @@ if ($codigoLogueado > 0) {
 </head>
 <body class="bg-light">
 
-    <mi-cabecera></mi-cabecera>
-    <mi-menu data-user="<?php echo htmlspecialchars($_SESSION["nombreUsuario"] ?? ""); ?>"></mi-menu>
+    <?php include '../includes/menu.php'; ?>
 
     <main class="container my-5">
         <div class="row justify-content-center">
@@ -138,9 +137,8 @@ if ($codigoLogueado > 0) {
         </div>
     </main>
 
-    <mi-pie></mi-pie>
-
-    <script src="../js/mis-etiquetas.js"></script>
+    <?php include '../includes/pie.php'; ?>
+    
     <script src="../js/logica.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>

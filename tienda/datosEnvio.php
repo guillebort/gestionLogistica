@@ -52,7 +52,7 @@ $u = $con->obtenerUsuarioBD($idUsuario);
                                 </div>
                                 <div class="col-md-7">
                                     <label class="form-label small fw-bold">Correo Electrónico</label>
-                                    <input type="email" class="form-control bg-light" value="<?= htmlspecialchars($u->getUsuario()) ?>" required disabled>
+                                    <input type="email" class="form-control bg-light" value="<?= htmlspecialchars($u->getUsuario()) ?>" required>
                                 </div>
                                 <div class="col-md-5">
                                     <label class="form-label small fw-bold">Teléfono</label>

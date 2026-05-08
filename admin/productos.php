@@ -38,7 +38,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // OBTENER LISTA PARA MOSTRAR
-$listaProductos = $con->obtenerProductosBD();
+// OBTENER LISTA PARA MOSTRAR (AHORA PAGINADA)
+$limite = 5; // Productos que quieres mostrar por página
+$paginaActual = isset($_GET['pagina']) ? (int)$_GET['pagina'] : 1;
+if ($paginaActual < 1) {
+    $paginaActual = 1;
+}
+
+$totalProductos = $con->contarProductos();
+$totalPaginas = ceil($totalProductos / $limite);
+$offset = ($paginaActual - 1) * $limite;
+
+$listaProductos = $con->obtenerProductosPaginados($limite, $offset);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -127,6 +138,29 @@ $listaProductos = $con->obtenerProductosBD();
                     <?php } ?>
                 </tbody>
             </table>
+            <!-- Paginación Bootstrap -->
+            <?php if ($totalPaginas > 1): ?>
+            <nav aria-label="Navegación del catálogo">
+                <ul class="pagination justify-content-center mt-4">
+                    <!-- Botón Anterior -->
+                    <li class="page-item <?= ($paginaActual <= 1) ? 'disabled' : '' ?>">
+                        <a class="page-link" href="?pagina=<?= $paginaActual - 1 ?>">Anterior</a>
+                    </li>
+                    
+                    <!-- Números de página -->
+                    <?php for($i = 1; $i <= $totalPaginas; $i++): ?>
+                        <li class="page-item <?= ($paginaActual == $i) ? 'active' : '' ?>">
+                            <a class="page-link" href="?pagina=<?= $i ?>"><?= $i ?></a>
+                        </li>
+                    <?php endfor; ?>
+                    
+                    <!-- Botón Siguiente -->
+                    <li class="page-item <?= ($paginaActual >= $totalPaginas) ? 'disabled' : '' ?>">
+                        <a class="page-link" href="?pagina=<?= $paginaActual + 1 ?>">Siguiente</a>
+                    </li>
+                </ul>
+            </nav>
+            <?php endif; ?>
         </div>
     </main>
 </body>

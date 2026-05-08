@@ -265,10 +265,22 @@ class AccesoBD {
 
     public function guardarTarjeta($idUsuario, $numero, $titular, $caducidad) {
         try {
+            // SIMULACIÓN DE TOKENIZACIÓN (Cumplimiento básico PCI-DSS para el TFG)
+            // Eliminamos espacios y cogemos solo los últimos 4 dígitos
+            $numeroLimpio = preg_replace('/\D/', '', $numero);
+            $ultimos4 = substr($numeroLimpio, -4);
+            $numeroEnmascarado = "**** **** **** " . $ultimos4;
+            
+            // NOTA PARA LA MEMORIA DEL TFG: En un entorno real (Stripe/Redsys), 
+            // no se guarda la tarjeta, se guarda un token seguro (ej: tok_1Hh98...).
+            
             $sql = "INSERT INTO tarjetas (id_usuario, numero, titular, caducidad) VALUES (?, ?, ?, ?)";
             $stmt = $this->conexionBD->prepare($sql);
-            return $stmt->execute([$idUsuario, $numero, $titular, $caducidad]);
+            
+            // Guardamos el número ya enmascarado
+            return $stmt->execute([$idUsuario, $numeroEnmascarado, $titular, $caducidad]);
         } catch (Exception $e) {
+            error_log("Error al guardar tarjeta tokenizada: " . $e->getMessage());
             return false;
         }
     }
@@ -538,6 +550,45 @@ class AccesoBD {
             }
         } catch (Exception $e) {}
         return $lista;
+    }
+
+    // Cuenta el total de productos para calcular las páginas
+    public function contarProductos() {
+        try {
+            $stmt = $this->conexionBD->query("SELECT COUNT(*) as total FROM productos");
+            return $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+        } catch (Exception $e) {
+            return 0;
+        }
+    }
+
+    // Obtiene los productos limitados por página
+    public function obtenerProductosPaginados($limite, $offset) {
+        $productos = [];
+        try {
+            // Usamos PDO con parámetros nombrados. IMPORTANTE: Usar bindValue con PARAM_INT
+            $sql = "SELECT id, descripcion, precio, existencias, imagen, caracteristicas, color_css 
+                    FROM productos LIMIT :limite OFFSET :offset";
+            $stmt = $this->conexionBD->prepare($sql);
+            $stmt->bindValue(':limite', (int)$limite, PDO::PARAM_INT);
+            $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $p = new ProductoBD();
+                $p->setId($row['id']);
+                $p->setDescripcion($row['descripcion']);
+                $p->setPrecio($row['precio']);
+                $p->setExistencias($row['existencias']);
+                $p->setImagen($row['imagen']);
+                $p->setCaracteristicas($row['caracteristicas']);
+                $p->setColorCss($row['color_css']);
+                $productos[] = $p;
+            }
+        } catch (Exception $e) {
+            error_log("Error en paginación: " . $e->getMessage());
+        }
+        return $productos;
     }
 
 }

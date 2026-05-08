@@ -89,7 +89,7 @@ $pedidosFiltrados = $con->obtenerPedidosFiltrados($idUsuario, $idProducto, $fech
                 <table class="table table-striped align-middle">
                     <thead class="table-dark">
                         <tr>
-                            <th>#ID</th><th>Fecha</th><th>Cliente</th><th>Estado</th><th>Importe</th>
+                            <th>#ID</th><th>Fecha</th><th>Cliente</th><th>Estado</th><th>Importe</th><th>Acción</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -102,6 +102,7 @@ $pedidosFiltrados = $con->obtenerPedidosFiltrados($idUsuario, $idProducto, $fech
                                 <td><span class="badge bg-secondary"><?= htmlspecialchars($pf['estado_nombre']) ?></span></td>
                                 <td><?= $pf['importe'] ?> €</td>
                             </tr>
+                            <button class="btn btn-outline-dark btn-sm" onclick="imprimirAlbaran(<?= $pf['id'] ?>, '<?= htmlspecialchars($pf['cliente']) ?>')">🖨️ Albarán</button>
                         <?php } ?>
                     </tbody>
                 </table>

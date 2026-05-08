@@ -64,23 +64,78 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 6. LÓGICA DEL REPARTIDOR (repartidor.html)
+    // 6. LÓGICA DEL REPARTIDOR (repartidor.php)
     const botonesEntregado = document.querySelectorAll('.btn-entregado');
     const botonesIncidencia = document.querySelectorAll('.btn-incidencia');
     let entregasCompletadas = 0;
+    
+    // Obtenemos el total de entregas desde el DOM
+    const totalEntregasElem = document.getElementById('total-entregas');
+    const totalEntregas = totalEntregasElem ? parseInt(totalEntregasElem.innerText) : 0;
 
     botonesEntregado.forEach(btn => {
         btn.addEventListener('click', (e) => {
-            const paradaId = e.target.getAttribute('data-parada');
-            marcarParada(paradaId, 'entregado');
+            if(confirm("¿Confirmar entrega exitosa?")) {
+                const pedidoId = e.target.getAttribute('data-pedido');
+                procesarEstadoReparto(pedidoId, 3, e.target.closest('.card')); // 3 = Entregado
+            }
         });
     });
 
     botonesIncidencia.forEach(btn => {
         btn.addEventListener('click', (e) => {
-            const paradaId = e.target.getAttribute('data-parada');
-            marcarParada(paradaId, 'incidencia');
+            const motivo = prompt("Describe la incidencia (Ej: Ausente, Dirección incorrecta):");
+            if (motivo) {
+                const pedidoId = e.target.getAttribute('data-pedido');
+                procesarEstadoReparto(pedidoId, 4, e.target.closest('.card'), motivo); // 4 = Incidencia/Cancelado
+            }
         });
     });
+
+    // Función que envía la petición a PHP y actualiza la UI
+    function procesarEstadoReparto(idPedido, nuevoEstado, cardElement, motivo = '') {
+        fetch('../controladores/actualizarEstadoReparto.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `idPedido=${idPedido}&estado=${nuevoEstado}&motivo=${encodeURIComponent(motivo)}`
+        })
+        .then(response => response.text())
+        .then(data => {
+            if(data.trim() === "OK") {
+                // Efecto visual de desaparición
+                cardElement.style.transition = "opacity 0.5s, transform 0.5s";
+                cardElement.style.opacity = "0";
+                cardElement.style.transform = "translateX(100%)";
+                
+                setTimeout(() => {
+                    cardElement.remove();
+                    entregasCompletadas++;
+                    
+                    // Actualizamos el contador visual
+                    let contadorElem = document.getElementById('contador-entregas');
+                    if (contadorElem) {
+                        contadorElem.innerHTML = `${entregasCompletadas} / <span id="total-entregas">${totalEntregas}</span> Entregas`;
+                    }
+                    
+                    // Si completamos todas, mostramos mensaje de victoria
+                    if(entregasCompletadas === totalEntregas) {
+                        document.getElementById('lista-paradas').innerHTML = `
+                            <div class="alert alert-success text-center mt-5" style="border-radius: 15px;">
+                                <h1 style="font-size: 4rem;">🎉</h1>
+                                <h4>¡Ruta finalizada!</h4>
+                                <p>Has completado todas tus entregas.</p>
+                            </div>`;
+                    }
+                }, 500);
+            } else {
+                alert("Error al actualizar la base de datos.");
+            }
+        })
+        .catch(error => {
+            console.error("Error en la red:", error);
+            alert("Error de conexión al procesar el estado.");
+        });
+    }
 
     const successIcon = document.querySelector('.success-icon');
     if (successIcon) {
@@ -473,3 +528,37 @@ document.addEventListener("DOMContentLoaded", function() {
     activarAutocompletado('input_origen', 'lista_origen', 'lat_origen', 'lon_origen');
     activarAutocompletado('input_destino', 'lista_destino', 'lat_destino', 'lon_destino');
 });
+
+// Función para generar e imprimir el albarán del pedido
+function imprimirAlbaran(idPedido, cliente) {
+    // Genera un documento "al vuelo" optimizado para impresión
+    let ventana = window.open('', 'PRINT', 'height=600,width=800');
+    
+    // Escribimos la estructura HTML del albarán
+    ventana.document.write('<!DOCTYPE html><html lang="es"><head><title>Albarán Pedido #' + idPedido + '</title>');
+    ventana.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">');
+    ventana.document.write('</head><body style="padding: 40px;">');
+    
+    ventana.document.write('<div class="d-flex justify-content-between align-items-center mb-4">');
+    ventana.document.write('<h1>📦 Albarán de Entrega</h1>');
+    ventana.document.write('<h3>LogisTFG</h3>');
+    ventana.document.write('</div><hr>');
+    
+    ventana.document.write('<p><strong>Pedido ID:</strong> #' + idPedido + '</p>');
+    ventana.document.write('<p><strong>Cliente Receptor:</strong> ' + cliente + '</p>');
+    ventana.document.write('<p><strong>Fecha de Emisión:</strong> ' + new Date().toLocaleDateString() + '</p>');
+    
+    ventana.document.write('<br><div class="alert alert-secondary border-dark text-dark">Documento de control logístico interno. El receptor acredita que el bulto ha llegado en perfectas condiciones.</div>');
+    
+    ventana.document.write('<br><br><br><br><p class="text-center"><strong>Firma del Cliente o Sello:</strong> <br><br><br>_________________________</p>');
+    
+    ventana.document.write('</body></html>');
+    ventana.document.close(); 
+    ventana.focus(); 
+    
+    // Esperamos medio segundo a que Bootstrap cargue el CSS antes de lanzar el menú de impresión
+    setTimeout(function() {
+        ventana.print();
+        ventana.close();
+    }, 500); 
+}

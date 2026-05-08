@@ -591,5 +591,40 @@ class AccesoBD {
         return $productos;
     }
 
+    // Obtiene las rutas/pedidos asignados a un repartidor en concreto (Estado 2 = Enviado/En ruta)
+    public function obtenerRutasRepartidor($idRepartidor) {
+        $lista = [];
+        try {
+            $sql = "SELECT p.id, p.fecha, p.importe, u.nombre as cliente, u.telefono, d.calle_texto as destino, d.latitud, d.longitud 
+                    FROM pedidos p 
+                    JOIN usuarios u ON p.persona = u.id
+                    JOIN direcciones d ON p.id_direccion_destino = d.id
+                    WHERE p.estado = 2 AND p.id_repartidor = ?
+                    ORDER BY p.fecha ASC";
+            $stmt = $this->conexionBD->prepare($sql);
+            $stmt->execute([$idRepartidor]);
+            
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $lista[] = $row;
+            }
+        } catch (Exception $e) {
+            error_log("Error obteniendo rutas del repartidor: " . $e->getMessage());
+        }
+        return $lista;
+    }
+
+    // Función para que el repartidor cambie el estado del pedido (3 = Entregado) o reporte incidencia
+    public function actualizarEstadoReparto($idPedido, $idRepartidor, $nuevoEstado) {
+        try {
+            // Verificamos que el pedido es suyo antes de actualizar
+            $sql = "UPDATE pedidos SET estado = ? WHERE id = ? AND id_repartidor = ?";
+            $stmt = $this->conexionBD->prepare($sql);
+            $stmt->execute([$nuevoEstado, $idPedido, $idRepartidor]);
+            return $stmt->rowCount() > 0;
+        } catch (Exception $e) {
+            return false;
+        }
+    }
+
 }
 ?>

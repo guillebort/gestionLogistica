@@ -6,6 +6,8 @@ require_once '../modelos/Modelos.php';
 require '../vendor/autoload.php'; 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 
 session_start();
 
@@ -54,14 +56,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $usuarioDatos = $con->obtenerUsuarioBD($idUsuario);
         
         if ($usuarioDatos != null) {
+            
+            // 1. CONFIGURAR Y GENERAR EL TICKET EN PDF
+            $options = new Options();
+            $options->set('defaultFont', 'Helvetica');
+            $dompdf = new Dompdf($options);
+            
+            // Construimos el HTML que irá dentro del PDF
+            $htmlPdf = "
+                <div style='font-family: Helvetica, sans-serif; color: #333;'>
+                    <h1 style='color: #0d6efd; text-align: center;'>LogisTFG</h1>
+                    <h2 style='text-align: center;'>Ticket de Reserva</h2>
+                    <hr>
+                    <p><strong>Referencia:</strong> REF-LOGIS-{$idNuevoPedido}</p>
+                    <p><strong>Cliente:</strong> {$usuarioDatos->getNombre()} {$usuarioDatos->getApellidos()}</p>
+                    <p><strong>Fecha:</strong> " . date('d/m/Y') . "</p>
+                    <br>
+                    <h3>Detalles del Servicio:</h3>
+                    <ul>
+                        <li><strong>Origen:</strong> {$dirOrigen}</li>
+                        <li><strong>Destino:</strong> {$dirDestino}</li>
+                    </ul>
+                    <table style='width: 100%; border-collapse: collapse; margin-top: 20px;'>
+                        <tr style='background-color: #f8f9fa;'>
+                            <th style='padding: 10px; border: 1px solid #ddd;'>Descripción</th>
+                            <th style='padding: 10px; border: 1px solid #ddd;'>Total</th>
+                        </tr>
+                        <tr>
+                            <td style='padding: 10px; border: 1px solid #ddd;'>Servicios Logísticos Contratados</td>
+                            <td style='padding: 10px; border: 1px solid #ddd; text-align: right;'><strong>{$total} €</strong></td>
+                        </tr>
+                    </table>
+                    <br>
+                    <p style='text-align: center; font-size: 12px; color: #777;'>Gracias por confiar en nuestra red de transporte.</p>
+                </div>
+            ";
+            
+            $dompdf->loadHtml($htmlPdf);
+            $dompdf->setPaper('A4', 'portrait');
+            $dompdf->render();
+            
+            // Obtenemos el contenido del PDF generado en una variable (en memoria)
+            $pdfOutput = $dompdf->output();
+
+            // 2. CONFIGURAR EL CORREO Y ADJUNTAR EL PDF
             $mail = new PHPMailer(true);
             try {
-                // Configuración del servidor SMTP (Ejemplo usando Gmail)
+                // Configuración del servidor SMTP
                 $mail->isSMTP();
                 $mail->Host       = 'smtp.gmail.com'; 
                 $mail->SMTPAuth   = true;
-                $mail->Username   = 'tu_correo_tfg@gmail.com'; // Pon tu correo de pruebas
-                $mail->Password   = 'tu_contraseña_de_aplicacion'; // Contraseña de aplicación de Google
+                $mail->Username   = 'tu_correo_tfg@gmail.com'; // Sustituir por el tuyo
+                $mail->Password   = 'tu_contraseña_de_aplicacion'; // Sustituir
                 $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
                 $mail->Port       = 587;
 
@@ -69,31 +115,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $mail->setFrom('no-reply@logistfg.es', 'LogisTFG');
                 $mail->addAddress($usuarioDatos->getUsuario(), $usuarioDatos->getNombre());
 
-                // Contenido
+                // Adjuntar el PDF generado en memoria
+                // addStringAttachment recibe: (el_contenido_en_crudo, el_nombre_del_archivo, codificación, tipo_MIME)
+                $mail->addStringAttachment($pdfOutput, "Ticket_Reserva_REF-LOGIS-{$idNuevoPedido}.pdf", 'base64', 'application/pdf');
+
+                // Contenido del correo
                 $mail->isHTML(true);
-                $mail->Subject = "Confirmacion de Reserva #REF-LOGIS-{$idNuevoPedido}";
+                $mail->Subject = "Confirmacion de Reserva #REF-LOGIS-{$idNuevoPedido} y Ticket de Compra";
                 
-                // Cuerpo del correo con un poco de HTML para que quede profesional
                 $cuerpoCorreo = "
                     <div style='font-family: Arial, sans-serif; padding: 20px; color: #333;'>
-                        <h2 style='color: #0d6efd;'>¡Gracias por confiar en LogisTFG!</h2>
+                        <h2 style='color: #0d6efd;'>¡Reserva Confirmada!</h2>
                         <p>Hola <strong>{$usuarioDatos->getNombre()}</strong>,</p>
-                        <p>Hemos recibido correctamente tu solicitud de transporte.</p>
-                        <div style='background-color: #f8f9fa; padding: 15px; border-left: 4px solid #198754; margin-bottom: 20px;'>
-                            <p><strong>Referencia:</strong> REF-LOGIS-{$idNuevoPedido}</p>
-                            <p><strong>Importe Total:</strong> {$total} €</p>
-                            <p><strong>Recogida:</strong> {$dirOrigen}</p>
-                            <p><strong>Entrega:</strong> {$dirDestino}</p>
-                        </div>
-                        <p>En breve asignaremos tu envío a uno de nuestros repartidores y podrás ver la actualización en tu panel de cliente.</p>
-                        <hr>
-                        <p style='font-size: 12px; color: #777;'>Este es un correo automático, por favor no respondas a esta dirección.</p>
+                        <p>Hemos recibido correctamente tu solicitud de transporte. Tienes adjunto en este correo el ticket en formato PDF con los detalles de tu reserva.</p>
+                        <p>En breve asignaremos tu envío a uno de nuestros repartidores. ¡Gracias por confiar en LogisTFG!</p>
                     </div>";
                 
                 $mail->Body = $cuerpoCorreo;
                 $mail->send();
+                
             } catch (Exception $e) {
-                // Si el correo falla, no rompemos la web, solo dejamos un log para depurar
                 error_log("Error de PHPMailer: {$mail->ErrorInfo}");
             }
         }

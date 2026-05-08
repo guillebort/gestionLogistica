@@ -93,7 +93,7 @@ $pedidosFiltrados = $con->obtenerPedidosFiltrados($idUsuario, $idProducto, $fech
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if (empty($pedidosFiltrados)) { echo "<tr><td colspan='5' class='text-center'>No hay resultados para estos filtros.</td></tr>"; } ?>
+                        <?php if (empty($pedidosFiltrados)) { echo "<tr><td colspan='6' class='text-center'>No hay resultados para estos filtros.</td></tr>"; } ?>
                         <?php foreach ($pedidosFiltrados as $pf) { ?>
                             <tr>
                                 <td><strong><?= $pf['id'] ?></strong></td>
@@ -101,13 +101,17 @@ $pedidosFiltrados = $con->obtenerPedidosFiltrados($idUsuario, $idProducto, $fech
                                 <td><?= htmlspecialchars($pf['cliente']) ?></td>
                                 <td><span class="badge bg-secondary"><?= htmlspecialchars($pf['estado_nombre']) ?></span></td>
                                 <td><?= $pf['importe'] ?> €</td>
+                                <!-- ¡El botón debe ir dentro de un <td> para no romper la tabla! -->
+                                <td>
+                                    <button class="btn btn-outline-dark btn-sm" onclick="imprimirAlbaran(<?= $pf['id'] ?>, '<?= htmlspecialchars($pf['cliente']) ?>')">🖨️ Albarán</button>
+                                </td>
                             </tr>
-                            <button class="btn btn-outline-dark btn-sm" onclick="imprimirAlbaran(<?= $pf['id'] ?>, '<?= htmlspecialchars($pf['cliente']) ?>')">🖨️ Albarán</button>
                         <?php } ?>
                     </tbody>
                 </table>
             </div>
         </div>
     </main>
+    <script src="../js/logica.js"></script>
 </body>
 </html>

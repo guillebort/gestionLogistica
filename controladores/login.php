@@ -1,6 +1,5 @@
 <?php
 session_start();
-// CORREGIDO: Ruta relativa al modelo
 require_once '../modelos/AccesoBD.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -15,16 +14,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $codigo = $con->comprobarUsuarioBD($usuario, $clave);
         if ($codigo > 0) {
             $u = $con->obtenerUsuarioBD($codigo);
+            
+            // Guardamos los datos vitales en la sesión, INCLUYENDO EL ROL
             $_SESSION['codigo'] = $codigo;
             $_SESSION['nombreUsuario'] = $u->getNombre();
+            $_SESSION['rol'] = $u->getRol(); // ¡Añadimos esta línea clave!
             
-            // CORREGIDO: Volvemos a la carpeta tienda
-            header("Location: ../tienda/" . ltrim($urlDestino, '/'));
+            // Redirección basada en el ROL
+            if ($_SESSION['rol'] == 2) {
+                // Es un repartidor, lo mandamos a su panel estilo App
+                header("Location: ../repartidor/repartidor.php");
+            } else {
+                // Es un cliente normal (rol 0), lo mandamos a la tienda/mi cuenta
+                header("Location: ../tienda/" . ltrim($urlDestino, '/'));
+            }
             exit;
         } else {
             $_SESSION['mensaje'] = "⚠️ Usuario o contraseña incorrectos.";
-            
-            // CORREGIDO: Volvemos a la carpeta tienda
             header("Location: ../tienda/loginUsuario.php");
             exit;
         }

@@ -63,8 +63,162 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 6. LÓGICA DEL REPARTIDOR (repartidor.html)
     // 6. LÓGICA DEL REPARTIDOR (repartidor.php)
+    
+    // --- Lógica del Mapa (Leaflet + Routing) ---
+   const mapaElem = document.getElementById('mapa-repartidor');
+    let map = null;
+    let controlRuta = null;
+    let cocheMarker = null; // Variable para nuestro coche animado
+
+    // Solo inicializar si estamos en la vista que tiene el mapa
+    if (mapaElem) {
+        map = L.map('mapa-repartidor').setView([39.4699, -0.3762], 12);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap'
+        }).addTo(map);
+    }
+
+    // Definimos el icono del coche (puedes usar un emoji o una imagen PNG real)
+    const iconoCoche = L.divIcon({
+        html: '<div style="font-size: 24px; transform: scaleX(-1);">🚗</div>',
+        className: 'icono-coche-custom',
+        iconSize: [30, 30],
+        iconAnchor: [15, 15] // Centramos el icono
+    });
+
+    const botonesSimular = document.querySelectorAll('.btn-simular-ruta');
+    botonesSimular.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            if (!map) return;
+
+            // Limpiar ruta y coche anteriores
+            if (controlRuta != null) {
+                map.removeControl(controlRuta);
+            }
+            if (cocheMarker != null) {
+                map.removeLayer(cocheMarker);
+            }
+
+            const latO = e.target.getAttribute('data-lato');
+            const lonO = e.target.getAttribute('data-lono');
+            const latD = e.target.getAttribute('data-latd');
+            const lonD = e.target.getAttribute('data-lond');
+
+            if(latO == 0 || lonO == 0 || latD == 0 || lonD == 0) {
+                alert("Las coordenadas de este pedido no son válidas.");
+                return;
+            }
+
+            // Trazar la nueva ruta
+            controlRuta = L.Routing.control({
+                waypoints: [
+                    L.latLng(latO, lonO), // Origen
+                    L.latLng(latD, lonD)  // Destino
+                ],
+                routeWhileDragging: false,
+                addWaypoints: false,
+                fitSelectedRoutes: true,
+                lineOptions: {
+                    styles: [{color: '#0d6efd', opacity: 0.8, weight: 6}]
+                },
+                createMarker: function(i, wp, nWps) {
+                    var texto = (i === 0) ? "🟢 Origen" : "📍 Destino";
+                    return L.marker(wp.latLng).bindPopup(texto);
+                }
+            }).addTo(map);
+
+            // --- MAGIA DE LA ANIMACIÓN ---
+            // Escuchamos el evento cuando la ruta ya se ha calculado
+            controlRuta.on('routesfound', function(e) {
+                const rutas = e.routes;
+                const coordenadas = rutas[0].coordinates; // Puntos de la ruta
+                
+                // 1. CÁLCULO DEL ÁNGULO INICIAL (Para que no salga torcido desde el segundo cero)
+                const dyInicial = coordenadas[1].lat - coordenadas[0].lat;
+                const dxInicial = coordenadas[1].lng - coordenadas[0].lng;
+                
+                // EL TRUCO: Restamos 90 grados porque el emoji 🚗 mira hacia la derecha por defecto
+                let anguloAnterior = (Math.atan2(dxInicial, dyInicial) * (180 / Math.PI)) - 90;
+                
+                // 2. Creamos el icono del coche ya con la rotación inicial aplicada en el atributo style
+                const iconoCocheRealista = L.divIcon({
+                    html: `<div id="coche-animado" style="font-size: 24px; transition: transform 0.1s linear; transform: rotate(${anguloAnterior}deg);">🚗</div>`,
+                    className: 'icono-coche-custom',
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 15]
+                });
+
+                // Lo colocamos en el punto de salida
+                cocheMarker = L.marker([coordenadas[0].lat, coordenadas[0].lng], {icon: iconoCocheRealista}).addTo(map);
+                
+                let i = 0;
+                
+                function moverCoche() {
+                    if (i < coordenadas.length - 1) {
+                        const puntoActual = coordenadas[i];
+                        const puntoSiguiente = coordenadas[i + 1];
+
+                        // Movemos el marcador al siguiente punto
+                        cocheMarker.setLatLng([puntoSiguiente.lat, puntoSiguiente.lng]);
+
+                        // 3. CÁLCULO DEL ÁNGULO EN MOVIMIENTO
+                        const dy = puntoSiguiente.lat - puntoActual.lat;
+                        const dx = puntoSiguiente.lng - puntoActual.lng;
+                        
+                        // Evitamos temblores visuales si el coche casi no se mueve entre dos coordenadas
+                        if (Math.abs(dx) > 0.00005 || Math.abs(dy) > 0.00005) {
+                            
+                            // Volvemos a aplicar el offset de -90 grados al ángulo nuevo
+                            let anguloNuevo = (Math.atan2(dx, dy) * (180 / Math.PI)) - 90; 
+                            
+                            let diferencia = anguloNuevo - anguloAnterior;
+                            
+                            // Obligamos a CSS a girar por el camino más corto
+                            if (diferencia > 180) {
+                                diferencia -= 360;
+                            } else if (diferencia < -180) {
+                                diferencia += 360;
+                            }
+                            
+                            // Acumulamos el ángulo para que las transiciones de CSS sigan siendo suaves
+                            let anguloFinal = anguloAnterior + diferencia;
+                            anguloAnterior = anguloFinal; 
+
+                            const cocheDOM = document.getElementById('coche-animado');
+                            if (cocheDOM) {
+                                cocheDOM.style.transform = `rotate(${anguloFinal}deg)`;
+                            }
+                        }
+
+                        // Cálculo del tiempo (velocidad constante)
+                        const latLngActual = L.latLng(puntoActual.lat, puntoActual.lng);
+                        const latLngSiguiente = L.latLng(puntoSiguiente.lat, puntoSiguiente.lng);
+                        const distanciaMetros = latLngActual.distanceTo(latLngSiguiente);
+                        
+                        let tiempoEspera = distanciaMetros * 15; 
+                        if (tiempoEspera < 30) tiempoEspera = 30; 
+                        if (tiempoEspera > 800) tiempoEspera = 800;
+
+                        i++; 
+                        setTimeout(moverCoche, tiempoEspera);
+                        
+                    } else {
+                        // Fin de la ruta
+                        cocheMarker.bindPopup("<b>📍 ¡Paquete entregado!</b><br>El repartidor ha llegado a su destino.").openPopup();
+                    }
+                }
+                
+                // Empezamos la animación tras 1.5 segundos
+                setTimeout(moverCoche, 1500); 
+            });
+            
+            // Subimos la pantalla suavemente
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    });
+
+    // --- Lógica de Entregas e Incidencias ---
     const botonesEntregado = document.querySelectorAll('.btn-entregado');
     const botonesIncidencia = document.querySelectorAll('.btn-incidencia');
     let entregasCompletadas = 0;
@@ -135,12 +289,6 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("Error en la red:", error);
             alert("Error de conexión al procesar el estado.");
         });
-    }
-
-    const successIcon = document.querySelector('.success-icon');
-    if (successIcon) {
-        localStorage.removeItem("mi-carrito");
-        console.log("Estado logístico: Cesta sincronizada.");
     }
 });
 

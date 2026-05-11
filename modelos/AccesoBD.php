@@ -595,10 +595,13 @@ class AccesoBD {
     public function obtenerRutasRepartidor($idRepartidor) {
         $lista = [];
         try {
-            $sql = "SELECT p.id, p.fecha, p.importe, u.nombre as cliente, u.telefono, d.calle_texto as destino, d.latitud, d.longitud 
+            $sql = "SELECT p.id, p.fecha, p.importe, u.nombre as cliente, u.telefono, 
+                           dorigen.calle_texto as origen, dorigen.latitud as lat_origen, dorigen.longitud as lon_origen,
+                           ddestino.calle_texto as destino, ddestino.latitud as lat_destino, ddestino.longitud as lon_destino 
                     FROM pedidos p 
                     JOIN usuarios u ON p.persona = u.id
-                    JOIN direcciones d ON p.id_direccion_destino = d.id
+                    JOIN direcciones dorigen ON p.id_direccion_origen = dorigen.id
+                    JOIN direcciones ddestino ON p.id_direccion_destino = ddestino.id
                     WHERE p.estado = 2 AND p.id_repartidor = ?
                     ORDER BY p.fecha ASC";
             $stmt = $this->conexionBD->prepare($sql);

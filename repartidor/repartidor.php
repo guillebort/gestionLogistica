@@ -20,6 +20,8 @@ $paradas = $con->obtenerRutasRepartidor($idRepartidor);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>App Reparto - LogisTFG</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0d6efd">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
@@ -45,6 +47,11 @@ $paradas = $con->obtenerRutasRepartidor($idRepartidor);
             <span class="badge bg-primary fs-6" id="contador-entregas">0 / <span id="total-entregas"><?= count($paradas) ?></span> Entregas</span>
         </div>
 
+        <div class="d-grid mb-3">
+            <button id="btn-optimizar-ruta" class="btn btn-dark btn-lg shadow-sm">
+                🗺️ Calcular Ruta Óptima (Todos los paquetes)
+            </button>
+        </div>
         <!-- CONTENEDOR DEL MAPA ESTÁTICO -->
         <div id="mapa-repartidor"></div>
 

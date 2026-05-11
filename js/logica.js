@@ -64,6 +64,85 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 6. LÓGICA DEL REPARTIDOR (repartidor.php)
+    // --- NUEVA LÓGICA: OPTIMIZACIÓN MULTI-PARADA ---
+    const btnOptimizar = document.getElementById('btn-optimizar-ruta');
+    if (btnOptimizar) {
+        btnOptimizar.addEventListener('click', () => {
+            if (!map) return;
+
+            const paradas = document.querySelectorAll('.btn-simular-ruta');
+            if (paradas.length === 0) {
+                alert("No hay entregas pendientes para optimizar.");
+                return;
+            }
+
+            // Limpiar ruta y coche anteriores
+            if (controlRuta != null) {
+                map.removeControl(controlRuta);
+            }
+            if (cocheMarker != null) {
+                map.removeLayer(cocheMarker);
+            }
+
+            // 1. Extraer el origen (Asumimos la central o el origen del primer paquete)
+            const latOrigen = parseFloat(paradas[0].getAttribute('data-lato'));
+            const lonOrigen = parseFloat(paradas[0].getAttribute('data-lono'));
+
+            // 2. Extraer todos los destinos pendientes
+            let destinos = [];
+            paradas.forEach(btn => {
+                destinos.push({
+                    lat: parseFloat(btn.getAttribute('data-latd')),
+                    lng: parseFloat(btn.getAttribute('data-lond'))
+                });
+            });
+
+            // 3. Algoritmo del Vecino Más Cercano (Nearest Neighbor)
+            let rutaOptima = [L.latLng(latOrigen, lonOrigen)];
+            let posicionActual = L.latLng(latOrigen, lonOrigen);
+            let pendientes = [...destinos];
+
+            while (pendientes.length > 0) {
+                let indiceMasCercano = -1;
+                let distanciaMin = Infinity;
+
+                for (let i = 0; i < pendientes.length; i++) {
+                    let destinoEval = L.latLng(pendientes[i].lat, pendientes[i].lng);
+                    let dist = posicionActual.distanceTo(destinoEval);
+                    
+                    if (dist < distanciaMin) {
+                        distanciaMin = dist;
+                        indiceMasCercano = i;
+                    }
+                }
+
+                // Añadir el más cercano a la ruta y actualizar la posición
+                posicionActual = L.latLng(pendientes[indiceMasCercano].lat, pendientes[indiceMasCercano].lng);
+                rutaOptima.push(posicionActual);
+                pendientes.splice(indiceMasCercano, 1); // Quitar de la lista de pendientes
+            }
+
+            // 4. Dibujar la ruta optimizada en Leaflet
+            controlRuta = L.Routing.control({
+                waypoints: rutaOptima,
+                routeWhileDragging: false,
+                addWaypoints: false,
+                fitSelectedRoutes: true,
+                lineOptions: {
+                    styles: [{color: '#198754', opacity: 0.8, weight: 6}] // Color verde para diferenciar
+                },
+                createMarker: function(i, wp, nWps) {
+                    if (i === 0) {
+                        return L.marker(wp.latLng).bindPopup("<b>🟢 Central Logística</b>");
+                    } else {
+                        return L.marker(wp.latLng).bindPopup("<b>📍 Parada " + i + "</b>");
+                    }
+                }
+            }).addTo(map);
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
     
     // --- Lógica del Mapa (Leaflet + Routing) ---
    const mapaElem = document.getElementById('mapa-repartidor');
@@ -709,4 +788,18 @@ function imprimirAlbaran(idPedido, cliente) {
         ventana.print();
         ventana.close();
     }, 500); 
+}
+
+if ('serviceWorker' in navigator) {
+    // Escuchamos el evento load del window para no bloquear la carga inicial
+    window.addEventListener('load', () => {
+        // La ruta es relativa a repartidor.php, que es quien carga este script
+        navigator.serviceWorker.register('./sw.js')
+            .then(registration => {
+                console.log('✅ ServiceWorker registrado con éxito con el scope: ', registration.scope);
+            })
+            .catch(err => {
+                console.log('❌ El registro del ServiceWorker ha fallado: ', err);
+            });
+    });
 }

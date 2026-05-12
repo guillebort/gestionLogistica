@@ -1,26 +1,11 @@
-<?php
-session_start();
-require_once '../modelos/AccesoBD.php';
-
-$rolUsuario = $_SESSION['rol'] ?? 0; 
-$idRepartidor = $_SESSION['codigo'] ?? 0;
-
-if ($idRepartidor <= 0 || $rolUsuario != 2) {
-    header("Location: ../tienda/loginUsuario.php");
-    exit;
-}
-
-$con = AccesoBD::getInstance();
-$nombreRepartidor = $_SESSION['nombreUsuario'] ?? 'Repartidor';
-$paradas = $con->obtenerRutasRepartidor($idRepartidor);
-?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>App Reparto - LogisTFG</title>
-    <link rel="manifest" href="manifest.json">
+    <!-- Mantenemos el manifest para la PWA -->
+    <link rel="manifest" href="../repartidor/manifest.json">
     <meta name="theme-color" content="#0d6efd">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
@@ -52,6 +37,7 @@ $paradas = $con->obtenerRutasRepartidor($idRepartidor);
                 🗺️ Calcular Ruta Óptima (Todos los paquetes)
             </button>
         </div>
+        
         <!-- CONTENEDOR DEL MAPA ESTÁTICO -->
         <div id="mapa-repartidor"></div>
 
@@ -63,6 +49,7 @@ $paradas = $con->obtenerRutasRepartidor($idRepartidor);
                     <p>No tienes entregas pendientes en tu ruta actual.</p>
                 </div>
             <?php else: ?>
+                <!-- Iteramos sobre la variable inyectada desde el controlador -->
                 <?php foreach ($paradas as $index => $parada): ?>
                     <div class="card parada-card" id="pedido-<?= $parada['id'] ?>">
                         <div class="card-body">
@@ -77,7 +64,7 @@ $paradas = $con->obtenerRutasRepartidor($idRepartidor);
                             <p class="mb-3 text-secondary"><strong>📍 Destino:</strong> <?= htmlspecialchars($parada['destino']) ?></p>
                             
                             <div class="d-flex gap-2">
-                                <!-- Botón limpio sin 'onclick', pasamos variables por 'data-' -->
+                                <!-- Datos inyectados en HTML5 data-attributes para ser leídos por JS -->
                                 <button class="btn btn-primary btn-app flex-grow-1 btn-simular-ruta" 
                                         data-lato="<?= $parada['lat_origen'] ?>" 
                                         data-lono="<?= $parada['lon_origen'] ?>" 

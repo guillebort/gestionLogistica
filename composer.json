@@ -2,5 +2,11 @@
     "require": {
         "phpmailer/phpmailer": "^7.0",
         "dompdf/dompdf": "^3.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "servicios\\": "servicios/",
+            "modelos\\": "modelos/"
+        }
     }
 }

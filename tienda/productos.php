@@ -1,11 +1,4 @@
-<?php
-
-require_once '../modelos/AccesoBD.php'; // Llamamos al modelo
-session_start();
-// Instanciamos la conexión y pedimos los productos
-$bd = AccesoBD::getInstance();
-$lista = $bd->obtenerProductosBD();
-?>
+<!-- tienda/vistas/productos_vista.php -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -29,9 +22,11 @@ $lista = $bd->obtenerProductosBD();
         </div>
 
         <div class="row">
-            <?php if (!empty($lista)): ?>
-                <?php foreach ($lista as $p): ?>
+            <!-- La variable $listaProductos ya viene inyectada y lista desde el Controlador -->
+            <?php if (!empty($listaProductos)): ?>
+                <?php foreach ($listaProductos as $p): ?>
                     <?php
+                        // LÓGICA DE PRESENTACIÓN: Totalmente válido en una Vista MVC
                         $claseBoton = "btn-outline-primary"; 
                         $sufijo = "/ paquete";
                         $claseBorde = "shadow-sm"; 
@@ -53,7 +48,7 @@ $lista = $bd->obtenerProductosBD();
                                 <h1 class="card-title pricing-card-title"><?= number_format($p->getPrecio(), 2) ?>€ <small class="text-muted"><?= $sufijo ?></small></h1>
                                 
                                 <ul class="list-unstyled mt-3 mb-4 text-start">
-                                    <?= $p->getCaracteristicas() // Cuidado, si tiene HTML en la BD no lo escapamos aquí ?>
+                                    <?= $p->getCaracteristicas() // Se imprime el HTML guardado en BD ?>
                                 </ul>
                                 
                                 <button type="button" class="btn btn-lg btn-block <?= $claseBoton ?> mt-auto" 
@@ -72,6 +67,7 @@ $lista = $bd->obtenerProductosBD();
         </div>
     </main>
 
+    <!-- Importamos el pie y los scripts originales -->
     <?php include '../includes/pie.php'; ?>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

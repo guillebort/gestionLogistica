@@ -50,3 +50,62 @@ self.addEventListener('fetch', (event) => {
             })
     );
 });
+
+self.addEventListener('sync', function(event) {
+    if (event.tag === 'sync-entregas') {
+        console.log("Internet recuperado: Sincronizando entregas pendientes...");
+        event.waitUntil(sincronizarEntregasPendientes());
+    }
+});
+
+function sincronizarEntregasPendientes() {
+    // Aquí leerías los datos guardados en IndexedDB
+    // y harías un fetch() por cada entrega pendiente hacia actualizarEstadoReparto.php
+    // Si el fetch es exitoso (200 OK), lo borras de IndexedDB.
+    return Promise.resolve(); // Placeholder
+}
+
+self.addEventListener('sync', (event) => {
+    if (event.tag === 'sync-entregas') {
+        console.log("Internet recuperado: Sincronizando entregas con el servidor PHP...");
+        event.waitUntil(sincronizarEntregasPendientes());
+    }
+});
+
+function sincronizarEntregasPendientes() {
+    return new Promise((resolve, reject) => {
+        let request = indexedDB.open('LogisTFG_Offline', 1);
+        request.onsuccess = (e) => {
+            let db = e.target.result;
+            if (!db.objectStoreNames.contains('entregas_pendientes')) return resolve();
+            
+            let tx = db.transaction('entregas_pendientes', 'readwrite');
+            let store = tx.objectStore('entregas_pendientes');
+            let cursorReq = store.openCursor();
+
+            cursorReq.onsuccess = (event) => {
+                let cursor = event.target.result;
+                if (cursor) {
+                    let payload = cursor.value;
+                    let key = cursor.key;
+
+                    // Enviar al servidor MySQL a través de PHP
+                    fetch('../controladores/actualizarEstadoReparto.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: payload
+                    }).then(response => response.text())
+                      .then(data => {
+                          if (data.trim() === "OK") {
+                              // Borrar de IndexedDB si el servidor lo procesó bien
+                              db.transaction('entregas_pendientes', 'readwrite').objectStore('entregas_pendientes').delete(key);
+                          }
+                      });
+                    cursor.continue();
+                } else {
+                    resolve();
+                }
+            };
+        };
+    });
+}

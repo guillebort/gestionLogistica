@@ -1,5 +1,7 @@
 // js/logica.js
 
+const DB_NAME = 'LogisTFG_Offline';
+const STORE_NAME = 'entregas_pendientes';
 // Esperamos a que toda la página HTML cargue antes de ejecutar nada
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -64,85 +66,91 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 6. LÓGICA DEL REPARTIDOR (repartidor.php)
-    // --- NUEVA LÓGICA: OPTIMIZACIÓN MULTI-PARADA ---
-    const btnOptimizar = document.getElementById('btn-optimizar-ruta');
-    if (btnOptimizar) {
-        btnOptimizar.addEventListener('click', () => {
-            if (!map) return;
+    // js/logica.js - Fragmento del optimizador de rutas
 
-            const paradas = document.querySelectorAll('.btn-simular-ruta');
-            if (paradas.length === 0) {
-                alert("No hay entregas pendientes para optimizar.");
-                return;
-            }
+const btnOptimizar = document.getElementById('btn-optimizar-ruta');
+if (btnOptimizar) {
+    btnOptimizar.addEventListener('click', () => {
+        if (!map) return;
 
-            // Limpiar ruta y coche anteriores
-            if (controlRuta != null) {
-                map.removeControl(controlRuta);
-            }
-            if (cocheMarker != null) {
-                map.removeLayer(cocheMarker);
-            }
+        // Recogemos todos los botones de simulación que contienen las coordenadas
+        const paradas = document.querySelectorAll('.btn-simular-ruta');
+        if (paradas.length === 0) {
+            alert("No hay entregas pendientes para optimizar en esta ruta.");
+            return;
+        }
 
-            // 1. Extraer el origen (Asumimos la central o el origen del primer paquete)
-            const latOrigen = parseFloat(paradas[0].getAttribute('data-lato'));
-            const lonOrigen = parseFloat(paradas[0].getAttribute('data-lono'));
+        // Limpiamos rutas o marcadores anteriores del mapa
+        if (controlRuta != null) map.removeControl(controlRuta);
+        if (cocheMarker != null) map.removeLayer(cocheMarker);
 
-            // 2. Extraer todos los destinos pendientes
-            let destinos = [];
-            paradas.forEach(btn => {
-                destinos.push({
-                    lat: parseFloat(btn.getAttribute('data-latd')),
-                    lng: parseFloat(btn.getAttribute('data-lond'))
-                });
+        // 1. DEFINIR EL PUNTO DE ORIGEN
+        // Tomamos el origen del primer paquete como punto de partida (Central Logística)
+        const latOrigen = parseFloat(paradas[0].getAttribute('data-lato'));
+        const lonOrigen = parseFloat(paradas[0].getAttribute('data-lono'));
+        let posicionActual = L.latLng(latOrigen, lonOrigen);
+
+        // 2. EXTRAER DESTINOS PENDIENTES
+        let pendientes = [];
+        paradas.forEach(btn => {
+            pendientes.push({
+                lat: parseFloat(btn.getAttribute('data-latd')),
+                lng: parseFloat(btn.getAttribute('data-lond'))
             });
+        });
 
-            // 3. Algoritmo del Vecino Más Cercano (Nearest Neighbor)
-            let rutaOptima = [L.latLng(latOrigen, lonOrigen)];
-            let posicionActual = L.latLng(latOrigen, lonOrigen);
-            let pendientes = [...destinos];
+        // 3. ALGORITMO: EL VECINO MÁS CERCANO (Nearest Neighbor Heuristic)
+        let rutaOptima = [posicionActual]; // Empezamos la ruta en la central
 
-            while (pendientes.length > 0) {
-                let indiceMasCercano = -1;
-                let distanciaMin = Infinity;
+        while (pendientes.length > 0) {
+            let indiceMasCercano = -1;
+            let distanciaMin = Infinity;
 
-                for (let i = 0; i < pendientes.length; i++) {
-                    let destinoEval = L.latLng(pendientes[i].lat, pendientes[i].lng);
-                    let dist = posicionActual.distanceTo(destinoEval);
-                    
-                    if (dist < distanciaMin) {
-                        distanciaMin = dist;
-                        indiceMasCercano = i;
-                    }
+            // Evaluamos la distancia desde nuestra posición actual a todos los nodos no visitados
+            for (let i = 0; i < pendientes.length; i++) {
+                let destinoEval = L.latLng(pendientes[i].lat, pendientes[i].lng);
+                
+                // distanceTo usa la fórmula de Haversine internamente en Leaflet
+                let dist = posicionActual.distanceTo(destinoEval); 
+                
+                if (dist < distanciaMin) {
+                    distanciaMin = dist;
+                    indiceMasCercano = i;
                 }
-
-                // Añadir el más cercano a la ruta y actualizar la posición
-                posicionActual = L.latLng(pendientes[indiceMasCercano].lat, pendientes[indiceMasCercano].lng);
-                rutaOptima.push(posicionActual);
-                pendientes.splice(indiceMasCercano, 1); // Quitar de la lista de pendientes
             }
 
-            // 4. Dibujar la ruta optimizada en Leaflet
-            controlRuta = L.Routing.control({
-                waypoints: rutaOptima,
-                routeWhileDragging: false,
-                addWaypoints: false,
-                fitSelectedRoutes: true,
-                lineOptions: {
-                    styles: [{color: '#198754', opacity: 0.8, weight: 6}] // Color verde para diferenciar
-                },
-                createMarker: function(i, wp, nWps) {
-                    if (i === 0) {
-                        return L.marker(wp.latLng).bindPopup("<b>🟢 Central Logística</b>");
-                    } else {
-                        return L.marker(wp.latLng).bindPopup("<b>📍 Parada " + i + "</b>");
-                    }
-                }
-            }).addTo(map);
+            // Movemos la "posición actual" al nodo más cercano encontrado
+            posicionActual = L.latLng(pendientes[indiceMasCercano].lat, pendientes[indiceMasCercano].lng);
+            
+            // Añadimos el nodo a nuestra ruta ordenada
+            rutaOptima.push(posicionActual);
+            
+            // Lo eliminamos de la lista de pendientes para no volver a visitarlo
+            pendientes.splice(indiceMasCercano, 1); 
+        }
 
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-    }
+        // 4. DIBUJAR LA RUTA OPTIMIZADA EN LEAFLET
+        controlRuta = L.Routing.control({
+            waypoints: rutaOptima,
+            routeWhileDragging: false, // Desactiva recalcular al arrastrar (ahorra batería en móvil)
+            addWaypoints: false,
+            fitSelectedRoutes: true,
+            lineOptions: {
+                styles: [{color: '#198754', opacity: 0.8, weight: 6}] // Línea verde estilo "Ruta Óptima"
+            },
+            createMarker: function(i, wp, nWps) {
+                if (i === 0) {
+                    return L.marker(wp.latLng).bindPopup("<b>🟢 Central Logística (Inicio)</b>");
+                } else {
+                    return L.marker(wp.latLng).bindPopup("<b>📍 Parada " + i + "</b>");
+                }
+            }
+        }).addTo(map);
+
+        // Hacemos scroll hacia arriba para que el repartidor vea el mapa
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+}
     
     // --- Lógica del Mapa (Leaflet + Routing) ---
    const mapaElem = document.getElementById('mapa-repartidor');
@@ -325,51 +333,71 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Función que envía la petición a PHP y actualiza la UI
-    function procesarEstadoReparto(idPedido, nuevoEstado, cardElement, motivo = '') {
-        fetch('../controladores/actualizarEstadoReparto.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `idPedido=${idPedido}&estado=${nuevoEstado}&motivo=${encodeURIComponent(motivo)}`
-        })
-        .then(response => response.text())
-        .then(data => {
-            if(data.trim() === "OK") {
-                // Efecto visual de desaparición
-                cardElement.style.transition = "opacity 0.5s, transform 0.5s";
-                cardElement.style.opacity = "0";
-                cardElement.style.transform = "translateX(100%)";
-                
-                setTimeout(() => {
-                    cardElement.remove();
-                    entregasCompletadas++;
-                    
-                    // Actualizamos el contador visual
-                    let contadorElem = document.getElementById('contador-entregas');
-                    if (contadorElem) {
-                        contadorElem.innerHTML = `${entregasCompletadas} / <span id="total-entregas">${totalEntregas}</span> Entregas`;
-                    }
-                    
-                    // Si completamos todas, mostramos mensaje de victoria
-                    if(entregasCompletadas === totalEntregas) {
-                        document.getElementById('lista-paradas').innerHTML = `
-                            <div class="alert alert-success text-center mt-5" style="border-radius: 15px;">
-                                <h1 style="font-size: 4rem;">🎉</h1>
-                                <h4>¡Ruta finalizada!</h4>
-                                <p>Has completado todas tus entregas.</p>
-                            </div>`;
-                    }
-                }, 500);
-            } else {
-                alert("Error al actualizar la base de datos.");
+    function initDB() {
+    return new Promise((resolve, reject) => {
+        let request = indexedDB.open(DB_NAME, 1);
+        request.onupgradeneeded = (e) => {
+            let db = e.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                db.createObjectStore(STORE_NAME, { autoIncrement: true });
             }
-        })
-        .catch(error => {
-            console.error("Error en la red:", error);
-            alert("Error de conexión al procesar el estado.");
-        });
-    }
-});
+        };
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+    });
+}
+
+// Guardar la acción si no hay internet
+function guardarEnIndexedDB(payload) {
+    initDB().then(db => {
+        let tx = db.transaction(STORE_NAME, 'readwrite');
+        tx.objectStore(STORE_NAME).add(payload);
+        console.log("Acción guardada en local (IndexedDB) para futura sincronización.");
+    });
+}
+    // Función que envía la petición a PHP y actualiza la UI
+    // js/logica.js (Modificación sugerida)
+function procesarEstadoReparto(idPedido, nuevoEstado, cardElement, motivo = '') {
+    function procesarEstadoReparto(idPedido, nuevoEstado, cardElement, motivo = '') {
+    const payload = `idPedido=${idPedido}&estado=${nuevoEstado}&motivo=${encodeURIComponent(motivo)}`;
+
+    fetch('../controladores/actualizarEstadoReparto.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: payload
+    })
+    .then(response => {
+        if (!response.ok) throw new Error("Fallo de red");
+        return response.text();
+    })
+    .then(data => {
+        if(data.trim() === "OK") {
+            // Efecto visual de desaparición
+            cardElement.style.transition = "opacity 0.5s, transform 0.5s";
+            cardElement.style.opacity = "0";
+            cardElement.style.transform = "translateX(100%)";
+            setTimeout(() => cardElement.remove(), 500);
+        } else {
+            alert("Error al actualizar la base de datos MySQL.");
+        }
+    })
+    .catch(error => {
+        console.warn("Sin conexión. Guardando entrega en modo offline.");
+        
+        guardarEnIndexedDB(payload);
+        
+        // Registrar el evento de sincronización en el Service Worker
+        if ('serviceWorker' in navigator && 'SyncManager' in window) {
+            navigator.serviceWorker.ready.then(function(swRegistration) {
+                return swRegistration.sync.register('sync-entregas');
+            });
+        }
+        
+        // Feedback visual para el repartidor (Ocultamos la tarjeta)
+        cardElement.style.opacity = "0.5";
+        alert("Sin conexión. La entrega se sincronizará automáticamente al recuperar la señal.");
+    });
+}
 
 
 /* ==========================================

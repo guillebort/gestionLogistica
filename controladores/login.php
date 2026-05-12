@@ -1,7 +1,9 @@
 <?php
 session_start();
 require_once '../modelos/AccesoBD.php';
-
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $usuario = $_POST['usuario'] ?? '';
     $clave = $_POST['clave'] ?? '';

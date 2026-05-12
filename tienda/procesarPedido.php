@@ -3,6 +3,9 @@
 require_once '../modelos/AccesoBD.php';
 require_once '../modelos/Modelos.php';
 session_start();
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
 // Recuperamos los datos de la sesión
 $listaCarrito = $_SESSION["carritoJSON"] ?? [];
 $total = $_SESSION["totalPedido"] ?? 0.0;
@@ -57,7 +60,7 @@ if ($codigoLogueado > 0) {
                         </div>
 
                         <form action="../controladores/finalizarPedido.php" method="POST" id="formPago">
-                            
+                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
                             <h5 class="mb-3">Servicios Contratados</h5>
                             <div class="table-responsive mb-4">
                                 <table class="table table-sm table-borderless">

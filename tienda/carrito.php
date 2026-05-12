@@ -65,7 +65,7 @@ $nombreUsuario = $_SESSION['nombreUsuario'] ?? '';
                                 <button class="btn btn-link text-danger text-decoration-none mb-3 mb-md-0 fw-bold" onclick="vaciarCarrito()">
                                     <small>🗑️ Vaciar Cesta</small>
                                 </button>
-                                <button class="btn btn-success btn-lg px-5 shadow rounded-pill fw-bold" onclick="EnviarCarrito('../controladores/procesarPedido_action.php', carrito)">
+                                <button class="btn btn-success btn-lg px-5 shadow rounded-pill fw-bold" onclick="EnviarCarrito('../controladores/procesarPedido.php', carrito)">
                                     Configurar Ruta ➔
                                 </button>
                             </div> 

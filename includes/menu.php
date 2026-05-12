@@ -4,28 +4,41 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 $nombreUsu = $_SESSION['nombreUsuario'] ?? '';
-$textoEnlace = !empty($nombreUsu) ? "👋 Hola, " . htmlspecialchars($nombreUsu) : '👤 Usuario';
+$textoEnlace = !empty($nombreUsu) ? "👋 Hola, " . htmlspecialchars($nombreUsu) : '👤 Acceder';
 ?>
-<header class="bg-primary text-white text-center py-4">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <h1>🚚 LogisTFG - Gestión de Repartos</h1>
-</header>
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
-    <div class="container-fluid">
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+<!-- Importamos Poppins aquí para garantizar que toda la web comparta la tipografía -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<nav class="navbar navbar-expand-lg sticky-top" style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);">
+    <div class="container">
+        <!-- Logo / Marca -->
+        <a class="navbar-brand fw-bold text-primary d-flex align-items-center gap-2" href="../tienda/index.php">
+            <span style="font-size: 1.5rem;">🚚</span> LogisTFG
+        </a>
+        
+        <!-- Botón Hamburguesa para Móviles -->
+        <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
+        
+        <!-- Enlaces -->
         <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav mx-auto">
-                <li class="nav-item"><a class="nav-link" href="../tienda/index.php">Inicio</a></li>
-                <li class="nav-item"><a class="nav-link" href="../tienda/empresa.php">Empresa</a></li>
-                <li class="nav-item"><a class="nav-link" href="../tienda/productos.php">Productos/Servicios</a></li>
-                <li class="nav-item"><a class="nav-link" href="../tienda/contacto.php">Contacto</a></li>
-                <li class="nav-item"><a class="nav-link" href="../tienda/carrito.php">🛒 Carrito</a></li>
-                <li class="nav-item"><a class="nav-link" href="../tienda/usuario.php"><?= $textoEnlace ?></a></li>
+            <ul class="navbar-nav mx-auto gap-2 mt-3 mt-lg-0 text-center text-lg-start">
+                <li class="nav-item"><a class="nav-link text-dark fw-medium px-3 rounded-pill" href="../tienda/index.php">Inicio</a></li>
+                <li class="nav-item"><a class="nav-link text-dark fw-medium px-3 rounded-pill" href="../tienda/empresa.php">Empresa</a></li>
+                <li class="nav-item"><a class="nav-link text-dark fw-medium px-3 rounded-pill" href="../tienda/productos.php">Tarifas</a></li>
+                <li class="nav-item"><a class="nav-link text-dark fw-medium px-3 rounded-pill" href="../tienda/contacto.php">Contacto</a></li>
             </ul>
+            
+            <!-- Botones de Acción -->
+            <div class="d-flex flex-column flex-lg-row align-items-center gap-3 mt-3 mt-lg-0">
+                <a href="../tienda/carrito.php" class="btn btn-light rounded-pill fw-medium px-4 shadow-sm" style="color: #2b2d42;">
+                    🛒 Cesta
+                </a>
+                <a href="../tienda/usuario.php" class="btn btn-primary rounded-pill fw-semibold px-4 shadow-sm">
+                    <?= $textoEnlace ?>
+                </a>
+            </div>
         </div>
     </div>
 </nav>

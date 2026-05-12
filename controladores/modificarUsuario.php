@@ -5,7 +5,7 @@ require_once '../modelos/AccesoBD.php';
 
 $codigo = $_SESSION['codigo'] ?? 0;
 if ($codigo <= 0) {
-    header("Location: ../tienda/loginUsuario.php");
+    header("Location: ../tienda/login.php");
     exit;
 }
 

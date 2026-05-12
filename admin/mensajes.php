@@ -5,7 +5,7 @@ require_once '../modelos/Modelos.php';
 
 $con = AccesoBD::getInstance();
 if (!isset($_SESSION['codigo']) || $_SESSION['rol'] != 1) {
-    header("Location: ../tienda/loginUsuario.php");
+    header("Location: ../tienda/login.php");
     exit;
 }
 

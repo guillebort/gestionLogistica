@@ -15,4 +15,3 @@ define('MAIL_PASS', 'tu_contraseña_de_aplicacion');
 define('MAIL_FROM_EMAIL', 'no-reply@logistfg.es');
 define('MAIL_FROM_NAME', 'LogisTFG');
 ?>
-?>

@@ -10,7 +10,7 @@ $idRepartidor = $_SESSION['codigo'] ?? 0;
 
 // Si no está logueado o no es repartidor (rol 2), lo echamos a la pantalla de login
 if ($idRepartidor <= 0 || $rolUsuario != 2) {
-    header("Location: ../tienda/loginUsuario.php");
+    header("Location: ../tienda/login.php");
     exit;
 }
 

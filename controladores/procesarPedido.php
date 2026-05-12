@@ -1,7 +1,8 @@
 <?php
 // --- Archivo: procesarPedido.php ---
-require_once '../modelos/AccesoBD.php';
 session_start();
+require_once '../modelos/AccesoBD.php';
+
 
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -43,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['totalPedido'] = $totalPedido;
 
         $codigoUsuario = $_SESSION['codigo'] ?? 0;
-        $urlDestino = ($codigoUsuario <= 0) ? "loginTienda.php?url=datosEnvio.php" : "datosEnvio.php";
+        $urlDestino = ($codigoUsuario <= 0) ? "login.php?url=datosEnvio.php" : "datosEnvio.php";
 
         echo json_encode(["status" => "ok", "redirect" => $urlDestino]);
     } else {

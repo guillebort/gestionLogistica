@@ -1,15 +1,13 @@
 <?php
-    
 session_start();
 require_once '../includes/controlSesion.php';
 require_once '../modelos/AccesoBD.php';
 require_once '../modelos/Modelos.php';
     
-    
 // REDIRECCIÓN MAESTRA: Si no está logueado, lo mandamos al login.
 $codigoLogueado = $_SESSION["codigo"] ?? 0;
 if ($codigoLogueado <= 0) {
-    header("Location: loginUsuario.php");
+    header("Location: login.php");
     exit;
 }
 ?>
@@ -34,83 +32,83 @@ if ($codigoLogueado <= 0) {
                 if ($mensaje != null) {
                     unset($_SESSION["mensaje"]);
         ?>
-            <div class="alert alert-info text-center"><?php echo htmlspecialchars($mensaje); ?></div>
+            <div class="alert alert-info text-center rounded-4 shadow-sm mb-4"><?php echo htmlspecialchars($mensaje); ?></div>
         <?php      } 
 
-                // Como ya sabemos que está logueado, cargamos sus datos directamente
+                // Cargamos datos
                 $con = AccesoBD::getInstance();
                 $u = $con->obtenerUsuarioBD($codigoLogueado);
                 
                 if ($u == null) {
-                    echo "<div class='alert alert-danger text-center'>Error: Perfil no encontrado. <a href='../controladores/logout.php'>Cerrar sesión</a></div>";
+                    echo "<div class='alert alert-danger text-center rounded-4'>Error: Perfil no encontrado. <a href='../controladores/logout.php'>Cerrar sesión</a></div>";
                 } else {
                     $historial = $con->obtenerHistorialDetallado($codigoLogueado);
         ?>
             
             <div class="row justify-content-center mb-5">
-                <div class="col-md-8">
-                    <div class="card shadow-sm border-success">
-                        <div class="card-body text-center py-5">
-                            <h2 class="text-success mb-4">¡Bienvenido, <?php echo htmlspecialchars($u->getNombre() != null ? $u->getNombre() : "Cliente"); ?>!</h2>
+                <!-- FORMULARIO DE PERFIL ORIGINAL, NUEVO DISEÑO -->
+                <div class="col-lg-10">
+                    <div class="card shadow-lg border-0" style="border-radius: 20px;">
+                        <div class="card-body py-5 px-4 px-md-5">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h3 class="text-dark fw-bold mb-0">¡Bienvenido, <?php echo htmlspecialchars($u->getNombre() != null ? $u->getNombre() : "Cliente"); ?>!</h3>
+                                <a href="productos.php" class="btn btn-primary rounded-pill shadow-sm d-none d-md-block">Nuevo Envío 📦</a>
+                            </div>
                             
-                            <form action="../controladores/modificarUsuario.php" method="POST" onsubmit="return validarModificacion()" class="text-start">
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label text-muted">Email (No modificable)</label>
-                                        <input type="text" class="form-control bg-light" value="<?php echo htmlspecialchars($u->getUsuario()); ?>" disabled>
+                            <!-- Formulario Original de Modificación -->
+                            <form action="../controladores/modificarUsuario.php" method="POST" onsubmit="return validarModificacion()" class="text-start mt-4">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label text-muted small fw-semibold">Email (No modificable)</label>
+                                        <input type="text" class="form-control rounded-3 bg-light border-0" value="<?php echo htmlspecialchars($u->getUsuario()); ?>" disabled>
                                     </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Teléfono</label>
-                                        <input type="tel" class="form-control" name="telefono" value="<?php echo htmlspecialchars($u->getTelefono() ?? ""); ?>">
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold">Teléfono</label>
+                                        <input type="tel" class="form-control rounded-3" name="telefono" value="<?php echo htmlspecialchars($u->getTelefono() ?? ""); ?>">
                                     </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Nombre</label>
-                                        <input type="text" class="form-control" name="nombre" value="<?php echo htmlspecialchars($u->getNombre() ?? ""); ?>">
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold">Nombre</label>
+                                        <input type="text" class="form-control rounded-3" name="nombre" value="<?php echo htmlspecialchars($u->getNombre() ?? ""); ?>">
                                     </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Apellidos</label>
-                                        <input type="text" class="form-control" name="apellidos" value="<?php echo htmlspecialchars($u->getApellidos() ?? ""); ?>">
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold">Apellidos</label>
+                                        <input type="text" class="form-control rounded-3" name="apellidos" value="<?php echo htmlspecialchars($u->getApellidos() ?? ""); ?>">
                                     </div>
-                                    <div class="col-12 mb-3">
-                                        <label class="form-label">Dirección Principal</label>
-                                        <input type="text" class="form-control" name="domicilio" value="<?php echo htmlspecialchars($u->getDomicilio() ?? ""); ?>">
+                                    <div class="col-12">
+                                        <label class="form-label small fw-semibold">Dirección Principal</label>
+                                        <input type="text" class="form-control rounded-3" name="domicilio" value="<?php echo htmlspecialchars($u->getDomicilio() ?? ""); ?>">
                                     </div>
-                                    <div class="col-md-5 mb-3">
-                                        <label class="form-label">Población</label>
-                                        <input type="text" class="form-control" name="poblacion" value="<?php echo htmlspecialchars($u->getPoblacion() ?? ""); ?>">
+                                    <div class="col-md-5">
+                                        <label class="form-label small fw-semibold">Población</label>
+                                        <input type="text" class="form-control rounded-3" name="poblacion" value="<?php echo htmlspecialchars($u->getPoblacion() ?? ""); ?>">
                                     </div>
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Provincia</label>
-                                        <input type="text" class="form-control" name="provincia" value="<?php echo htmlspecialchars($u->getProvincia() ?? ""); ?>">
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-semibold">Provincia</label>
+                                        <input type="text" class="form-control rounded-3" name="provincia" value="<?php echo htmlspecialchars($u->getProvincia() ?? ""); ?>">
                                     </div>
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">C.P.</label>
-                                        <input type="text" class="form-control" name="cp" value="<?php echo htmlspecialchars($u->getCp() ?? ""); ?>">
+                                    <div class="col-md-3">
+                                        <label class="form-label small fw-semibold">C.P.</label>
+                                        <input type="text" class="form-control rounded-3" name="cp" value="<?php echo htmlspecialchars($u->getCp() ?? ""); ?>">
                                     </div>
                                 </div>
 
-                                <hr class="my-4">
-                                <h5 class="text-secondary mb-3">Seguridad y Contraseña</h5>
-                                <p class="text-muted small"><em>* Déjalo en blanco si no quieres cambiar tu contraseña actual.</em></p>
-                                
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Nueva Contraseña</label>
-                                        <input type="password" class="form-control" id="mod_pass1" name="clave1" placeholder="Mínimo 4 caracteres">
+                                <div class="bg-light p-4 rounded-4 mt-4 mb-4">
+                                    <h6 class="text-secondary mb-1 fw-bold">Seguridad y Contraseña</h6>
+                                    <p class="text-muted small mb-3"><em>* Déjalo en blanco si no quieres cambiar tu contraseña actual.</em></p>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <input type="password" class="form-control rounded-3 border-0 shadow-sm" id="mod_pass1" name="clave1" placeholder="Nueva Contraseña">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <input type="password" class="form-control rounded-3 border-0 shadow-sm" id="mod_pass2" name="clave2" placeholder="Repetir Contraseña">
+                                        </div>
                                     </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Repetir Nueva Contraseña</label>
-                                        <input type="password" class="form-control" id="mod_pass2" name="clave2" placeholder="Confirma la contraseña">
-                                    </div>
-                                </div>
-                                <div id="errorModPass" class="alert alert-danger d-none py-2 text-center">
-                                    ⚠️ Las contraseñas no coinciden.
+                                    <div id="errorModPass" class="text-danger small mt-2 d-none fw-medium">⚠️ Las contraseñas no coinciden.</div>
                                 </div>
 
-                                <div class="d-grid gap-2 d-md-flex justify-content-md-center mt-4">
-                                    <button type="submit" class="btn btn-success px-4">Guardar Cambios</button>
-                                    <a href="productos.php" class="btn btn-primary px-4">Ir a Tarifas</a>
-                                    <a href="#" onclick="limpiarCarritoLocal(event)" class="btn btn-outline-danger px-4">Cerrar Sesión</a>
+                                <div class="d-flex justify-content-between align-items-center mt-4">
+                                    <a href="#" onclick="limpiarCarritoLocal(event)" class="text-danger text-decoration-none fw-semibold">Cerrar Sesión</a>
+                                    <button type="submit" class="btn btn-success px-5 rounded-pill shadow-sm fw-bold">Guardar Perfil</button>
                                 </div>
                             </form>
                         </div>
@@ -118,69 +116,86 @@ if ($codigoLogueado <= 0) {
                 </div>
             </div>
 
-            <div class="container my-5">
-                <h3 class="mb-4 text-primary">📦 Historial de Pedidos</h3>
+            <!-- SECCIÓN HISTORIAL ORIGINAL, REDISEÑADA -->
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <h4 class="mb-4 text-dark fw-bold">📦 Historial de Pedidos</h4>
 
-                <?php
-                    if (empty($historial)) {
-                ?>
-                    <div class="alert alert-info">Aún no has realizado ningún pedido.</div>
-                <?php  } else { ?>
-                    
-                    <div class="accordion shadow-sm" id="acordeonPedidos">
-                        <?php foreach ($historial as $ped) { ?>
+                    <?php if (empty($historial)) { ?>
+                        <div class="card border-0 shadow-sm rounded-4 text-center py-5">
+                            <span style="font-size: 3rem; opacity: 0.5;">🛣️</span>
+                            <p class="text-muted mt-3 mb-0">Aún no has solicitado ningún reparto.</p>
+                        </div>
+                    <?php  } else { ?>
                         
-                        <div class="accordion-item">
-                            <h2 class="accordion-header" id="heading<?php echo $ped->getId(); ?>">
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse<?php echo $ped->getId(); ?>">
-                                    <div class="d-flex justify-content-between w-100 pe-3">
-                                        <span><strong>Pedido #<?php echo $ped->getId(); ?></strong> (<?php echo $ped->getFecha(); ?>)</span>
-                                        <span class="badge bg-secondary"><?php echo htmlspecialchars($ped->getEstado()); ?></span>
-                                        <span class="text-success fw-bold"><?php echo number_format((float)$ped->getImporteTotal(), 2, '.', ''); ?>€</span>
-                                    </div>
-                                </button>
-                            </h2>
-                            <div id="collapse<?php echo $ped->getId(); ?>" class="accordion-collapse collapse" data-bs-parent="#acordeonPedidos">
-                                <div class="accordion-body bg-light">
-                                    <table class="table table-sm table-bordered bg-white mb-0">
-                                        <thead class="table-dark">
-                                            <tr>
-                                                <th>Producto</th>
-                                                <th class="text-center">Unidades</th>
-                                                <th class="text-end">Precio Unid.</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php foreach ($ped->getDetalles() as $linea) { ?>
-                                            <tr>
-                                                <td><?php echo htmlspecialchars($linea->getProducto()->getDescripcion()); ?></td>
-                                                <td class="text-center"><?php echo $linea->getCantidad(); ?></td>
-                                                <td class="text-end"><?php echo number_format((float)$linea->getPrecio(), 2, '.', ''); ?>€</td>
-                                            </tr>
-                                            <?php } ?>
-                                        </tbody>
-                                    </table>
-                                    <?php if (strcasecmp($ped->getEstado(), "Pendiente") == 0) { ?>
-                                        <div class="text-end mt-3">
-                                            <a href="../controladores/cancelarPedido.php?id=<?php echo $ped->getId(); ?>" 
-                                               class="btn btn-sm btn-danger" 
-                                               onclick="return confirm('¿Estás seguro de que quieres cancelar este pedido?');">
-                                               Cancelar Pedido
-                                            </a>
+                        <div class="accordion shadow-sm" id="acordeonPedidos" style="border-radius: 16px; overflow: hidden;">
+                            <?php foreach ($historial as $ped) { 
+                                // Color del badge dinámico
+                                $estado = $ped->getEstado();
+                                $badgeClass = (strcasecmp($estado, 'Entregado') == 0) ? 'bg-success' : ((strcasecmp($estado, 'En Ruta') == 0 || strcasecmp($estado, 'Enviado') == 0) ? 'bg-primary' : 'bg-warning text-dark');
+                            ?>
+                            
+                            <div class="accordion-item border-0 border-bottom">
+                                <h2 class="accordion-header" id="heading<?php echo $ped->getId(); ?>">
+                                    <button class="accordion-button collapsed bg-white text-dark py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapse<?php echo $ped->getId(); ?>">
+                                        <div class="d-flex justify-content-between align-items-center w-100 pe-3">
+                                            <div>
+                                                <span class="fw-bold">Pedido #<?php echo $ped->getId(); ?></span>
+                                                <small class="text-muted ms-2 d-none d-md-inline">(<?php echo $ped->getFecha(); ?>)</small>
+                                            </div>
+                                            <div>
+                                                <span class="badge rounded-pill <?php echo $badgeClass; ?> me-3"><?php echo htmlspecialchars($estado); ?></span>
+                                                <span class="text-success fw-bold"><?php echo number_format((float)$ped->getImporteTotal(), 2, '.', ''); ?>€</span>
+                                            </div>
                                         </div>
-                                    <?php } ?>
+                                    </button>
+                                </h2>
+                                <div id="collapse<?php echo $ped->getId(); ?>" class="accordion-collapse collapse" data-bs-parent="#acordeonPedidos">
+                                    <div class="accordion-body bg-light p-4">
+                                        <table class="table table-borderless bg-white rounded-3 shadow-sm overflow-hidden mb-0">
+                                            <thead class="table-light text-secondary small text-uppercase">
+                                                <tr>
+                                                    <th class="ps-3">Servicio</th>
+                                                    <th class="text-center">Unidades</th>
+                                                    <th class="text-end pe-3">Precio Unid.</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <!-- Bucle original de los detalles -->
+                                                <?php foreach ($ped->getDetalles() as $linea) { ?>
+                                                <tr class="border-bottom">
+                                                    <td class="ps-3 fw-medium"><?php echo htmlspecialchars($linea->getProducto()->getDescripcion()); ?></td>
+                                                    <td class="text-center text-muted"><?php echo $linea->getCantidad(); ?></td>
+                                                    <td class="text-end pe-3"><?php echo number_format((float)$linea->getPrecio(), 2, '.', ''); ?>€</td>
+                                                </tr>
+                                                <?php } ?>
+                                            </tbody>
+                                        </table>
+                                        
+                                        <!-- Lógica original de Cancelar Pedido -->
+                                        <?php if (strcasecmp($ped->getEstado(), "Pendiente") == 0) { ?>
+                                            <div class="text-end mt-3">
+                                                <a href="../controladores/cancelarPedido.php?id=<?php echo $ped->getId(); ?>" 
+                                                   class="btn btn-outline-danger btn-sm rounded-pill px-3" 
+                                                   onclick="return confirm('¿Estás seguro de que quieres cancelar este pedido? Se liberará el stock.');">
+                                                   Cancelar Envío ❌
+                                                </a>
+                                            </div>
+                                        <?php } ?>
+                                    </div>
                                 </div>
                             </div>
+                            
+                            <?php } ?>
                         </div>
-                        
-                        <?php } ?>
-                    </div>
-                <?php  } ?>
+                    <?php  } ?>
+                </div>
             </div>
 
-        <?php      } 
+        <?php      
+            } // fin del else de perfil no encontrado
             } catch (Exception $e) {
-                echo "<div class='alert alert-danger mt-5 p-4'><h4>⚠️ Error detectado</h4><p>" . htmlspecialchars($e->getMessage()) . "</p></div>";
+                echo "<div class='alert alert-danger rounded-4 mt-5 p-4 shadow-sm'><h4>⚠️ Error detectado</h4><p>" . htmlspecialchars($e->getMessage()) . "</p></div>";
             }
         ?>
     </main>

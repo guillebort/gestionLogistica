@@ -10,7 +10,7 @@ $con = AccesoBD::getInstance();
 $usuarioActual = $con->obtenerUsuarioBD($codigoLogueado);
 
 if ($usuarioActual == null || $usuarioActual->getRol() != 1) {
-    header("Location: ../tienda/loginUsuario.php");
+    header("Location: ../tienda/login.php");
     exit;
 }
 

@@ -87,7 +87,7 @@ session_start();
 
                             <div class="d-grid gap-2 mt-4">
                                 <button type="submit" class="btn btn-success btn-lg">Crear Cuenta</button>
-                                <a href="loginUsuario.php" class="btn btn-outline-secondary">Cancelar y volver</a>
+                                <a href="login.php" class="btn btn-outline-secondary">Cancelar y volver</a>
                             </div>
                         </form>
                     </div>

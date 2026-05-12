@@ -12,7 +12,7 @@ class RepartidorController {
 
         // Si no está logueado o no es repartidor (rol 2), lo echamos
         if ($idRepartidor <= 0 || $rolUsuario != 2) {
-            header("Location: ../tienda/loginUsuario.php");
+            header("Location: ../tienda/login.php");
             exit;
         }
 

@@ -5,7 +5,7 @@ require_once '../modelos/AccesoBD.php';
 
 $idUsuario = $_SESSION['codigo'] ?? null;
 if ($idUsuario == null) {
-    header("Location: loginUsuario.php");
+    header("Location: login.php");
     exit;
 }
 

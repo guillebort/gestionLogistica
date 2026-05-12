@@ -3,33 +3,42 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-// Cogemos el nombre del admin de la sesión (se guarda en loginAdminController.php)
+// Cogemos el nombre del admin de la sesión
 $nombreAdmin = $_SESSION['nombreAdmin'] ?? 'Administrador';
 ?>
-<nav class="navbar navbar-dark bg-dark sticky-top shadow-sm">
-    <div class="container-fluid">
-        <!-- Título / Logo -->
-        <span class="navbar-brand mb-0 h1">⚙️ LogisTFG - Panel de Administración</span>
+<nav class="navbar navbar-expand-lg sticky-top" style="background: #1e293b; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);">
+    <div class="container-fluid px-4">
+        <!-- Logo Admin -->
+        <a class="navbar-brand fw-bold text-white d-flex align-items-center gap-2" href="index.php">
+            <span class="bg-primary rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 35px; height: 35px; font-size: 1rem;">⚙️</span> 
+            LogisTFG <span class="fw-light ms-1">Admin</span>
+        </a>
         
-        <!-- Botones de acción derecha y navegación -->
-        <div class="d-flex gap-2 align-items-center">
-            <!-- Navegación interna del Admin -->
-            <a href="index.php" class="btn btn-outline-light btn-sm d-none d-md-block">Panel</a>
-            <a href="productos.php" class="btn btn-outline-light btn-sm d-none d-md-block">Catálogo</a>
-            <a href="usuarios.php" class="btn btn-outline-light btn-sm d-none d-md-block">Usuarios</a>
-            <a href="historialPedidos.php" class="btn btn-outline-light btn-sm d-none d-md-block">Historial</a>
-            
-            <!-- Separador visual -->
-            <div class="vr bg-light mx-2 d-none d-md-block" style="width: 2px; opacity: 0.5;"></div>
-            
-            <!-- Volver a tienda -->
-            <a href="../tienda/index.php" class="btn btn-outline-info btn-sm">Tienda</a>
-            
-            <!-- Info del usuario y Botón Salir -->
-            <span class="navbar-text text-white ms-2 me-2 d-none d-lg-block">
-                <?= htmlspecialchars($nombreAdmin) ?>
-            </span>
-            <a href="../controladores/logout.php" class="btn btn-danger btn-sm">Salir</a>
+        <!-- Menú Móvil -->
+        <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navAdmin">
+            <span class="navbar-toggler-icon" style="filter: invert(1);"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navAdmin">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0 gap-2 ms-lg-4 text-center text-lg-start mt-3 mt-lg-0">
+                <li class="nav-item"><a href="index.php" class="nav-link text-light rounded-pill px-3">Dashboard</a></li>
+                <li class="nav-item"><a href="productos.php" class="nav-link text-light rounded-pill px-3">Catálogo</a></li>
+                <li class="nav-item"><a href="usuarios.php" class="nav-link text-light rounded-pill px-3">Usuarios</a></li>
+                <li class="nav-item"><a href="historialPedidos.php" class="nav-link text-light rounded-pill px-3">Envíos</a></li>
+                <li class="nav-item"><a href="mensajes.php" class="nav-link text-light rounded-pill px-3">Mensajes</a></li>
+            </ul>
+
+            <div class="d-flex flex-column flex-lg-row align-items-center gap-3 mt-3 mt-lg-0">
+                <a href="../tienda/index.php" class="btn btn-outline-light btn-sm rounded-pill px-4 fw-medium">Ver Tienda</a>
+                
+                <div class="vr bg-light mx-1 d-none d-lg-block" style="width: 1px; opacity: 0.3;"></div>
+                
+                <div class="text-white small fw-medium d-none d-lg-block">
+                    <?= htmlspecialchars($nombreAdmin) ?>
+                </div>
+                
+                <a href="../controladores/logout.php" class="btn btn-danger btn-sm rounded-pill px-4 fw-bold shadow-sm">Salir</a>
+            </div>
         </div>
     </div>
 </nav>

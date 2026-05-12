@@ -38,7 +38,7 @@ $pedidosFiltrados = $con->obtenerPedidosFiltrados($idUsuario, $idProducto, $fech
         <div class="card shadow-sm mb-4 border-primary">
             <div class="card-header bg-primary text-white">🔍 Filtros de Búsqueda Avanzada</div>
             <div class="card-body">
-                <form action="historial_pedidos.php" method="GET" class="row g-3 align-items-end">
+                <form action="historialPedidos.php" method="GET" class="row g-3 align-items-end">
                     <div class="col-md-3">
                         <label class="form-label">Usuario/Cliente</label>
                         <select name="idUsuario" class="form-select">

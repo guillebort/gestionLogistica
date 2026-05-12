@@ -6,6 +6,8 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
+    'servicios\\' => array($baseDir . '/servicios'),
+    'modelos\\' => array($baseDir . '/modelos'),
     'Svg\\' => array($vendorDir . '/dompdf/php-svg-lib/src/Svg'),
     'Sabberworm\\CSS\\' => array($vendorDir . '/sabberworm/php-css-parser/src'),
     'PHPMailer\\PHPMailer\\' => array($vendorDir . '/phpmailer/phpmailer/src'),

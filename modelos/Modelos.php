@@ -80,19 +80,6 @@ class TarjetaBD {
     }
 }
 
-class Direccion {
-    private $id, $textoDireccion, $latitud, $longitud;
-
-    public function getId() { return $this->id; }
-    public function setId($id) { $this->id = $id; }
-    public function getTextoDireccion() { return $this->textoDireccion; }
-    public function setTextoDireccion($textoDireccion) { $this->textoDireccion = $textoDireccion; }
-    public function getLatitud() { return $this->latitud; }
-    public function setLatitud($latitud) { $this->latitud = $latitud; }
-    public function getLongitud() { return $this->longitud; }
-    public function setLongitud($longitud) { $this->longitud = $longitud; }
-}
-
 class DetallePedidoBD {
     private $producto, $cantidad, $precio;
 

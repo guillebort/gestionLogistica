@@ -1,23 +1,7 @@
 <?php
 session_start();
-// --- CONTROL DE INACTIVIDAD ---
-$tiempo_limite = 900; // Tiempo en segundos (Ej: 900s = 15 minutos)
 
-// Si la variable de sesión 'ultimo_acceso' existe, comprobamos el tiempo
-if (isset($_SESSION['ultimo_acceso'])) {
-    $tiempo_transcurrido = time() - $_SESSION['ultimo_acceso'];
-    
-    // Si ha pasado más tiempo del límite, destruimos la sesión
-    if ($tiempo_transcurrido > $tiempo_limite) {
-        session_unset();
-        session_destroy();
-        // Redirigimos al login con un mensaje por URL
-        header("Location: ../tienda/loginUsuario.php?timeout=1");
-        exit;
-    }
-}
-// Actualizamos la marca de tiempo con el acceso actual
-$_SESSION['ultimo_acceso'] = time();
+require_once '../includes/controlSesion.php';
 require_once '../modelos/AccesoBD.php';
 require_once '../modelos/Modelos.php';
 

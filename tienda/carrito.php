@@ -17,49 +17,60 @@ $nombreUsuario = $_SESSION['nombreUsuario'] ?? '';
     <main class="container my-5">
         <div class="row mb-4">
             <div class="col-12 text-center">
-                <h2 class="display-6 text-primary">Resumen de Contratación</h2>
-                <p class="text-muted">Revisa tus servicios antes de finalizar el pedido.</p>
+                <h2 class="display-6 fw-bold text-dark mb-2">Resumen de Contratación</h2>
+                <p class="text-muted">Revisa tus servicios logísticos antes de configurar la ruta.</p>
             </div>
         </div>
 
-        <div class="card shadow border-0">
-            <div class="card-body p-4">
-                <div id="carrito-vacio" class="text-center py-5 d-none">
-                    <div class="mb-3" style="font-size: 3rem;">🛒</div>
-                    <h4>Tu cesta está vacía</h4>
-                    <a href="productos.php" class="btn btn-primary mt-3">Ver servicios disponibles</a>
-                </div>
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="card shadow-sm border-0" style="border-radius: 16px;">
+                    <div class="card-body p-4 p-md-5">
+                        
+                        <!-- Estado Carrito Vacío -->
+                        <div id="carrito-vacio" class="text-center py-5 d-none">
+                            <div class="mb-3 opacity-50" style="font-size: 4rem;">📦</div>
+                            <h4 class="fw-bold text-dark">Tu cesta logística está vacía</h4>
+                            <p class="text-muted mb-4">Aún no has seleccionado ningún servicio de transporte.</p>
+                            <a href="productos.php" class="btn btn-primary btn-lg rounded-pill px-4 shadow-sm">Ver tarifas de envío</a>
+                        </div>
 
-                <div id="tabla-contenedor" class="d-none">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th>Servicio Logístico</th>
-                                    <th class="text-center">Cantidad</th>
-                                    <th class="text-end">Precio</th>
-                                    <th class="text-end">Subtotal</th>
-                                    <th class="text-center">Acción</th>
-                                </tr>
-                            </thead>
-                            <tbody id="cuerpo-tabla">
-                                </tbody>
-                            <tfoot class="table-light">
-                                <tr>
-                                    <td colspan="3" class="text-end fw-bold">TOTAL ESTIMADO:</td>
-                                    <td class="text-end fw-bold text-primary fs-5" id="total-pedido">0.00€</td>
-                                    <td></td>
-                                </tr>
-                            </tfoot>
-                        </table>
+                        <!-- Estado Carrito con Productos -->
+                        <div id="tabla-contenedor" class="d-none">
+                            <div class="table-responsive mb-4">
+                                <table class="table align-middle text-nowrap">
+                                    <thead class="bg-white text-muted" style="border-bottom: 2px solid #eee;">
+                                        <tr>
+                                            <th class="fw-bold bg-transparent text-secondary border-0">Servicio Logístico</th>
+                                            <th class="text-center fw-bold bg-transparent text-secondary border-0">Cantidad</th>
+                                            <th class="text-end fw-bold bg-transparent text-secondary border-0">Precio</th>
+                                            <th class="text-end fw-bold bg-transparent text-secondary border-0">Subtotal</th>
+                                            <th class="text-center bg-transparent border-0"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="cuerpo-tabla" style="border-top: none;">
+                                        <!-- Renderizado por JS -->
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <td colspan="3" class="text-end fw-bold text-secondary pt-4 border-0">TOTAL ESTIMADO:</td>
+                                            <td class="text-end fw-bold text-success fs-4 pt-4 border-0" id="total-pedido">0.00€</td>
+                                            <td class="border-0"></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+
+                            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 pt-3 border-top">
+                                <button class="btn btn-link text-danger text-decoration-none mb-3 mb-md-0 fw-bold" onclick="vaciarCarrito()">
+                                    <small>🗑️ Vaciar Cesta</small>
+                                </button>
+                                <button class="btn btn-success btn-lg px-5 shadow rounded-pill fw-bold" onclick="EnviarCarrito('../controladores/procesarPedido_action.php', carrito)">
+                                    Configurar Ruta ➔
+                                </button>
+                            </div> 
+                        </div>
                     </div>
-
-                    <div class="d-flex justify-content-between mt-4">
-                        <button class="btn btn-outline-secondary" onclick="vaciarCarrito()">Vaciar Cesta</button>
-                        <button class="btn btn-success btn-lg px-5" onclick="EnviarCarrito('../controladores/procesarPedido_action.php', carrito)">
-                            Formalizar Pedido ➔
-                        </button>
-                    </div> 
                 </div>
             </div>
         </div>

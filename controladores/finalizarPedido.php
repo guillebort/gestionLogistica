@@ -1,9 +1,9 @@
 <?php
-session_start();
+
 
 require_once '../vendor/autoload.php';
 require_once '../modelos/AccesoBD.php';
-
+session_start();
 use servicios\pdfService;
 use servicios\mailService;
 

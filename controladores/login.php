@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         } else {
             $_SESSION['mensaje'] = "⚠️ Usuario o contraseña incorrectos.";
-            header("Location: ../tienda/loginUsuario.php");
+            header("Location: ../tienda/login.php");
             exit;
         }
     }

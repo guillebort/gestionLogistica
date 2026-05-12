@@ -7,6 +7,9 @@ $nombreUsu = $_SESSION['nombreUsuario'] ?? '';
 $textoEnlace = !empty($nombreUsu) ? "👋 Hola, " . htmlspecialchars($nombreUsu) : '👤 Usuario';
 ?>
 <header class="bg-primary text-white text-center py-4">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <h1>🚚 LogisTFG - Gestión de Repartos</h1>
 </header>
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">

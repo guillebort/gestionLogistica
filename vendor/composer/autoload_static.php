@@ -92,6 +92,14 @@ class ComposerStaticInit2185d2f99bcd56787481d9357a5972d3
     );
 
     public static $prefixLengthsPsr4 = array (
+        's' =>
+        array (
+            'servicios\\' => 10,
+        ),
+        'm' =>
+        array (
+            'modelos\\' => 8,
+        ),
         'S' =>
         array (
             'Svg\\' => 4,
@@ -116,6 +124,14 @@ class ComposerStaticInit2185d2f99bcd56787481d9357a5972d3
     );
 
     public static $prefixDirsPsr4 = array (
+        'servicios\\' =>
+        array (
+            0 => __DIR__ . '/../..' . '/servicios',
+        ),
+        'modelos\\' =>
+        array (
+            0 => __DIR__ . '/../..' . '/modelos',
+        ),
         'Svg\\' =>
         array (
             0 => __DIR__ . '/..' . '/dompdf/php-svg-lib/src/Svg',

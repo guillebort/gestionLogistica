@@ -14,7 +14,7 @@ class ProductoController {
         $nombreUsuario = $_SESSION['nombreUsuario'] ?? '';
 
         // 3. El Controlador "inyecta" los datos en la Vista
-        require_once '../tienda/vistas/productos_vista.php';
+        require_once '../tienda/productos.php';
     }
 }
 

@@ -2,6 +2,8 @@
 namespace servicios;
 
 require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../includes/config.php'; // Importamos las constantes
+
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
@@ -10,14 +12,14 @@ class MailService {
         $mail = new PHPMailer(true);
         try {
             $mail->isSMTP();
-            $mail->Host       = 'smtp.gmail.com'; 
+            $mail->Host       = MAIL_HOST; 
             $mail->SMTPAuth   = true;
-            $mail->Username   = 'tu_correo_tfg@gmail.com'; 
-            $mail->Password   = 'tu_contraseña_de_aplicacion'; 
+            $mail->Username   = MAIL_USER; 
+            $mail->Password   = MAIL_PASS; 
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port       = 587;
+            $mail->Port       = MAIL_PORT;
 
-            $mail->setFrom('no-reply@logistfg.es', 'LogisTFG');
+            $mail->setFrom(MAIL_FROM_EMAIL, MAIL_FROM_NAME);
             $mail->addAddress($usuarioDatos->getUsuario(), $usuarioDatos->getNombre());
 
             $mail->addStringAttachment($pdfOutput, "Ticket_Reserva_REF-LOGIS-{$idPedido}.pdf", 'base64', 'application/pdf');
@@ -39,3 +41,4 @@ class MailService {
         }
     }
 }
+?>

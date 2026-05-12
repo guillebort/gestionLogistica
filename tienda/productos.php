@@ -1,4 +1,11 @@
-<!-- tienda/vistas/productos_vista.php -->
+<?php
+session_start();
+require_once '../modelos/AccesoBD.php';
+require_once '../modelos/Modelos.php';
+
+$con = AccesoBD::getInstance();
+$listaProductos = $con->obtenerProductosBD();
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>

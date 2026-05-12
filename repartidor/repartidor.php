@@ -1,3 +1,43 @@
+
+<?php
+session_start();
+// --- CONTROL DE INACTIVIDAD ---
+$tiempo_limite = 900; // Tiempo en segundos (Ej: 900s = 15 minutos)
+
+// Si la variable de sesión 'ultimo_acceso' existe, comprobamos el tiempo
+if (isset($_SESSION['ultimo_acceso'])) {
+    $tiempo_transcurrido = time() - $_SESSION['ultimo_acceso'];
+    
+    // Si ha pasado más tiempo del límite, destruimos la sesión
+    if ($tiempo_transcurrido > $tiempo_limite) {
+        session_unset();
+        session_destroy();
+        // Redirigimos al login con un mensaje por URL
+        header("Location: ../tienda/loginUsuario.php?timeout=1");
+        exit;
+    }
+}
+// Actualizamos la marca de tiempo con el acceso actual
+$_SESSION['ultimo_acceso'] = time();
+require_once '../modelos/AccesoBD.php';
+
+// 1. Validación de seguridad y rol
+$rolUsuario = $_SESSION['rol'] ?? 0; 
+$idRepartidor = $_SESSION['codigo'] ?? 0;
+
+// Si no está logueado o no es repartidor (rol 2), lo echamos a la pantalla de login
+if ($idRepartidor <= 0 || $rolUsuario != 2) {
+    header("Location: ../tienda/loginUsuario.php");
+    exit;
+}
+
+// 2. Conexión al Modelo para obtener los datos de MySQL
+$con = AccesoBD::getInstance();
+$nombreRepartidor = $_SESSION['nombreUsuario'] ?? 'Repartidor';
+
+// 3. Obtenemos las rutas/pedidos asignados a este repartidor en concreto
+$paradas = $con->obtenerRutasRepartidor($idRepartidor);
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>

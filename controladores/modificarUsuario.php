@@ -1,11 +1,11 @@
 <?php
-// --- Archivo: modificarUsuario.php ---
+
 session_start();
 require_once '../modelos/AccesoBD.php';
 
 $codigo = $_SESSION['codigo'] ?? 0;
 if ($codigo <= 0) {
-    header("Location: loginUsuario.php");
+    header("Location: ../tienda/loginUsuario.php");
     exit;
 }
 
@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!empty($clave1) && $clave1 !== $clave2) {
         $_SESSION['mensaje'] = "❌ Las contraseñas no coinciden.";
-        header("Location: usuario.php");
+        header("Location: ../tienda/usuario.php");
         exit;
     }
 
@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $exito = $con->modificarUsuarioBD($codigo, $clave1, $nombre, $apellidos, $domicilio, $poblacion, $provincia, $cp, $telefono);
 
     $_SESSION['mensaje'] = $exito ? "✅ Perfil actualizado correctamente." : "❌ Hubo un error al actualizar tus datos.";
-    header("Location: usuario.php");
+    header("Location: ../tienda/usuario.php");
     exit;
 }
 ?>

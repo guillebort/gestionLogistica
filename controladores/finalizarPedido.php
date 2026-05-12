@@ -2,8 +2,8 @@
 session_start();
 
 require_once '../vendor/autoload.php';
+require_once '../modelos/AccesoBD.php';
 
-use modelos\AccesBD;
 use servicios\pdfService;
 use servicios\mailService;
 
@@ -29,7 +29,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $total = $_SESSION['totalPedido'];
     $dirOrigen = $_SESSION['direccionOrigen'];
-    // ... [Recoger resto de variables de sesión de ruta] ...
+    $latOrigen = $_SESSION['latOrigen'] ?? 0.0;
+    $lonOrigen = $_SESSION['lonOrigen'] ?? 0.0;
+    $dirDestino = $_SESSION['direccionDestino'] ?? '';
+    $latDestino = $_SESSION['latDestino'] ?? 0.0;
+    $lonDestino = $_SESSION['lonDestino'] ?? 0.0;
 
     // 1. Guardar en Base de Datos
     $idNuevoPedido = $con->guardarPedido($idUsuario, $total, $carrito, $dirOrigen, $latOrigen, $lonOrigen, $dirDestino, $latDestino, $lonDestino);

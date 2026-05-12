@@ -1,11 +1,17 @@
-// js/logica.js
+/**
+ * TFG - LogisTFG
+ * Archivo Principal de Lógica Frontend
+ */
 
 const DB_NAME = 'LogisTFG_Offline';
 const STORE_NAME = 'entregas_pendientes';
-// Esperamos a que toda la página HTML cargue antes de ejecutar nada
+
+/* ==========================================
+   1. EVENTOS (Esperamos a que cargue el DOM)
+   ========================================== */
 document.addEventListener('DOMContentLoaded', () => {
 
-    // 1. LÓGICA DE USUARIO (usuario.html)
+    // --- 1. LÓGICA DE USUARIO (usuario.html) ---
     const radioAcceso = document.getElementById('radioAcceso');
     const radioRegistro = document.getElementById('radioRegistro');
     if (radioAcceso && radioRegistro) {
@@ -13,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
         radioRegistro.addEventListener('change', cambiarModoUsuario);
     }
 
-    // 2. LÓGICA DE PRODUCTOS (productos.html)
+    // --- 2. LÓGICA DE PRODUCTOS (productos.html) ---
     const botonesAñadir = document.querySelectorAll('.btn-add-carrito');
     botonesAñadir.forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -23,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // 3. LÓGICA DE CARRITO (carrito.html)
+    // --- 3. LÓGICA DE CARRITO (carrito.html) ---
     const inputsCantidad = document.querySelectorAll('.input-cantidad');
     inputsCantidad.forEach(input => {
         input.addEventListener('change', recalcularCarrito);
@@ -48,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 4. LÓGICA MI CUENTA (miCuenta.html)
+    // --- 4. LÓGICA MI CUENTA (miCuenta.html) ---
     const botonesCancelar = document.querySelectorAll('.btn-cancelar-pedido');
     botonesCancelar.forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -57,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // 5. LÓGICA CHECKOUT (checkout.html)
+    // --- 5. LÓGICA CHECKOUT (checkout.html) ---
     const formCheckout = document.getElementById('formCheckout');
     if (formCheckout) {
         formCheckout.addEventListener('submit', () => {
@@ -65,100 +71,50 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 6. LÓGICA DEL REPARTIDOR (repartidor.php)
-    // js/logica.js - Fragmento del optimizador de rutas
+    // --- 6. LÓGICA PARA LA PASARELA DE PAGO (Tarjetas) ---
+    const selectTarjeta = document.getElementById('tarjetaGuardada');
+    const seccionNueva = document.getElementById('seccionNuevaTarjeta');
 
-const btnOptimizar = document.getElementById('btn-optimizar-ruta');
-if (btnOptimizar) {
-    btnOptimizar.addEventListener('click', () => {
-        if (!map) return;
+    if (selectTarjeta) {
+        selectTarjeta.addEventListener('change', alternarCamposTarjeta);
+    }
+    if (seccionNueva) {
+        alternarCamposTarjeta();
+    }
 
-        // Recogemos todos los botones de simulación que contienen las coordenadas
-        const paradas = document.querySelectorAll('.btn-simular-ruta');
-        if (paradas.length === 0) {
-            alert("No hay entregas pendientes para optimizar en esta ruta.");
-            return;
-        }
-
-        // Limpiamos rutas o marcadores anteriores del mapa
-        if (controlRuta != null) map.removeControl(controlRuta);
-        if (cocheMarker != null) map.removeLayer(cocheMarker);
-
-        // 1. DEFINIR EL PUNTO DE ORIGEN
-        // Tomamos el origen del primer paquete como punto de partida (Central Logística)
-        const latOrigen = parseFloat(paradas[0].getAttribute('data-lato'));
-        const lonOrigen = parseFloat(paradas[0].getAttribute('data-lono'));
-        let posicionActual = L.latLng(latOrigen, lonOrigen);
-
-        // 2. EXTRAER DESTINOS PENDIENTES
-        let pendientes = [];
-        paradas.forEach(btn => {
-            pendientes.push({
-                lat: parseFloat(btn.getAttribute('data-latd')),
-                lng: parseFloat(btn.getAttribute('data-lond'))
-            });
+    const inputTarjeta = document.getElementById('numeroTarjeta');
+    if (inputTarjeta) {
+        inputTarjeta.addEventListener('input', function (e) {
+            let input = e.target.value.replace(/\D/g, ''); 
+            if (input.length > 16) input = input.substring(0, 16);
+            e.target.value = input.replace(/(\d{4})(?=\d)/g, '$1 ');
         });
+    }
 
-        // 3. ALGORITMO: EL VECINO MÁS CERCANO (Nearest Neighbor Heuristic)
-        let rutaOptima = [posicionActual]; // Empezamos la ruta en la central
-
-        while (pendientes.length > 0) {
-            let indiceMasCercano = -1;
-            let distanciaMin = Infinity;
-
-            // Evaluamos la distancia desde nuestra posición actual a todos los nodos no visitados
-            for (let i = 0; i < pendientes.length; i++) {
-                let destinoEval = L.latLng(pendientes[i].lat, pendientes[i].lng);
-                
-                // distanceTo usa la fórmula de Haversine internamente en Leaflet
-                let dist = posicionActual.distanceTo(destinoEval); 
-                
-                if (dist < distanciaMin) {
-                    distanciaMin = dist;
-                    indiceMasCercano = i;
-                }
+    const inputCaducidad = document.getElementById('caducidadTarjeta');
+    if (inputCaducidad) {
+        inputCaducidad.addEventListener('input', function (e) {
+            let input = e.target.value.replace(/\D/g, ''); 
+            if (input.length > 6) input = input.substring(0, 6);
+            if (input.length > 2) {
+                e.target.value = input.substring(0, 2) + '/' + input.substring(2);
+            } else {
+                e.target.value = input;
             }
+        });
+    }
 
-            // Movemos la "posición actual" al nodo más cercano encontrado
-            posicionActual = L.latLng(pendientes[indiceMasCercano].lat, pendientes[indiceMasCercano].lng);
-            
-            // Añadimos el nodo a nuestra ruta ordenada
-            rutaOptima.push(posicionActual);
-            
-            // Lo eliminamos de la lista de pendientes para no volver a visitarlo
-            pendientes.splice(indiceMasCercano, 1); 
-        }
+    // --- 7. AUTOCOMPLETADO DE DIRECCIONES (Nominatim OSM) ---
+    activarAutocompletado('input_origen', 'lista_origen', 'lat_origen', 'lon_origen');
+    activarAutocompletado('input_destino', 'lista_destino', 'lat_destino', 'lon_destino');
+    activarAutocompletadoUnico('input_direccion', 'lista_sugerencias');
 
-        // 4. DIBUJAR LA RUTA OPTIMIZADA EN LEAFLET
-        controlRuta = L.Routing.control({
-            waypoints: rutaOptima,
-            routeWhileDragging: false, // Desactiva recalcular al arrastrar (ahorra batería en móvil)
-            addWaypoints: false,
-            fitSelectedRoutes: true,
-            lineOptions: {
-                styles: [{color: '#198754', opacity: 0.8, weight: 6}] // Línea verde estilo "Ruta Óptima"
-            },
-            createMarker: function(i, wp, nWps) {
-                if (i === 0) {
-                    return L.marker(wp.latLng).bindPopup("<b>🟢 Central Logística (Inicio)</b>");
-                } else {
-                    return L.marker(wp.latLng).bindPopup("<b>📍 Parada " + i + "</b>");
-                }
-            }
-        }).addTo(map);
-
-        // Hacemos scroll hacia arriba para que el repartidor vea el mapa
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-}
-    
-    // --- Lógica del Mapa (Leaflet + Routing) ---
-   const mapaElem = document.getElementById('mapa-repartidor');
+    // --- 8. LÓGICA DEL MAPA DEL REPARTIDOR (Leaflet + Routing) ---
+    const mapaElem = document.getElementById('mapa-repartidor');
     let map = null;
     let controlRuta = null;
-    let cocheMarker = null; // Variable para nuestro coche animado
+    let cocheMarker = null;
 
-    // Solo inicializar si estamos en la vista que tiene el mapa
     if (mapaElem) {
         map = L.map('mapa-repartidor').setView([39.4699, -0.3762], 12);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -166,26 +122,20 @@ if (btnOptimizar) {
         }).addTo(map);
     }
 
-    // Definimos el icono del coche (puedes usar un emoji o una imagen PNG real)
     const iconoCoche = L.divIcon({
         html: '<div style="font-size: 24px; transform: scaleX(-1);">🚗</div>',
         className: 'icono-coche-custom',
         iconSize: [30, 30],
-        iconAnchor: [15, 15] // Centramos el icono
+        iconAnchor: [15, 15]
     });
 
+    // Simulación de ruta individual
     const botonesSimular = document.querySelectorAll('.btn-simular-ruta');
     botonesSimular.forEach(btn => {
         btn.addEventListener('click', (e) => {
             if (!map) return;
-
-            // Limpiar ruta y coche anteriores
-            if (controlRuta != null) {
-                map.removeControl(controlRuta);
-            }
-            if (cocheMarker != null) {
-                map.removeLayer(cocheMarker);
-            }
+            if (controlRuta != null) map.removeControl(controlRuta);
+            if (cocheMarker != null) map.removeLayer(cocheMarker);
 
             const latO = e.target.getAttribute('data-lato');
             const lonO = e.target.getAttribute('data-lono');
@@ -197,128 +147,93 @@ if (btnOptimizar) {
                 return;
             }
 
-            // Trazar la nueva ruta
             controlRuta = L.Routing.control({
-                waypoints: [
-                    L.latLng(latO, lonO), // Origen
-                    L.latLng(latD, lonD)  // Destino
-                ],
+                waypoints: [L.latLng(latO, lonO), L.latLng(latD, lonD)],
                 routeWhileDragging: false,
                 addWaypoints: false,
                 fitSelectedRoutes: true,
-                lineOptions: {
-                    styles: [{color: '#0d6efd', opacity: 0.8, weight: 6}]
-                },
+                lineOptions: { styles: [{color: '#0d6efd', opacity: 0.8, weight: 6}] },
                 createMarker: function(i, wp, nWps) {
                     var texto = (i === 0) ? "🟢 Origen" : "📍 Destino";
                     return L.marker(wp.latLng).bindPopup(texto);
                 }
             }).addTo(map);
 
-            // --- MAGIA DE LA ANIMACIÓN ---
-            // Escuchamos el evento cuando la ruta ya se ha calculado
             controlRuta.on('routesfound', function(e) {
-                const rutas = e.routes;
-                const coordenadas = rutas[0].coordinates; // Puntos de la ruta
-                
-                // 1. CÁLCULO DEL ÁNGULO INICIAL (Para que no salga torcido desde el segundo cero)
-                const dyInicial = coordenadas[1].lat - coordenadas[0].lat;
-                const dxInicial = coordenadas[1].lng - coordenadas[0].lng;
-                
-                // EL TRUCO: Restamos 90 grados porque el emoji 🚗 mira hacia la derecha por defecto
-                let anguloAnterior = (Math.atan2(dxInicial, dyInicial) * (180 / Math.PI)) - 90;
-                
-                // 2. Creamos el icono del coche ya con la rotación inicial aplicada en el atributo style
-                const iconoCocheRealista = L.divIcon({
-                    html: `<div id="coche-animado" style="font-size: 24px; transition: transform 0.1s linear; transform: rotate(${anguloAnterior}deg);">🚗</div>`,
-                    className: 'icono-coche-custom',
-                    iconSize: [30, 30],
-                    iconAnchor: [15, 15]
-                });
-
-                // Lo colocamos en el punto de salida
-                cocheMarker = L.marker([coordenadas[0].lat, coordenadas[0].lng], {icon: iconoCocheRealista}).addTo(map);
-                
-                let i = 0;
-                
-                function moverCoche() {
-                    if (i < coordenadas.length - 1) {
-                        const puntoActual = coordenadas[i];
-                        const puntoSiguiente = coordenadas[i + 1];
-
-                        // Movemos el marcador al siguiente punto
-                        cocheMarker.setLatLng([puntoSiguiente.lat, puntoSiguiente.lng]);
-
-                        // 3. CÁLCULO DEL ÁNGULO EN MOVIMIENTO
-                        const dy = puntoSiguiente.lat - puntoActual.lat;
-                        const dx = puntoSiguiente.lng - puntoActual.lng;
-                        
-                        // Evitamos temblores visuales si el coche casi no se mueve entre dos coordenadas
-                        if (Math.abs(dx) > 0.00005 || Math.abs(dy) > 0.00005) {
-                            
-                            // Volvemos a aplicar el offset de -90 grados al ángulo nuevo
-                            let anguloNuevo = (Math.atan2(dx, dy) * (180 / Math.PI)) - 90; 
-                            
-                            let diferencia = anguloNuevo - anguloAnterior;
-                            
-                            // Obligamos a CSS a girar por el camino más corto
-                            if (diferencia > 180) {
-                                diferencia -= 360;
-                            } else if (diferencia < -180) {
-                                diferencia += 360;
-                            }
-                            
-                            // Acumulamos el ángulo para que las transiciones de CSS sigan siendo suaves
-                            let anguloFinal = anguloAnterior + diferencia;
-                            anguloAnterior = anguloFinal; 
-
-                            const cocheDOM = document.getElementById('coche-animado');
-                            if (cocheDOM) {
-                                cocheDOM.style.transform = `rotate(${anguloFinal}deg)`;
-                            }
-                        }
-
-                        // Cálculo del tiempo (velocidad constante)
-                        const latLngActual = L.latLng(puntoActual.lat, puntoActual.lng);
-                        const latLngSiguiente = L.latLng(puntoSiguiente.lat, puntoSiguiente.lng);
-                        const distanciaMetros = latLngActual.distanceTo(latLngSiguiente);
-                        
-                        let tiempoEspera = distanciaMetros * 15; 
-                        if (tiempoEspera < 30) tiempoEspera = 30; 
-                        if (tiempoEspera > 800) tiempoEspera = 800;
-
-                        i++; 
-                        setTimeout(moverCoche, tiempoEspera);
-                        
-                    } else {
-                        // Fin de la ruta
-                        cocheMarker.bindPopup("<b>📍 ¡Paquete entregado!</b><br>El repartidor ha llegado a su destino.").openPopup();
-                    }
-                }
-                
-                // Empezamos la animación tras 1.5 segundos
-                setTimeout(moverCoche, 1500); 
+                animarCocheEnRuta(e.routes[0].coordinates, map);
             });
-            
-            // Subimos la pantalla suavemente
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
     });
 
-    // --- Lógica de Entregas e Incidencias ---
+    // Optimización de rutas (Vecino más cercano)
+    const btnOptimizar = document.getElementById('btn-optimizar-ruta');
+    if (btnOptimizar) {
+        btnOptimizar.addEventListener('click', () => {
+            if (!map) return;
+            const paradas = document.querySelectorAll('.btn-simular-ruta');
+            if (paradas.length === 0) {
+                alert("No hay entregas pendientes para optimizar en esta ruta.");
+                return;
+            }
+
+            if (controlRuta != null) map.removeControl(controlRuta);
+            if (cocheMarker != null) map.removeLayer(cocheMarker);
+
+            const latOrigen = parseFloat(paradas[0].getAttribute('data-lato'));
+            const lonOrigen = parseFloat(paradas[0].getAttribute('data-lono'));
+            let posicionActual = L.latLng(latOrigen, lonOrigen);
+
+            let pendientes = [];
+            paradas.forEach(btn => {
+                pendientes.push({
+                    lat: parseFloat(btn.getAttribute('data-latd')),
+                    lng: parseFloat(btn.getAttribute('data-lond'))
+                });
+            });
+
+            let rutaOptima = [posicionActual];
+            while (pendientes.length > 0) {
+                let indiceMasCercano = -1;
+                let distanciaMin = Infinity;
+                for (let i = 0; i < pendientes.length; i++) {
+                    let destinoEval = L.latLng(pendientes[i].lat, pendientes[i].lng);
+                    let dist = posicionActual.distanceTo(destinoEval); 
+                    if (dist < distanciaMin) {
+                        distanciaMin = dist;
+                        indiceMasCercano = i;
+                    }
+                }
+                posicionActual = L.latLng(pendientes[indiceMasCercano].lat, pendientes[indiceMasCercano].lng);
+                rutaOptima.push(posicionActual);
+                pendientes.splice(indiceMasCercano, 1); 
+            }
+
+            controlRuta = L.Routing.control({
+                waypoints: rutaOptima,
+                routeWhileDragging: false,
+                addWaypoints: false,
+                fitSelectedRoutes: true,
+                lineOptions: { styles: [{color: '#198754', opacity: 0.8, weight: 6}] },
+                createMarker: function(i, wp, nWps) {
+                    if (i === 0) return L.marker(wp.latLng).bindPopup("<b>🟢 Central Logística (Inicio)</b>");
+                    return L.marker(wp.latLng).bindPopup("<b>📍 Parada " + i + "</b>");
+                }
+            }).addTo(map);
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
+
+    // Gestión de entregas e incidencias
     const botonesEntregado = document.querySelectorAll('.btn-entregado');
     const botonesIncidencia = document.querySelectorAll('.btn-incidencia');
-    let entregasCompletadas = 0;
-    
-    // Obtenemos el total de entregas desde el DOM
-    const totalEntregasElem = document.getElementById('total-entregas');
-    const totalEntregas = totalEntregasElem ? parseInt(totalEntregasElem.innerText) : 0;
 
     botonesEntregado.forEach(btn => {
         btn.addEventListener('click', (e) => {
             if(confirm("¿Confirmar entrega exitosa?")) {
                 const pedidoId = e.target.getAttribute('data-pedido');
-                procesarEstadoReparto(pedidoId, 3, e.target.closest('.card')); // 3 = Entregado
+                procesarEstadoReparto(pedidoId, 3, e.target.closest('.card')); 
             }
         });
     });
@@ -328,80 +243,19 @@ if (btnOptimizar) {
             const motivo = prompt("Describe la incidencia (Ej: Ausente, Dirección incorrecta):");
             if (motivo) {
                 const pedidoId = e.target.getAttribute('data-pedido');
-                procesarEstadoReparto(pedidoId, 4, e.target.closest('.card'), motivo); // 4 = Incidencia/Cancelado
+                procesarEstadoReparto(pedidoId, 4, e.target.closest('.card'), motivo); 
             }
         });
     });
 
-    function initDB() {
-    return new Promise((resolve, reject) => {
-        let request = indexedDB.open(DB_NAME, 1);
-        request.onupgradeneeded = (e) => {
-            let db = e.target.result;
-            if (!db.objectStoreNames.contains(STORE_NAME)) {
-                db.createObjectStore(STORE_NAME, { autoIncrement: true });
-            }
-        };
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
-    });
-}
+    // Iniciar IndexedDB para modo offline
+    initDB();
 
-// Guardar la acción si no hay internet
-function guardarEnIndexedDB(payload) {
-    initDB().then(db => {
-        let tx = db.transaction(STORE_NAME, 'readwrite');
-        tx.objectStore(STORE_NAME).add(payload);
-        console.log("Acción guardada en local (IndexedDB) para futura sincronización.");
-    });
-}
-    // Función que envía la petición a PHP y actualiza la UI
-    // js/logica.js (Modificación sugerida)
-function procesarEstadoReparto(idPedido, nuevoEstado, cardElement, motivo = '') {
-    function procesarEstadoReparto(idPedido, nuevoEstado, cardElement, motivo = '') {
-    const payload = `idPedido=${idPedido}&estado=${nuevoEstado}&motivo=${encodeURIComponent(motivo)}`;
-
-    fetch('../controladores/actualizarEstadoReparto.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: payload
-    })
-    .then(response => {
-        if (!response.ok) throw new Error("Fallo de red");
-        return response.text();
-    })
-    .then(data => {
-        if(data.trim() === "OK") {
-            // Efecto visual de desaparición
-            cardElement.style.transition = "opacity 0.5s, transform 0.5s";
-            cardElement.style.opacity = "0";
-            cardElement.style.transform = "translateX(100%)";
-            setTimeout(() => cardElement.remove(), 500);
-        } else {
-            alert("Error al actualizar la base de datos MySQL.");
-        }
-    })
-    .catch(error => {
-        console.warn("Sin conexión. Guardando entrega en modo offline.");
-        
-        guardarEnIndexedDB(payload);
-        
-        // Registrar el evento de sincronización en el Service Worker
-        if ('serviceWorker' in navigator && 'SyncManager' in window) {
-            navigator.serviceWorker.ready.then(function(swRegistration) {
-                return swRegistration.sync.register('sync-entregas');
-            });
-        }
-        
-        // Feedback visual para el repartidor (Ocultamos la tarjeta)
-        cardElement.style.opacity = "0.5";
-        alert("Sin conexión. La entrega se sincronizará automáticamente al recuperar la señal.");
-    });
-}
+}); // FIN DEL DOMContentLoaded
 
 
 /* ==========================================
-   FUNCIONES AUXILIARES
+   2. FUNCIONES GLOBALES / AUXILIARES
    ========================================== */
 
 function cambiarModoUsuario() {
@@ -409,23 +263,17 @@ function cambiarModoUsuario() {
     const camposRegistro = document.getElementById('campos_registro');
     const btnSubmit = document.getElementById('btn_submit');
     const inputsExtra = camposRegistro.querySelectorAll('input');
-    
     const formulario = btnSubmit.closest('form');
 
     if (radioRegistro.checked) {
         camposRegistro.classList.remove('d-none');
         btnSubmit.textContent = 'Registrarse';
         inputsExtra.forEach(input => input.setAttribute('required', 'true'));
-        
-        // CORREGIDO: Redirigimos al controlador de registro PHP
         if (formulario) formulario.action = '../controladores/registro.php';
-        
     } else {
         camposRegistro.classList.add('d-none');
         btnSubmit.textContent = 'Entrar';
         inputsExtra.forEach(input => input.removeAttribute('required'));
-        
-        // CORREGIDO: Redirigimos al controlador de login PHP
         if (formulario) formulario.action = '../controladores/login.php';
     }
 }
@@ -433,7 +281,6 @@ function cambiarModoUsuario() {
 function recalcularCarrito() {
     let filas = document.querySelectorAll("#cuerpo_carrito tr");
     let totalGeneral = 0;
-
     filas.forEach(fila => {
         let id = fila.id.split('_')[1];
         let precioElem = document.getElementById('precio_' + id);
@@ -446,7 +293,6 @@ function recalcularCarrito() {
         document.getElementById('sub_' + id).innerText = subtotal.toFixed(2);
         totalGeneral += subtotal;
     });
-
     let totalElem = document.getElementById('total_carrito');
     if(totalElem) totalElem.innerText = totalGeneral.toFixed(2);
 }
@@ -457,8 +303,6 @@ function eliminarFilaCarrito(idFila) {
         fila.parentNode.removeChild(fila);
         recalcularCarrito();
     }
-    
-    // Si el carrito se vacía
     if (document.querySelectorAll("#cuerpo_carrito tr").length === 0) {
         document.getElementById('cuerpo_carrito').innerHTML = "<tr><td colspan='5' class='text-center text-muted'>Tu carrito está vacío.</td></tr>";
         document.getElementById('total_carrito').innerText = "0.00";
@@ -478,194 +322,120 @@ function cancelarPedido(idFila) {
     }
 }
 
-function marcarParada(idParada, estado) {
-    const parada = document.getElementById(idParada);
-    if (!parada) return;
-
-    if (estado === 'entregado') {
-        parada.classList.remove('list-group-item-action');
-        parada.classList.add('list-group-item-success', 'text-muted');
-        parada.innerHTML = `<div class="d-flex w-100 justify-content-between">
-                                <h5 class="mb-1 fw-bold text-decoration-line-through">` + parada.querySelector('h5').innerText + `</h5>
-                                <span class="badge bg-success align-self-start">✔️ Completado</span>
-                            </div>`;
-        
-        // Actualizar contador
-        let contadorElem = document.getElementById('contador-entregas');
-        if (contadorElem) {
-            let textoActual = contadorElem.innerText;
-            let entregados = parseInt(textoActual.split(' / ')[0]) + 1;
-            let total = textoActual.split(' / ')[1];
-            contadorElem.innerText = `${entregados} / ${total}`;
-        }
-    } else if (estado === 'incidencia') {
-        let motivo = prompt("Describe el motivo de la incidencia (ej. Ausente, Dirección incorrecta):");
-        if (motivo) {
-            parada.classList.add('list-group-item-danger');
-            parada.querySelector('.badge').className = "badge bg-danger text-white align-self-start";
-            parada.querySelector('.badge').innerText = "❌ Incidencia";
-            alert("Incidencia reportada a la central: " + motivo);
-        }
-    }
-}
-
-// Validar que las contraseñas de modificación coinciden
 function validarModificacion() {
     var inputPass1 = document.getElementById("mod_pass1");
     var inputPass2 = document.getElementById("mod_pass2");
-    
-    var p1 = inputPass1.value;
-    var p2 = inputPass2.value;
-    
-    if (p1 !== "" || p2 !== "") {
-        if (p1 !== p2) {
+    if (inputPass1.value !== "" || inputPass2.value !== "") {
+        if (inputPass1.value !== inputPass2.value) {
             document.getElementById("errorModPass").classList.remove("d-none");
             inputPass1.value = "";
             inputPass2.value = "";
-
             inputPass1.focus();
-            
-            return false; // Detiene el envío
+            return false; 
         }
     }
     document.getElementById("errorModPass").classList.add("d-none");
-    return true; // Permite el envío
+    return true; 
 }
 
-function limpiarCarritoLocal() {
+function limpiarCarritoLocal(event) {
     if (event) event.preventDefault();
-    
-    // Vaciamos el carrito del navegador
     localStorage.removeItem("mi-carrito");
     sessionStorage.clear();
-    
-    // Viajamos al Servlet/Controlador de Java/PHP para destruir la sesión del servidor
     window.location.href = '../controladores/logout.php';
 }
 
 function verificarPasswords() {
     var inputPass1 = document.getElementById("pass1");
     var inputPass2 = document.getElementById("pass2");
-    
     if (inputPass1 && inputPass2) {
         if (inputPass1.value !== inputPass2.value) {
             document.getElementById("errorPass").style.display = "block";
-            return false; // Detiene el envío del formulario
+            return false; 
         }
     }
-    return true; // Permite el envío
+    return true; 
 }
 
-// ==============================================================
-// 🛒 LÓGICA PARA LA PASARELA DE PAGO (Tarjetas y Autocompletado)
-// ==============================================================
-
-// 1. Función para mostrar/ocultar y AUTOCOMPLETAR las tarjetas
 function alternarCamposTarjeta() {
     const select = document.getElementById('tarjetaGuardada');
     const seccion = document.getElementById('seccionNuevaTarjeta');
-    
-    // Inputs del formulario
     const inputNum = document.getElementById('numeroTarjeta');
     const inputTit = document.getElementById('titularTarjeta');
     const inputCad = document.getElementById('caducidadTarjeta');
 
-    // Si no estamos en la página de pago, cortamos la ejecución aquí
     if (!seccion) return;
 
     if (!select || select.value === "NUEVA") {
-        // MODO MANUAL: Mostrar formulario y limpiar campos
         seccion.style.display = "block";
         inputNum.value = "";
         inputTit.value = "";
         inputCad.value = "";
-        
-        // Volvemos a hacer obligatorios los campos
         const inputs = seccion.querySelectorAll('input');
         inputs.forEach(i => { if(i.type !== 'checkbox') i.required = true; });
-        
     } else {
-        // MODO AUTOMÁTICO: Leer los atributos 'data-' ocultos en el HTML
         const opcionElegida = select.options[select.selectedIndex];
-        
         inputNum.value = opcionElegida.getAttribute('data-numero');
         inputTit.value = opcionElegida.getAttribute('data-titular');
         inputCad.value = opcionElegida.getAttribute('data-caducidad');
-        
-        // Ocultar formulario visualmente (los datos se enviarán igual)
         seccion.style.display = "none";
-        
-        // Quitamos la obligatoriedad porque ya están rellenos (aunque no se vean)
         const inputs = seccion.querySelectorAll('input');
         inputs.forEach(i => i.required = false);
     }
 }
 
+function activarAutocompletado(idInput, idLista, idLat, idLon) {
+    const inputElement = document.getElementById(idInput);
+    const listaElement = document.getElementById(idLista);
+    let temporizador;
 
-// ==============================================================
-// 🚀 INICIALIZACIÓN DE EVENTOS (Cuando la página termina de cargar)
-// ==============================================================
-document.addEventListener("DOMContentLoaded", function() {
+    if (!inputElement) return;
 
-    // --- A. GESTIÓN DEL DESPLEGABLE DE TARJETAS ---
-    const selectTarjeta = document.getElementById('tarjetaGuardada');
-    const seccionNueva = document.getElementById('seccionNuevaTarjeta');
+    inputElement.addEventListener('input', function() {
+        const query = this.value.trim();
+        if (query.length < 3) {
+            listaElement.style.display = 'none';
+            return;
+        }
 
-    // Escuchar cuando el usuario cambie de opción en el desplegable
-    if (selectTarjeta) {
-        selectTarjeta.addEventListener('change', alternarCamposTarjeta);
-    }
+        clearTimeout(temporizador);
+        temporizador = setTimeout(() => {
+            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&addressdetails=1&limit=5&countrycodes=es`;
+            fetch(url, { headers: { "Accept-Language": "es" } })
+                .then(response => response.json())
+                .then(data => {
+                    listaElement.innerHTML = '';
+                    if (data && data.length > 0) {
+                        listaElement.style.display = 'block';
+                        data.forEach(place => {
+                            const li = document.createElement('li');
+                            li.className = 'list-group-item list-group-item-action cursor-pointer';
+                            li.innerHTML = `<strong>${place.display_name.split(',')[0]}</strong> <small class="text-muted d-block">${place.display_name}</small>`;
+                            
+                            li.onclick = function() {
+                                inputElement.value = place.display_name.split(',')[0];
+                                document.getElementById(idLat).value = place.lat;
+                                document.getElementById(idLon).value = place.lon;
+                                listaElement.style.display = 'none';
+                            };
+                            listaElement.appendChild(li);
+                        });
+                    }
+                })
+                .catch(err => console.error("Fallo OSM:", err));
+        }, 500);
+    });
 
-    // Comprobar el estado inicial al entrar a la página
-    if (seccionNueva) {
-        alternarCamposTarjeta();
-    }
+    document.addEventListener('click', function(e) {
+        if (!inputElement.contains(e.target) && !listaElement.contains(e.target)) {
+            listaElement.style.display = 'none';
+        }
+    });
+}
 
-
-    // --- B. MAGIA 1: FORMATEO DEL NÚMERO DE TARJETA ---
-    const inputTarjeta = document.getElementById('numeroTarjeta');
-    if (inputTarjeta) {
-        inputTarjeta.addEventListener('input', function (e) {
-            // 1. Borramos todo lo que no sean números
-            let input = e.target.value.replace(/\D/g, ''); 
-            
-            // 2. Lo cortamos a 16 números como máximo
-            if (input.length > 16) {
-                input = input.substring(0, 16);
-            }
-            
-            // 3. Le añadimos un espacio cada 4 números
-            let formateado = input.replace(/(\d{4})(?=\d)/g, '$1 ');
-            e.target.value = formateado;
-        });
-    }
-
-
-    // --- C. MAGIA 2: FORMATEO DE LA CADUCIDAD (MM/AAAA) ---
-    const inputCaducidad = document.getElementById('caducidadTarjeta');
-    if (inputCaducidad) {
-        inputCaducidad.addEventListener('input', function (e) {
-            // 1. Borramos todo lo que no sean números
-            let input = e.target.value.replace(/\D/g, ''); 
-            
-            // 2. Lo cortamos a 6 números máximo (2 mes, 4 año)
-            if (input.length > 6) {
-                input = input.substring(0, 6);
-            }
-            
-            // 3. Si ya han escrito el mes, le colamos la barra '/'
-            if (input.length > 2) {
-                e.target.value = input.substring(0, 2) + '/' + input.substring(2);
-            } else {
-                e.target.value = input;
-            }
-        });
-    }
-
-});
-document.addEventListener("DOMContentLoaded", function() {
-    const inputDireccion = document.getElementById('input_direccion');
-    const listaSugerencias = document.getElementById('lista_sugerencias');
+function activarAutocompletadoUnico(idInput, idLista) {
+    const inputDireccion = document.getElementById(idInput);
+    const listaSugerencias = document.getElementById(idLista);
     let temporizador;
 
     if (inputDireccion) {
@@ -678,9 +448,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
             clearTimeout(temporizador);
             temporizador = setTimeout(() => {
-                // CAMBIO A NOMINATIM: Más estable y sin bloqueos raros
                 const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&addressdetails=1&limit=5&countrycodes=es`;
-
                 fetch(url, { headers: { "Accept-Language": "es" } })
                     .then(response => response.json())
                     .then(data => {
@@ -691,137 +459,174 @@ document.addEventListener("DOMContentLoaded", function() {
                                 const li = document.createElement('li');
                                 li.className = 'list-group-item list-group-item-action';
                                 li.style.cursor = 'pointer';
-                                
-                                // Nombre más descriptivo
                                 li.innerHTML = `<strong>${place.display_name.split(',')[0]}</strong> <small class="text-muted d-block">${place.display_name}</small>`;
                                 
                                 li.onclick = function() {
-                                    // 1. Ponemos el nombre de la calle
                                     inputDireccion.value = place.display_name.split(',')[0];
-                                    
-                                    // 2. Extraemos datos de la dirección de Nominatim
                                     const addr = place.address;
                                     const ciudad = addr.city || addr.town || addr.village || addr.municipality || "";
-                                    const codigoPostal = addr.postcode || ""; // Aquí pillamos el CP
-
-                                    // 3. Rellenamos los inputs del formulario
+                                    const codigoPostal = addr.postcode || ""; 
                                     if(document.getElementById('input_poblacion')) document.getElementById('input_poblacion').value = ciudad;
                                     if(document.getElementById('input_cp')) document.getElementById('input_cp').value = codigoPostal;
-                                    
-                                    // 4. Guardamos las coordenadas (Crucial para que Java no explote)
                                     if(document.getElementById('lat_input')) document.getElementById('lat_input').value = place.lat;
                                     if(document.getElementById('lon_input')) document.getElementById('lon_input').value = place.lon;
-                                    
-                                    console.log("Datos cargados: ", ciudad, codigoPostal, place.lat, place.lon);
-
                                     listaSugerencias.style.display = 'none';
-};
+                                };
                                 listaSugerencias.appendChild(li);
                             });
                         }
                     })
                     .catch(err => console.error("Fallo en red OSM:", err));
-            }, 500); // Un poco más de margen
-        });
-    }
-});
-
-document.addEventListener("DOMContentLoaded", function() {
-    
-    // Función maestra: Le pasas los IDs de los cajones y ella se encarga de todo
-    function activarAutocompletado(idInput, idLista, idLat, idLon) {
-        const inputElement = document.getElementById(idInput);
-        const listaElement = document.getElementById(idLista);
-        let temporizador;
-
-        if (!inputElement) return;
-
-        inputElement.addEventListener('input', function() {
-            const query = this.value.trim();
-            if (query.length < 3) {
-                listaElement.style.display = 'none';
-                return;
-            }
-
-            clearTimeout(temporizador);
-            temporizador = setTimeout(() => {
-                const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&addressdetails=1&limit=5&countrycodes=es`;
-
-                fetch(url, { headers: { "Accept-Language": "es" } })
-                    .then(response => response.json())
-                    .then(data => {
-                        listaElement.innerHTML = '';
-                        if (data && data.length > 0) {
-                            listaElement.style.display = 'block';
-                            data.forEach(place => {
-                                const li = document.createElement('li');
-                                li.className = 'list-group-item list-group-item-action cursor-pointer';
-                                li.innerHTML = `<strong>${place.display_name.split(',')[0]}</strong> <small class="text-muted d-block">${place.display_name}</small>`;
-                                
-                                li.onclick = function() {
-                                    inputElement.value = place.display_name.split(',')[0];
-                                    document.getElementById(idLat).value = place.lat;
-                                    document.getElementById(idLon).value = place.lon;
-                                    listaElement.style.display = 'none';
-                                };
-                                listaElement.appendChild(li);
-                            });
-                        }
-                    })
-                    .catch(err => console.error("Fallo OSM:", err));
             }, 500);
         });
-
-        document.addEventListener('click', function(e) {
-            if (!inputElement.contains(e.target) && !listaElement.contains(e.target)) {
-                listaElement.style.display = 'none';
-            }
-        });
     }
+}
 
-    // Activamos la magia para el Origen y para el Destino
-    activarAutocompletado('input_origen', 'lista_origen', 'lat_origen', 'lon_origen');
-    activarAutocompletado('input_destino', 'lista_destino', 'lat_destino', 'lon_destino');
-});
-
-// Función para generar e imprimir el albarán del pedido
 function imprimirAlbaran(idPedido, cliente) {
-    // Genera un documento "al vuelo" optimizado para impresión
     let ventana = window.open('', 'PRINT', 'height=600,width=800');
-    
-    // Escribimos la estructura HTML del albarán
     ventana.document.write('<!DOCTYPE html><html lang="es"><head><title>Albarán Pedido #' + idPedido + '</title>');
     ventana.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">');
     ventana.document.write('</head><body style="padding: 40px;">');
-    
     ventana.document.write('<div class="d-flex justify-content-between align-items-center mb-4">');
     ventana.document.write('<h1>📦 Albarán de Entrega</h1>');
     ventana.document.write('<h3>LogisTFG</h3>');
     ventana.document.write('</div><hr>');
-    
     ventana.document.write('<p><strong>Pedido ID:</strong> #' + idPedido + '</p>');
     ventana.document.write('<p><strong>Cliente Receptor:</strong> ' + cliente + '</p>');
     ventana.document.write('<p><strong>Fecha de Emisión:</strong> ' + new Date().toLocaleDateString() + '</p>');
-    
     ventana.document.write('<br><div class="alert alert-secondary border-dark text-dark">Documento de control logístico interno. El receptor acredita que el bulto ha llegado en perfectas condiciones.</div>');
-    
     ventana.document.write('<br><br><br><br><p class="text-center"><strong>Firma del Cliente o Sello:</strong> <br><br><br>_________________________</p>');
-    
     ventana.document.write('</body></html>');
     ventana.document.close(); 
     ventana.focus(); 
-    
-    // Esperamos medio segundo a que Bootstrap cargue el CSS antes de lanzar el menú de impresión
     setTimeout(function() {
         ventana.print();
         ventana.close();
     }, 500); 
 }
 
+function procesarEstadoReparto(idPedido, nuevoEstado, cardElement, motivo = '') {
+    const payload = `idPedido=${idPedido}&estado=${nuevoEstado}&motivo=${encodeURIComponent(motivo)}`;
+
+    fetch('../controladores/actualizarEstadoReparto.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: payload
+    })
+    .then(response => {
+        if (!response.ok) throw new Error("Fallo de red");
+        return response.text();
+    })
+    .then(data => {
+        if(data.trim() === "OK") {
+            cardElement.style.transition = "opacity 0.5s, transform 0.5s";
+            cardElement.style.opacity = "0";
+            cardElement.style.transform = "translateX(100%)";
+            setTimeout(() => cardElement.remove(), 500);
+        } else {
+            alert("Error al actualizar la base de datos MySQL.");
+        }
+    })
+    .catch(error => {
+        console.warn("Sin conexión. Guardando entrega en modo offline.");
+        guardarEnIndexedDB(payload);
+        if ('serviceWorker' in navigator && 'SyncManager' in window) {
+            navigator.serviceWorker.ready.then(function(swRegistration) {
+                return swRegistration.sync.register('sync-entregas');
+            });
+        }
+        cardElement.style.opacity = "0.5";
+        alert("Sin conexión. La entrega se sincronizará automáticamente al recuperar la señal.");
+    });
+}
+
+function animarCocheEnRuta(coordenadas, mapaInstance) {
+    const dyInicial = coordenadas[1].lat - coordenadas[0].lat;
+    const dxInicial = coordenadas[1].lng - coordenadas[0].lng;
+    let anguloAnterior = (Math.atan2(dxInicial, dyInicial) * (180 / Math.PI)) - 90;
+    
+    const iconoCocheRealista = L.divIcon({
+        html: `<div id="coche-animado" style="font-size: 24px; transition: transform 0.1s linear; transform: rotate(${anguloAnterior}deg);">🚗</div>`,
+        className: 'icono-coche-custom',
+        iconSize: [30, 30],
+        iconAnchor: [15, 15]
+    });
+
+    // Nota: aquí asumimos que cocheMarker está definido globalmente arriba
+    window.cocheMarker = L.marker([coordenadas[0].lat, coordenadas[0].lng], {icon: iconoCocheRealista}).addTo(mapaInstance);
+    
+    let i = 0;
+    function moverCoche() {
+        if (i < coordenadas.length - 1) {
+            const puntoActual = coordenadas[i];
+            const puntoSiguiente = coordenadas[i + 1];
+
+            window.cocheMarker.setLatLng([puntoSiguiente.lat, puntoSiguiente.lng]);
+
+            const dy = puntoSiguiente.lat - puntoActual.lat;
+            const dx = puntoSiguiente.lng - puntoActual.lng;
+            
+            if (Math.abs(dx) > 0.00005 || Math.abs(dy) > 0.00005) {
+                let anguloNuevo = (Math.atan2(dx, dy) * (180 / Math.PI)) - 90; 
+                let diferencia = anguloNuevo - anguloAnterior;
+                if (diferencia > 180) diferencia -= 360;
+                else if (diferencia < -180) diferencia += 360;
+                
+                let anguloFinal = anguloAnterior + diferencia;
+                anguloAnterior = anguloFinal; 
+
+                const cocheDOM = document.getElementById('coche-animado');
+                if (cocheDOM) cocheDOM.style.transform = `rotate(${anguloFinal}deg)`;
+            }
+
+            const latLngActual = L.latLng(puntoActual.lat, puntoActual.lng);
+            const latLngSiguiente = L.latLng(puntoSiguiente.lat, puntoSiguiente.lng);
+            const distanciaMetros = latLngActual.distanceTo(latLngSiguiente);
+            
+            let tiempoEspera = distanciaMetros * 15; 
+            if (tiempoEspera < 30) tiempoEspera = 30; 
+            if (tiempoEspera > 800) tiempoEspera = 800;
+
+            i++; 
+            setTimeout(moverCoche, tiempoEspera);
+        } else {
+            window.cocheMarker.bindPopup("<b>📍 ¡Paquete entregado!</b><br>El repartidor ha llegado a su destino.").openPopup();
+        }
+    }
+    setTimeout(moverCoche, 1500); 
+}
+
+/* ==========================================
+   3. INDEXEDDB (OFFLINE)
+   ========================================== */
+
+function initDB() {
+    return new Promise((resolve, reject) => {
+        let request = indexedDB.open(DB_NAME, 1);
+        request.onupgradeneeded = (e) => {
+            let db = e.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                db.createObjectStore(STORE_NAME, { autoIncrement: true });
+            }
+        };
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+    });
+}
+
+function guardarEnIndexedDB(payload) {
+    initDB().then(db => {
+        let tx = db.transaction(STORE_NAME, 'readwrite');
+        tx.objectStore(STORE_NAME).add(payload);
+        console.log("Acción guardada en local (IndexedDB) para futura sincronización.");
+    });
+}
+
+/* ==========================================
+   4. REGISTRO DEL SERVICE WORKER (PWA)
+   ========================================== */
 if ('serviceWorker' in navigator) {
-    // Escuchamos el evento load del window para no bloquear la carga inicial
     window.addEventListener('load', () => {
-        // La ruta es relativa a repartidor.php, que es quien carga este script
         navigator.serviceWorker.register('./sw.js')
             .then(registration => {
                 console.log('✅ ServiceWorker registrado con éxito con el scope: ', registration.scope);
@@ -831,3 +636,36 @@ if ('serviceWorker' in navigator) {
             });
     });
 }
+
+// --- AUTO CIERRE DE SESIÓN POR INACTIVIDAD ---
+function controlInactividad() {
+    let tiempo;
+    const tiempoLimite = 15 * 60 * 1000; // 15 minutos en milisegundos
+
+    // Eventos que indican que el usuario sigue activo
+    window.onload = resetearTiempo;
+    document.onmousemove = resetearTiempo;
+    document.onkeypress = resetearTiempo;
+    document.ontouchstart = resetearTiempo; // Importante para la vista del repartidor
+    document.onclick = resetearTiempo;
+
+    function expirarSesion() {
+        alert("⏱️ Tu sesión ha expirado por inactividad por motivos de seguridad.");
+        // Reutilizamos tu controlador de logout existente
+        window.location.href = '../controladores/logout.php';
+    }
+
+    function resetearTiempo() {
+        clearTimeout(tiempo);
+        tiempo = setTimeout(expirarSesion, tiempoLimite);
+    }
+}
+
+// Iniciar el control solo si hay indicios de estar logueado 
+// (Por ejemplo, si el botón de "Cerrar Sesión" existe en el DOM)
+document.addEventListener('DOMContentLoaded', () => {
+    // Si la URL actual no es el login, activamos el temporizador
+    if (!window.location.href.includes("login")) {
+        controlInactividad();
+    }
+});

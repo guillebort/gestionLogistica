@@ -1,5 +1,8 @@
 <?php
 session_start();
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
 require_once '../includes/controlSesion.php';
 require_once '../modelos/AccesoBD.php';
 require_once '../modelos/Modelos.php';
@@ -48,7 +51,7 @@ if ($codigoLogueado <= 0) {
             <div class="row justify-content-center mb-5">
                 <!-- FORMULARIO DE PERFIL ORIGINAL, NUEVO DISEÑO -->
                 <div class="col-lg-10">
-                    <div class="card shadow-lg border-0" style="border-radius: 20px;">
+                    <div class="card shadow-lg border-0">
                         <div class="card-body py-5 px-4 px-md-5">
                             <div class="d-flex justify-content-between align-items-center mb-4">
                                 <h3 class="text-dark fw-bold mb-0">¡Bienvenido, <?php echo htmlspecialchars($u->getNombre() != null ? $u->getNombre() : "Cliente"); ?>!</h3>
@@ -57,6 +60,7 @@ if ($codigoLogueado <= 0) {
                             
                             <!-- Formulario Original de Modificación -->
                             <form action="../controladores/modificarUsuario.php" method="POST" onsubmit="return validarModificacion()" class="text-start mt-4">
+                                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
                                 <div class="row g-3">
                                     <div class="col-md-6">
                                         <label class="form-label text-muted small fw-semibold">Email (No modificable)</label>
@@ -123,12 +127,12 @@ if ($codigoLogueado <= 0) {
 
                     <?php if (empty($historial)) { ?>
                         <div class="card border-0 shadow-sm rounded-4 text-center py-5">
-                            <span style="font-size: 3rem; opacity: 0.5;">🛣️</span>
+                            <span>🛣️</span>
                             <p class="text-muted mt-3 mb-0">Aún no has solicitado ningún reparto.</p>
                         </div>
                     <?php  } else { ?>
                         
-                        <div class="accordion shadow-sm" id="acordeonPedidos" style="border-radius: 16px; overflow: hidden;">
+                        <div class="accordion shadow-sm" id="acordeonPedidos">
                             <?php foreach ($historial as $ped) { 
                                 // Color del badge dinámico
                                 $estado = $ped->getEstado();
@@ -175,11 +179,16 @@ if ($codigoLogueado <= 0) {
                                         <!-- Lógica original de Cancelar Pedido -->
                                         <?php if (strcasecmp($ped->getEstado(), "Pendiente") == 0) { ?>
                                             <div class="text-end mt-3">
-                                                <a href="../controladores/cancelarPedido.php?id=<?php echo $ped->getId(); ?>" 
-                                                   class="btn btn-outline-danger btn-sm rounded-pill px-3" 
-                                                   onclick="return confirm('¿Estás seguro de que quieres cancelar este pedido? Se liberará el stock.');">
-                                                   Cancelar Envío ❌
-                                                </a>
+                                                <form action="../controladores/cancelarPedido.php" method="POST" class="d-inline" onsubmit="return confirm('¿Estás seguro de que quieres cancelar este pedido? Se liberará el stock.');">
+                                                    <!-- Token de seguridad -->
+                                                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
+                                                    <!-- ID del pedido a cancelar -->
+                                                    <input type="hidden" name="id_pedido" value="<?php echo $ped->getId(); ?>">
+                                                    
+                                                    <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3">
+                                                        Cancelar Envío ❌
+                                                    </button>
+                                                </form>
                                             </div>
                                         <?php } ?>
                                     </div>

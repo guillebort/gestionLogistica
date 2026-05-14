@@ -1,5 +1,5 @@
 <!-- includes/pie.php -->
-<footer class="mt-auto py-5" style="background-color: #ffffff; border-top: 1px solid rgba(0,0,0,0.05);">
+<footer class="mt-auto py-5">
     <div class="container">
         <div class="row align-items-center flex-column flex-md-row">
             

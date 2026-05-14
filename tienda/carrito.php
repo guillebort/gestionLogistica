@@ -24,12 +24,12 @@ $nombreUsuario = $_SESSION['nombreUsuario'] ?? '';
 
         <div class="row justify-content-center">
             <div class="col-lg-10">
-                <div class="card shadow-sm border-0" style="border-radius: 16px;">
+                <div class="card shadow-sm border-0">
                     <div class="card-body p-4 p-md-5">
                         
                         <!-- Estado Carrito Vacío -->
                         <div id="carrito-vacio" class="text-center py-5 d-none">
-                            <div class="mb-3 opacity-50" style="font-size: 4rem;">📦</div>
+                            <div class="mb-3 opacity-50" >📦</div>
                             <h4 class="fw-bold text-dark">Tu cesta logística está vacía</h4>
                             <p class="text-muted mb-4">Aún no has seleccionado ningún servicio de transporte.</p>
                             <a href="productos.php" class="btn btn-primary btn-lg rounded-pill px-4 shadow-sm">Ver tarifas de envío</a>
@@ -39,7 +39,7 @@ $nombreUsuario = $_SESSION['nombreUsuario'] ?? '';
                         <div id="tabla-contenedor" class="d-none">
                             <div class="table-responsive mb-4">
                                 <table class="table align-middle text-nowrap">
-                                    <thead class="bg-white text-muted" style="border-bottom: 2px solid #eee;">
+                                    <thead class="bg-white text-muted">
                                         <tr>
                                             <th class="fw-bold bg-transparent text-secondary border-0">Servicio Logístico</th>
                                             <th class="text-center fw-bold bg-transparent text-secondary border-0">Cantidad</th>
@@ -48,7 +48,7 @@ $nombreUsuario = $_SESSION['nombreUsuario'] ?? '';
                                             <th class="text-center bg-transparent border-0"></th>
                                         </tr>
                                     </thead>
-                                    <tbody id="cuerpo-tabla" style="border-top: none;">
+                                    <tbody id="cuerpo-tabla" >
                                         <!-- Renderizado por JS -->
                                     </tbody>
                                     <tfoot>

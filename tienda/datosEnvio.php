@@ -31,14 +31,14 @@ $u = $con->obtenerUsuarioBD($idUsuario);
                 
                 <!-- Indicador de progreso (Stepper) modernizado -->
                 <div class="d-flex justify-content-between mb-5 position-relative">
-                    <div class="progress position-absolute top-50 start-0 w-100 translate-middle-y" style="height: 4px; z-index: 0; background-color: #e2e8f0;">
-                        <div class="progress-bar bg-primary" role="progressbar" style="width: 50%;"></div>
-                    </div>
-                    <div class="position-relative z-index-1 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow fw-bold" style="width: 45px; height: 45px;">1</div>
-                    <div class="position-relative z-index-1 bg-white text-muted border border-2 rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 45px; height: 45px;">2</div>
+                    <div class="progress position-absolute top-50 start-0 w-100 translate-middle-y stepper-line">
+                    <div class="progress-bar bg-primary stepper-progress" role="progressbar"></div>
+                </div>
+                <div class="position-relative z-index-1 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow fw-bold stepper-circle">1</div>
+                    <div class="position-relative z-index-1 bg-white text-muted border border-2 rounded-circle d-flex align-items-center justify-content-center fw-bold">2</div>
                 </div>
 
-                <div class="card shadow-lg border-0" style="border-radius: 20px;">
+                <div class="card shadow-lg border-0">
                     <div class="card-header bg-transparent border-bottom-0 pt-4 pb-0 text-center">
                         <h4 class="mb-0 fw-bold text-dark">📍 Define la Ruta del Envío</h4>
                         <p class="text-secondary small mt-1">Valida tus datos y busca las direcciones para calcular coordenadas.</p>
@@ -48,7 +48,7 @@ $u = $con->obtenerUsuarioBD($idUsuario);
                             
                             <!-- Sección Contacto (Tus campos name originales) -->
                             <div class="bg-light p-4 rounded-4 mb-5 border-0 shadow-sm">
-                                <h6 class="text-primary mb-3 fw-bold text-uppercase" style="font-size: 0.8rem; letter-spacing: 1px;">Datos del remitente</h6>
+                                <h6 class="text-primary mb-3 fw-bold text-uppercase">Datos del remitente</h6>
                                 <div class="row g-3">
                                     <div class="col-md-6">
                                         <input type="text" class="form-control rounded-pill shadow-none border-0" name="nombre" value="<?= htmlspecialchars($u->getNombre()) ?>" placeholder="Nombre" required>
@@ -69,16 +69,14 @@ $u = $con->obtenerUsuarioBD($idUsuario);
                             <div class="position-relative ms-3 border-start border-3 border-primary ps-4 py-2 mb-4">
                                 <!-- Origen -->
                                 <div class="mb-5 position-relative">
-                                    <span class="position-absolute translate-middle bg-white border border-primary border-3 rounded-circle" style="width: 18px; height: 18px; left: -26px; top: 18px;"></span>
+                                    <span class="position-absolute translate-middle bg-white border border-primary border-3 rounded-circle"></span>
                                     <label class="form-label fw-bold text-primary mb-1">Recogida (Origen)</label>
                                     
                                     <!-- INPUTS ORIGINALES MANTENIDOS PARA JS -->
-                                    <input type="text" class="form-control form-control-lg rounded-4 shadow-sm" style="border: 1px solid #cfe2ff;"
-                                           name="direccionOrigen" id="input_origen" 
+                                    <input type="text" class="form-control form-control-lg rounded-4 shadow-sm" name="direccionOrigen" id="input_origen" 
                                            placeholder="Escribe la dirección de recogida..." required autocomplete="off">
                                     
-                                    <ul id="lista_origen" class="list-group position-absolute w-100 shadow-lg" 
-                                        style="z-index: 1050; display: none; top: 100%; border-radius: 12px; overflow: hidden;"></ul>
+                                    <ul id="lista_origen" class="list-group position-absolute w-100 shadow-lg"></ul>
                                     
                                     <!-- Campos ocultos de coordenadas -->
                                     <input type="hidden" name="latOrigen" id="lat_origen" value="0.0">
@@ -87,7 +85,7 @@ $u = $con->obtenerUsuarioBD($idUsuario);
 
                                 <!-- Destino -->
                                 <div class="position-relative mt-4">
-                                    <span class="position-absolute translate-middle bg-primary rounded-circle shadow-sm" style="width: 18px; height: 18px; left: -26px; top: 18px;"></span>
+                                    <span class="position-absolute translate-middle bg-primary rounded-circle shadow-sm"></span>
                                     <label class="form-label fw-bold text-dark mb-1">Entrega (Destino)</label>
                                     
                                     <!-- INPUTS ORIGINALES MANTENIDOS PARA JS -->
@@ -95,8 +93,7 @@ $u = $con->obtenerUsuarioBD($idUsuario);
                                            name="direccionDestino" id="input_destino" 
                                            placeholder="Escribe la dirección de entrega..." required autocomplete="off">
                                            
-                                    <ul id="lista_destino" class="list-group position-absolute w-100 shadow-lg" 
-                                        style="z-index: 1050; display: none; top: 100%; border-radius: 12px; overflow: hidden;"></ul>
+                                    <ul id="lista_destino" class="list-group position-absolute w-100 shadow-lg"></ul>
                                     
                                     <!-- Campos ocultos de coordenadas -->
                                     <input type="hidden" name="latDestino" id="lat_destino" value="0.0">

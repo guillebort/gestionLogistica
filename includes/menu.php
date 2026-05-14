@@ -9,11 +9,11 @@ $textoEnlace = !empty($nombreUsu) ? "👋 Hola, " . htmlspecialchars($nombreUsu)
 <!-- Importamos Poppins aquí para garantizar que toda la web comparta la tipografía -->
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-<nav class="navbar navbar-expand-lg sticky-top" style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);">
+<nav class="navbar navbar-expand-lg sticky-top navbar-main">
     <div class="container">
         <!-- Logo / Marca -->
         <a class="navbar-brand fw-bold text-primary d-flex align-items-center gap-2" href="../tienda/index.php">
-            <span style="font-size: 1.5rem;">🚚</span> LogisTFG
+            <span class="navbar-brand-icon">🚚</span> LogisTFG
         </a>
         
         <!-- Botón Hamburguesa para Móviles -->
@@ -32,7 +32,7 @@ $textoEnlace = !empty($nombreUsu) ? "👋 Hola, " . htmlspecialchars($nombreUsu)
             
             <!-- Botones de Acción -->
             <div class="d-flex flex-column flex-lg-row align-items-center gap-3 mt-3 mt-lg-0">
-                <a href="../tienda/carrito.php" class="btn btn-light rounded-pill fw-medium px-4 shadow-sm" style="color: #2b2d42;">
+                <a href="../tienda/carrito.php" class="btn btn-light rounded-pill fw-medium px-4 shadow-sm">
                     🛒 Cesta
                 </a>
                 <a href="../tienda/usuario.php" class="btn btn-primary rounded-pill fw-semibold px-4 shadow-sm">

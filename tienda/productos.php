@@ -42,10 +42,10 @@ $listaProductos = $con->obtenerProductosBD();
                         $sufijo = ($p->getColorCss() === "dark") ? "/ bulto" : "/ paquete";
                     ?>
                     <div class="col-lg-4 col-md-6 mb-4">
-                        <div class="card h-100 <?= $cardClass ?>" style="border-radius: 16px; overflow: hidden;">
+                        <div class="card h-100 <?= $cardClass ?>" >
                             <?php if($esDestacado): ?>
                                 <!-- Etiqueta superior para el plan recomendado -->
-                                <div class="bg-warning text-dark text-center fw-bold py-1" style="font-size: 0.85rem; letter-spacing: 1px;">MÁS POPULAR</div>
+                                <div class="bg-warning text-dark text-center fw-bold py-1">MÁS POPULAR</div>
                             <?php endif; ?>
                             
                             <div class="card-header text-center py-4 <?= $headerClass ?>">
@@ -61,7 +61,7 @@ $listaProductos = $con->obtenerProductosBD();
                                     <?= str_replace('<li>', '<li class="mb-2">✔️ ', $p->getCaracteristicas()) ?>
                                 </ul>
                                 
-                                <button type="button" class="btn btn-lg w-100 <?= $btnClass ?> mt-auto fw-bold" style="border-radius: 10px;"
+                                <button type="button" class="btn btn-lg w-100 <?= $btnClass ?> mt-auto fw-bold"
                                     onclick="anadirCarrito(<?= $p->getId() ?>, '<?= addslashes($p->getDescripcion()) ?>', <?= $p->getPrecio() ?>, <?= $p->getExistencias() ?>)">
                                     Añadir al carrito 
                                 </button>

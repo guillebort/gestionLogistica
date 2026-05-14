@@ -29,18 +29,6 @@ if ($codigoLogueado > 0) {
     <title>Pasarela de Pago - LogisTFG</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../css/estilo.css">
-    <style>
-        /* Estilos personalizados para las tarjetas de pago visuales */
-        .tarjeta-radio:checked + .tarjeta-label {
-            border-color: #10b981 !important;
-            background-color: rgba(16, 185, 129, 0.05);
-        }
-        .tarjeta-label {
-            cursor: pointer;
-            transition: all 0.2s ease-in-out;
-        }
-        .tarjeta-label:hover { border-color: #0d6efd !important; }
-    </style>
 </head>
 <body class="bg-light">
 
@@ -67,7 +55,7 @@ if ($codigoLogueado > 0) {
                 
                 <!-- COLUMNA DERECHA: RESUMEN STICKY -->
                 <div class="col-lg-5">
-                    <div class="card shadow-sm border-0 rounded-4 position-sticky" style="top: 90px; background-color: #f8f9fa;">
+                    <div class="card shadow-sm border-0 rounded-4 position-sticky">
                         <div class="card-body p-4">
                             <h5 class="fw-bold mb-4">Resumen del Pedido</h5>
                             

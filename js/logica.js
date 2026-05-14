@@ -301,6 +301,79 @@ document.addEventListener('DOMContentLoaded', () => {
     // Iniciar IndexedDB para modo offline
     initDB();
 
+    /* ==========================================
+       9. LÓGICA DE VALIDACIÓN REGISTRO USUARIO
+       ========================================== */
+    const pass2Registro = document.getElementById('pass2');
+    if (pass2Registro) {
+        pass2Registro.addEventListener('input', function() {
+            let pass1 = document.getElementById('pass1').value;
+            let pass2 = this.value;
+            let error = document.getElementById('errorPass');
+            if (pass2.length > 0 && pass1 !== pass2) {
+                this.classList.add('is-invalid');
+                error.style.display = 'block';
+            } else {
+                this.classList.remove('is-invalid');
+                if(pass2.length > 0) this.classList.add('is-valid');
+                error.style.display = 'none';
+            }
+        });
+    }
+
+    /* ==========================================
+       10. LÓGICA DE SINCRONIZACIÓN DE TARJETAS
+       ========================================== */
+    const radioTarjetas = document.querySelectorAll('.tarjeta-radio');
+    const selectReal = document.getElementById('tarjetaGuardada');
+    if (radioTarjetas.length > 0 && selectReal) {
+        radioTarjetas.forEach(radio => {
+            radio.addEventListener('change', function() {
+                document.getElementById('opt_' + this.value).selected = true;
+                selectReal.dispatchEvent(new Event('change'));
+            });
+        });
+    }
+
+    /* ==========================================
+       11. INICIALIZACIÓN MAPA LOGÍSTICO (ADMIN)
+       ========================================== */
+    const mapaAdminElem = document.getElementById('mapa-logistico');
+    if (mapaAdminElem) {
+        // Inicializar mapa centrado en España/Valencia
+        const mapAdmin = L.map('mapa-logistico').setView([39.4699, -0.3762], 12);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(mapAdmin);
+
+        // Extraer los datos inyectados en el atributo HTML
+        const pedidosRaw = mapaAdminElem.getAttribute('data-pedidos');
+        if (pedidosRaw) {
+            const pedidosAdmin = JSON.parse(pedidosRaw);
+            const limites = [];
+
+            const iconoPedido = L.divIcon({
+                html: '<div style="background-color: #0d6efd; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); font-weight: bold; font-size: 10px;">📦</div>',
+                className: '',
+                iconSize: [24, 24],
+                iconAnchor: [12, 12]
+            });
+
+            pedidosAdmin.forEach(function(ped) {
+                if (ped.latitud && ped.longitud && ped.latitud != "0.0") {
+                    const marker = L.marker([ped.latitud, ped.longitud], {icon: iconoPedido}).addTo(mapAdmin);
+                    marker.bindPopup("<div class='text-center'><b>Pedido #" + ped.id + "</b><br><span class='text-muted'>" + ped.cliente + "</span><br><small>" + ped.destino + "</small></div>");
+                    limites.push([ped.latitud, ped.longitud]);
+                }
+            });
+
+            if (limites.length > 0) {
+                mapAdmin.fitBounds(limites, {padding: [30, 30]});
+            }
+        }
+    }
+
 }); // FIN DEL DOMContentLoaded
 
 

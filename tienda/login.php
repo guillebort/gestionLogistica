@@ -32,11 +32,6 @@ if ($origen === 'carrito') {
     <link rel="icon" type="image/ico" href="../img/icono.ico" sizes="64x64">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../css/estilo.css">
-    <style>
-        .split-bg {
-            background: linear-gradient(135deg, rgba(44,62,80,0.9) 0%, rgba(52,152,219,0.8) 100%), url('https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=2070&auto=format&fit=crop') center/cover;
-        }
-    </style>
 </head>
 <body class="bg-light d-flex flex-column vh-100">
 
@@ -46,7 +41,7 @@ if ($origen === 'carrito') {
         <div class="row g-0 h-100">
             <!-- Mitad Izquierda (Imagen/Branding) - Oculta en móviles -->
             <div class="col-md-5 col-lg-6 d-none d-md-flex flex-column justify-content-center align-items-center text-white split-bg p-5">
-                <div class="text-center" style="max-width: 400px;">
+                <div class="text-center">
                     <div class="display-3 mb-3">🚚</div>
                     <h2 class="fw-bold mb-3">Tu socio logístico inteligente</h2>
                     <p class="lead opacity-75">Accede a tu panel para gestionar tus envíos, visualizar rutas en tiempo real y optimizar la cadena de suministro de tu negocio.</p>
@@ -55,7 +50,7 @@ if ($origen === 'carrito') {
 
             <!-- Mitad Derecha (Formulario) -->
             <div class="col-md-7 col-lg-6 d-flex align-items-center justify-content-center p-4 p-sm-5 bg-light">
-                <div class="w-100" style="max-width: 450px;">
+                <div class="w-100">
                     
                     <?php
                         if (isset($_GET['timeout'])) {

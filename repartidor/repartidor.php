@@ -38,32 +38,11 @@ $paradas = $con->obtenerRutasRepartidor($idRepartidor);
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
     <link rel="stylesheet" href="../css/estilo.css">
     
-    <style>
-        /* Ajustes específicos para la vista móvil de la App del Repartidor */
-        body { background-color: #f4f7f6; padding-bottom: 80px; }
-        .leaflet-routing-container { display: none !important; }
-        #mapa-repartidor { z-index: 1; }
-        
-        /* Timeline visual para origen y destino */
-        .timeline-reparto {
-            position: relative;
-            margin-left: 0.5rem;
-            padding-left: 1.5rem;
-            border-left: 2px solid #0d6efd;
-        }
-        .timeline-punto {
-            position: absolute;
-            left: -8px;
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-        }
-    </style>
 </head>
-<body>
+<body class="body-repartidor">
 
     <!-- CABECERA ESTILO APP -->
-    <nav class="navbar sticky-top bg-white shadow-sm" style="backdrop-filter: blur(10px); background-color: rgba(255,255,255,0.95) !important;">
+    <nav class="navbar sticky-top bg-white shadow-sm">
         <div class="container-fluid px-3 py-1">
             <a class="navbar-brand fw-bold text-primary d-flex align-items-center gap-2 m-0" href="#">
                 <span class="fs-4">🚚</span> <span class="fs-5">Ruta Activa</span>
@@ -98,14 +77,14 @@ $paradas = $con->obtenerRutasRepartidor($idRepartidor);
         </div>
         
         <!-- MAPA (Con bordes redondeados y sombra) -->
-        <div id="mapa-repartidor" class="rounded-4 shadow-sm border-0 mb-4" style="height: 350px; width: 100%;"></div>
+        <div id="mapa-repartidor" class="rounded-4 shadow-sm border-0 mb-4"></div>
 
         <!-- LISTADO DE PARADAS -->
         <div id="lista-paradas">
             <?php if (empty($paradas)): ?>
                 <div class="card border-0 shadow-sm rounded-4 text-center py-5 mt-4">
                     <div class="card-body">
-                        <div style="font-size: 4rem; opacity: 0.8;" class="mb-3">🎉</div>
+                        <div class="mb-3">🎉</div>
                         <h4 class="fw-bold text-dark">¡Jornada finalizada!</h4>
                         <p class="text-muted mb-0">No tienes más entregas pendientes en tu ruta actual. Buen trabajo.</p>
                     </div>
@@ -133,7 +112,7 @@ $paradas = $con->obtenerRutasRepartidor($idRepartidor);
                             
                             <!-- Datos del Cliente -->
                             <div class="d-flex align-items-center gap-3 mb-4 bg-light p-3 rounded-4 border-0">
-                                <div class="bg-white rounded-circle d-flex justify-content-center align-items-center shadow-sm" style="width:45px; height:45px; font-size: 1.2rem;">👤</div>
+                                <div class="bg-white rounded-circle d-flex justify-content-center align-items-center shadow-sm">👤</div>
                                 <div>
                                     <div class="fw-bold text-dark"><?= htmlspecialchars($parada['cliente']) ?></div>
                                     <a href="tel:<?= htmlspecialchars($parada['telefono']) ?>" class="text-decoration-none text-primary fw-bold d-flex align-items-center gap-1 mt-1">
@@ -145,13 +124,13 @@ $paradas = $con->obtenerRutasRepartidor($idRepartidor);
                             <!-- Timeline de la Ruta -->
                             <div class="timeline-reparto mb-4">
                                 <div class="mb-3 position-relative">
-                                    <div class="timeline-punto bg-white border border-primary border-3" style="top: 2px;"></div>
-                                    <small class="text-muted fw-bold d-block text-uppercase" style="font-size: 0.7rem; letter-spacing: 1px;">Recogida (Origen)</small>
+                                    <div class="timeline-punto bg-white border border-primary border-3 timeline-dot"></div>
+                                    <small class="text-muted fw-bold d-block text-uppercase timeline-label">Recogida (Origen)</small>
                                     <span class="fw-medium text-dark"><?= htmlspecialchars($parada['origen']) ?></span>
                                 </div>
                                 <div class="position-relative">
-                                    <div class="timeline-punto bg-primary shadow-sm" style="top: 2px;"></div>
-                                    <small class="text-muted fw-bold d-block text-uppercase" style="font-size: 0.7rem; letter-spacing: 1px;">Entrega (Destino)</small>
+                                    <div class="timeline-punto bg-primary shadow-sm" ></div>
+                                    <small class="text-muted fw-bold d-block text-uppercase">Entrega (Destino)</small>
                                     <span class="fw-medium text-dark"><?= htmlspecialchars($parada['destino']) ?></span>
                                 </div>
                             </div>

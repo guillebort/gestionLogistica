@@ -110,7 +110,7 @@ $pedidosJson = json_encode($pedidosPendientes);
                         <p class="text-muted small">Ubicación de entregas pendientes</p>
                     </div>
                     <div class="card-body p-4">
-                        <div id="mapa-logistico" class="shadow-sm border border-secondary border-opacity-25"></div>
+                        <div id="mapa-logistico" class="shadow-sm border border-secondary border-opacity-25" data-pedidos='<?= htmlspecialchars($pedidosJson, ENT_QUOTES, "UTF-8") ?>'></div>
                     </div>
                 </div>
             </div>
@@ -167,45 +167,6 @@ $pedidosJson = json_encode($pedidosPendientes);
             </div>
         </div>
     </main>
-
-    <!-- SCRIPT PARA DIBUJAR EL MAPA LEAFLET DINÁMICO -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Inicializar mapa centrado por defecto en España/Valencia
-            var map = L.map('mapa-logistico').setView([39.4699, -0.3762], 12);
-
-            // Cargar capa de OpenStreetMap (Software Libre)
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors'
-            }).addTo(map);
-
-            // Importar datos de PHP a Javascript
-            var pedidos = <?= $pedidosJson ?>;
-            var limites = [];
-
-            // Icono personalizado para los marcadores
-            var iconoPedido = L.divIcon({
-                html: '<div style="background-color: #0d6efd; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); font-weight: bold; font-size: 10px;">📦</div>',
-                className: '',
-                iconSize: [24, 24],
-                iconAnchor: [12, 12]
-            });
-
-            // Recorrer los pedidos y pintar un marcador por cada entrega pendiente
-            pedidos.forEach(function(ped) {
-                if (ped.latitud && ped.longitud && ped.latitud != "0.0") {
-                    var marker = L.marker([ped.latitud, ped.longitud], {icon: iconoPedido}).addTo(map);
-                    marker.bindPopup("<div class='text-center'><b>Pedido #" + ped.id + "</b><br><span class='text-muted'>" + ped.cliente + "</span><br><small>" + ped.destino + "</small></div>");
-                    limites.push([ped.latitud, ped.longitud]);
-                }
-            });
-
-            // Ajustar el zoom automáticamente si hay pedidos en el mapa
-            if (limites.length > 0) {
-                map.fitBounds(limites, {padding: [30, 30]});
-            }
-        });
-    </script>
+    <script src="../js/logica.js"></script>
 </body>
 </html>

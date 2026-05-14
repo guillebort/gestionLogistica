@@ -19,24 +19,20 @@
     <title>Confirmación de Reserva - LogisTFG</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../css/estilo.css">
-    <style>
-        .success-icon { font-size: 5rem; color: #198754; animation: scaleUp 0.5s ease-out; }
-        @keyframes scaleUp { from { transform: scale(0); } to { transform: scale(1); } }
-    </style>
 </head>
 <body class="bg-light">
 
     <?php include '../includes/menu.php'; ?>
 
     <main class="container my-5 text-center">
-        <div class="card shadow-lg border-0 mx-auto" style="max-width: 650px; border-radius: 15px;">
+        <div class="card shadow-lg border-0 mx-auto">
             <div class="card-body py-5 px-4">
                 <div class="success-icon mb-4">✅</div>
                 
                 <h2 class="fw-bold mb-3">¡Reserva Completada con Éxito!</h2>
                 <p class="text-muted mb-4">Hemos procesado tu solicitud. Los detalles de tu envío ya están en manos de nuestra central logística.</p>
                 
-                <div class="p-4 mb-4" style="background-color: #f8f9fa; border: 2px dashed #dee2e6; border-radius: 10px;">
+                <div class="p-4 mb-4">
                     <p class="text-uppercase small fw-bold text-secondary mb-2">Referencia de Seguimiento</p>
                     <div class="h4 text-primary font-monospace mb-0">
                         <?php echo htmlspecialchars($mensajeExito); ?>

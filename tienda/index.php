@@ -22,7 +22,7 @@ $nombreUsuario = $_SESSION['nombreUsuario'] ?? '';
     <?php include '../includes/menu.php'; ?>
 
     <!-- HERO SECTION (Estilo Startup) -->
-    <div class="bg-dark text-white py-5 text-center" style="background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);">
+    <div class="bg-dark text-white py-5 text-center">
         <div class="container py-5">
             <h1 class="display-4 fw-bold mb-3">Envíos rápidos para negocios locales</h1>
             <p class="lead mb-5 text-light opacity-75">Optimiza tus rutas, reduce costes y gestiona tus entregas en tiempo real con nuestra plataforma inteligente.</p>

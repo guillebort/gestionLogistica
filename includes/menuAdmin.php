@@ -9,31 +9,20 @@ $nombreAdmin = $_SESSION['nombreAdmin'] ?? 'Administrador';
 // Obtenemos el nombre del archivo actual para marcar el enlace "Activo"
 $paginaActual = basename($_SERVER['PHP_SELF']);
 ?>
-<style>
-    /* Efectos hover sutiles para los enlaces del menú admin */
-    .nav-admin-link {
-        color: rgba(255, 255, 255, 0.7) !important;
-        transition: all 0.2s ease-in-out;
-    }
-    .nav-admin-link:hover, .nav-admin-link.active {
-        color: #ffffff !important;
-        background-color: rgba(255, 255, 255, 0.1);
-    }
-</style>
 
-<nav class="navbar navbar-expand-lg sticky-top" style="background-color: #0f172a; border-bottom: 1px solid rgba(255,255,255,0.05); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);">
+<nav class="navbar navbar-expand-lg sticky-top">
     <div class="container-fluid px-4 py-1">
         
         <!-- Logo Admin -->
         <a class="navbar-brand fw-bold text-white d-flex align-items-center gap-2 m-0" href="index.php">
-            <span class="bg-primary rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 36px; height: 36px; font-size: 1.1rem;">⚙️</span> 
+            <span class="bg-primary rounded-circle d-flex align-items-center justify-content-center shadow-sm">⚙️</span> 
             <span class="fs-5">LogisTFG</span> 
-            <span class="badge bg-white bg-opacity-10 text-white-50 border border-secondary border-opacity-25 rounded-pill fw-medium ms-1" style="font-size: 0.7rem; letter-spacing: 1px;">ADMIN</span>
+            <span class="badge bg-white bg-opacity-10 text-white-50 border border-secondary border-opacity-25 rounded-pill fw-medium ms-1">ADMIN</span>
         </a>
         
         <!-- Menú Móvil -->
         <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navAdmin">
-            <span class="navbar-toggler-icon" style="filter: invert(1) opacity(0.7);"></span>
+            <span class="navbar-toggler-icon"></span>
         </button>
 
         <div class="collapse navbar-collapse" id="navAdmin">
@@ -63,10 +52,10 @@ $paginaActual = basename($_SERVER['PHP_SELF']);
                     🌐 Ver Tienda Pública
                 </a>
                 
-                <div class="vr bg-secondary mx-1 d-none d-lg-block" style="width: 1px; opacity: 0.5;"></div>
+                <div class="vr bg-secondary mx-1 d-none d-lg-block"></div>
                 
                 <div class="d-flex align-items-center gap-2">
-                    <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm" style="width: 32px; height: 32px; font-size: 0.85rem;">
+                    <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm">
                         <?= strtoupper(substr($nombreAdmin, 0, 1)) ?>
                     </div>
                     <div class="text-white small fw-semibold d-none d-xl-block pe-2">

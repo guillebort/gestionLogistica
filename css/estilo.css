@@ -100,3 +100,176 @@ body {
     border-color: #0d6efd;
     box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.15);
 }
+
+/* ==========================================
+   ESTILOS EXTRAÍDOS DE LAS VISTAS (PHP)
+   ========================================== */
+
+/* --- De: admin/index.php --- */
+#mapa-logistico { 
+    height: 450px; 
+    width: 100%; 
+    border-radius: 1rem; 
+    z-index: 1; 
+}
+.scroll-invisible::-webkit-scrollbar { width: 6px; }
+.scroll-invisible::-webkit-scrollbar-thumb { background-color: #dee2e6; border-radius: 10px; }
+
+/* --- De: admin/loginAdmin.php --- */
+.split-bg-admin {
+    background: linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(30,41,59,0.85) 100%), url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop') center/cover;
+}
+
+/* --- De: admin/productos.php --- */
+.pagination .page-link { border: none; color: #2c3e50; font-weight: 500; border-radius: 8px; margin: 0 4px; }
+.pagination .page-item.active .page-link { background-color: #0d6efd; color: white; box-shadow: 0 4px 6px rgba(13, 110, 253, 0.2); }
+
+/* --- De: includes/menuAdmin.php --- */
+.nav-admin-link { color: rgba(255, 255, 255, 0.7) !important; transition: all 0.2s ease-in-out; }
+.nav-admin-link:hover, .nav-admin-link.active { color: #ffffff !important; background-color: rgba(255, 255, 255, 0.1); }
+
+/* --- De: tienda/login.php --- */
+.split-bg { background: linear-gradient(135deg, rgba(44,62,80,0.9) 0%, rgba(52,152,219,0.8) 100%), url('https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=2070&auto=format&fit=crop') center/cover; }
+
+/* --- De: tienda/pedidoCompletado.php --- */
+.success-icon { font-size: 5rem; color: #198754; animation: scaleUp 0.5s ease-out; }
+@keyframes scaleUp { from { transform: scale(0); } to { transform: scale(1); } }
+
+/* --- De: tienda/procesarPedido.php --- */
+.tarjeta-radio:checked + .tarjeta-label { border-color: #10b981 !important; background-color: rgba(16, 185, 129, 0.05); }
+.tarjeta-label { cursor: pointer; transition: all 0.2s ease-in-out; }
+.tarjeta-label:hover { border-color: #0d6efd !important; }
+
+/* --- De: repartidor/repartidor.php --- */
+.body-repartidor { background-color: #f4f7f6; padding-bottom: 80px; }
+.leaflet-routing-container { display: none !important; }
+#mapa-repartidor { z-index: 1; }
+.timeline-reparto { position: relative; margin-left: 0.5rem; padding-left: 1.5rem; border-left: 2px solid #0d6efd; }
+.timeline-punto { position: absolute; left: -8px; width: 14px; height: 14px; border-radius: 50%; }
+
+/* ==========================================
+   ESTILOS EXTRAÍDOS DEL HTML (LIMPIEZA DE INLINE STYLES)
+   ========================================== */
+
+/* --- Iconos y Tarjetas del Dashboard (Admin) --- */
+.icon-dashboard {
+    width: 60px; 
+    height: 60px; 
+    font-size: 1.5rem;
+}
+.text-metric-title {
+    font-size: 0.75rem; 
+    letter-spacing: 0.5px;
+}
+.scroll-invisible {
+    max-height: 500px;
+}
+
+/* --- Menú Público --- */
+.navbar-main {
+    background: rgba(255, 255, 255, 0.95); 
+    backdrop-filter: blur(10px); 
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+.navbar-brand-icon {
+    font-size: 1.5rem;
+}
+.btn-cart-nav {
+    color: #2b2d42;
+}
+
+/* --- Menú Admin --- */
+.navbar-admin {
+    background-color: #0f172a; 
+    border-bottom: 1px solid rgba(255,255,255,0.05); 
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+.admin-logo-icon {
+    width: 36px; 
+    height: 36px; 
+    font-size: 1.1rem;
+}
+.admin-badge {
+    font-size: 0.7rem; 
+    letter-spacing: 1px;
+}
+.admin-toggler-icon {
+    filter: invert(1) opacity(0.7);
+}
+.admin-divider {
+    width: 1px; 
+    opacity: 0.5;
+}
+.admin-avatar {
+    width: 32px; 
+    height: 32px; 
+    font-size: 0.85rem;
+}
+
+/* --- Footer --- */
+.footer-main {
+    background-color: #ffffff; 
+    border-top: 1px solid rgba(0,0,0,0.05);
+}
+
+/* --- Tienda y Checkout --- */
+.hero-section {
+    background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+}
+.checkout-card {
+    border-radius: 20px;
+}
+.stepper-line {
+    height: 4px; 
+    z-index: 0; 
+    background-color: #e2e8f0;
+}
+.stepper-progress {
+    width: 50%;
+}
+.stepper-circle {
+    width: 45px; 
+    height: 45px;
+}
+.input-address-origin {
+    border: 1px solid #cfe2ff;
+}
+.autocomplete-list {
+    z-index: 1050; 
+    display: none; 
+    top: 100%; 
+    border-radius: 12px; 
+    overflow: hidden;
+}
+.map-marker-origin {
+    width: 18px; 
+    height: 18px; 
+    left: -26px; 
+    top: 18px;
+}
+
+/* --- Panel Repartidor --- */
+.repartidor-nav {
+    backdrop-filter: blur(10px); 
+    background-color: rgba(255,255,255,0.95) !important;
+}
+.mapa-repartidor-container {
+    height: 350px; 
+    width: 100%;
+}
+.parada-avatar {
+    width: 45px; 
+    height: 45px; 
+    font-size: 1.2rem;
+}
+.timeline-dot {
+    top: 2px;
+}
+.timeline-label {
+    font-size: 0.7rem; 
+    letter-spacing: 1px;
+}
+.empty-route-icon {
+    font-size: 4rem; 
+    opacity: 0.8;
+}

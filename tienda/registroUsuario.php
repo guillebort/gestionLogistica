@@ -54,7 +54,7 @@ session_start();
                                         <label for="pass2">Repetir Contraseña</label>
                                     </div>
                                 </div>
-                                <div id="errorPass" class="col-12 text-danger small fw-medium mt-1" style="display: none;">⚠️ Las contraseñas no coinciden.</div>
+                                <div id="errorPass" class="col-12 text-danger small fw-medium mt-1">⚠️ Las contraseñas no coinciden.</div>
                             </div>
 
                             <!-- SECCIÓN 2: Datos Personales -->
@@ -124,21 +124,6 @@ session_start();
 
     <?php include '../includes/pie.php'; ?>
     <script src="../js/logica.js"></script>
-    <script>
-        // Feedback en tiempo real para las contraseñas sin romper logica.js
-        document.getElementById('pass2').addEventListener('input', function() {
-            let pass1 = document.getElementById('pass1').value;
-            let pass2 = this.value;
-            let error = document.getElementById('errorPass');
-            if (pass2.length > 0 && pass1 !== pass2) {
-                this.classList.add('is-invalid');
-                error.style.display = 'block';
-            } else {
-                this.classList.remove('is-invalid');
-                if(pass2.length > 0) this.classList.add('is-valid');
-                error.style.display = 'none';
-            }
-        });
-    </script>
+    
 </body>
 </html>

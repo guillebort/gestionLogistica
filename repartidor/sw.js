@@ -1,6 +1,6 @@
-const CACHE_NAME = 'logistfg-repartidor-v1';
+const CACHE_NAME = 'logistfg-repartidor-v2'; // Cambiamos versión para limpiar la caché antigua
 const ASSETS_TO_CACHE = [
-    './repartidor.php',
+    './offline.html', // <-- Metemos la página offline en lugar del .php
     '../css/estilo.css',
     '../js/logica.js',
     './manifest.json',
@@ -8,17 +8,16 @@ const ASSETS_TO_CACHE = [
     'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
 ];
 
-// 1. INSTALACIÓN: Guardamos los archivos estáticos en la caché
+// 1. INSTALACIÓN
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            console.log('Archivos en caché correctamente');
             return cache.addAll(ASSETS_TO_CACHE);
         })
     );
 });
 
-// 2. ACTIVACIÓN: Limpiamos cachés antiguas si cambiamos la versión
+// 2. ACTIVACIÓN (Limpieza de cachés viejas)
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((cacheNames) => {
@@ -33,24 +32,37 @@ self.addEventListener('activate', (event) => {
     );
 });
 
-// 3. FETCH (Estrategia Network First): Intentamos ir a internet, si falla, tiramos de caché
+// 3. FETCH: Estrategia para PWA con backend PHP
 self.addEventListener('fetch', (event) => {
-    event.respondWith(
-        fetch(event.request)
-            .then((networkResponse) => {
-                // Si hay conexión, guardamos una copia fresca en caché
-                return caches.open(CACHE_NAME).then((cache) => {
-                    cache.put(event.request, networkResponse.clone());
-                    return networkResponse;
-                });
+    // Si la petición es de navegación (pidiendo un archivo HTML o PHP entero)
+    if (event.request.mode === 'navigate') {
+        event.respondWith(
+            fetch(event.request).catch(() => {
+                // Si la red falla (offline), devolvemos la página offline genérica
+                return caches.match('./offline.html');
             })
-            .catch(() => {
-                // Si no hay conexión (modo offline), devolvemos lo que haya en la caché
-                return caches.match(event.request);
-            })
-    );
+        );
+    } else {
+        // Para el resto de cosas (CSS, JS, imágenes), intentamos red primero, y si no, tiramos de caché
+        event.respondWith(
+            fetch(event.request)
+                .then((networkResponse) => {
+                    return caches.open(CACHE_NAME).then((cache) => {
+                        // Guardamos copia de los assets estáticos
+                        if (event.request.url.includes('.css') || event.request.url.includes('.js')) {
+                            cache.put(event.request, networkResponse.clone());
+                        }
+                        return networkResponse;
+                    });
+                })
+                .catch(() => {
+                    return caches.match(event.request);
+                })
+        );
+    }
 });
 
+// 4. BACKGROUND SYNC (Lo tenías muy bien planteado)
 self.addEventListener('sync', function(event) {
     if (event.tag === 'sync-entregas') {
         console.log("Internet recuperado: Sincronizando entregas pendientes...");

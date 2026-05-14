@@ -10,6 +10,10 @@ if ($codigo <= 0) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
+        die("Error de seguridad: Token CSRF inválido o solicitud caducada.");
+    }
     $nombre = $_POST['nombre'] ?? '';
     $apellidos = $_POST['apellidos'] ?? '';
     $domicilio = $_POST['domicilio'] ?? '';

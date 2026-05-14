@@ -109,11 +109,15 @@ document.addEventListener('DOMContentLoaded', () => {
     activarAutocompletado('input_destino', 'lista_destino', 'lat_destino', 'lon_destino');
     activarAutocompletadoUnico('input_direccion', 'lista_sugerencias');
 
-    // --- 8. LÓGICA DEL MAPA DEL REPARTIDOR (Leaflet + Routing) ---
+    // --- 8. LÓGICA DEL MAPA DEL REPARTIDOR UNIFICADA (Leaflet + Routing) ---
     const mapaElem = document.getElementById('mapa-repartidor');
     let map = null;
     let controlRuta = null;
     let cocheMarker = null;
+
+    // Variables globales para la navegación paso a paso
+    let rutaOptimaOrdenada = [];
+    let pasoRutaActual = 0;
 
     if (mapaElem) {
         map = L.map('mapa-repartidor').setView([39.4699, -0.3762], 12);
@@ -122,80 +126,50 @@ document.addEventListener('DOMContentLoaded', () => {
         }).addTo(map);
     }
 
-    const iconoCoche = L.divIcon({
-        html: '<div style="font-size: 24px; transform: scaleX(-1);">🚗</div>',
-        className: 'icono-coche-custom',
-        iconSize: [30, 30],
-        iconAnchor: [15, 15]
-    });
+    // Ocultamos los botones de simulación individual (ahora navegamos paso a paso)
+    document.querySelectorAll('.btn-simular-ruta').forEach(btn => btn.style.display = 'none');
 
-    // Simulación de ruta individual
-    const botonesSimular = document.querySelectorAll('.btn-simular-ruta');
-    botonesSimular.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            if (!map) return;
-            if (controlRuta != null) map.removeControl(controlRuta);
-            if (cocheMarker != null) map.removeLayer(cocheMarker);
-
-            const latO = e.target.getAttribute('data-lato');
-            const lonO = e.target.getAttribute('data-lono');
-            const latD = e.target.getAttribute('data-latd');
-            const lonD = e.target.getAttribute('data-lond');
-
-            if(latO == 0 || lonO == 0 || latD == 0 || lonD == 0) {
-                alert("Las coordenadas de este pedido no son válidas.");
-                return;
-            }
-
-            controlRuta = L.Routing.control({
-                waypoints: [L.latLng(latO, lonO), L.latLng(latD, lonD)],
-                routeWhileDragging: false,
-                addWaypoints: false,
-                fitSelectedRoutes: true,
-                lineOptions: { styles: [{color: '#0d6efd', opacity: 0.8, weight: 6}] },
-                createMarker: function(i, wp, nWps) {
-                    var texto = (i === 0) ? "🟢 Origen" : "📍 Destino";
-                    return L.marker(wp.latLng).bindPopup(texto);
-                }
-            }).addTo(map);
-
-            controlRuta.on('routesfound', function(e) {
-                animarCocheEnRuta(e.routes[0].coordinates, map);
-            });
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-    });
-
-    // Optimización de rutas (Vecino más cercano)
     const btnOptimizar = document.getElementById('btn-optimizar-ruta');
-    if (btnOptimizar) {
+    const btnSiguiente = document.getElementById('btn-siguiente-parada');
+
+    if (btnOptimizar && btnSiguiente) {
+        
+        // --- A. CALCULAR RUTA ÓPTIMA Y PREPARAR JORNADA ---
         btnOptimizar.addEventListener('click', () => {
             if (!map) return;
-            const paradas = document.querySelectorAll('.btn-simular-ruta');
+            const paradas = document.querySelectorAll('.parada-card');
             if (paradas.length === 0) {
-                alert("No hay entregas pendientes para optimizar en esta ruta.");
+                alert("No hay entregas pendientes para organizar.");
                 return;
             }
 
-            if (controlRuta != null) map.removeControl(controlRuta);
-            if (cocheMarker != null) map.removeLayer(cocheMarker);
-
-            const latOrigen = parseFloat(paradas[0].getAttribute('data-lato'));
-            const lonOrigen = parseFloat(paradas[0].getAttribute('data-lono'));
+            // 1. Obtener punto de origen (central logística) de la primera tarjeta
+            const latOrigen = parseFloat(paradas[0].querySelector('.btn-simular-ruta').getAttribute('data-lato'));
+            const lonOrigen = parseFloat(paradas[0].querySelector('.btn-simular-ruta').getAttribute('data-lono'));
             let posicionActual = L.latLng(latOrigen, lonOrigen);
 
+            rutaOptimaOrdenada = [{
+                latLng: posicionActual,
+                idPedido: 'central'
+            }];
+
+            // 2. Extraer todos los destinos
             let pendientes = [];
-            paradas.forEach(btn => {
+            paradas.forEach(card => {
+                const btn = card.querySelector('.btn-simular-ruta');
                 pendientes.push({
+                    idPedido: card.id,
+                    cardElement: card,
                     lat: parseFloat(btn.getAttribute('data-latd')),
                     lng: parseFloat(btn.getAttribute('data-lond'))
                 });
             });
 
-            let rutaOptima = [posicionActual];
+            // 3. Algoritmo: Vecino Más Cercano
             while (pendientes.length > 0) {
                 let indiceMasCercano = -1;
                 let distanciaMin = Infinity;
+                
                 for (let i = 0; i < pendientes.length; i++) {
                     let destinoEval = L.latLng(pendientes[i].lat, pendientes[i].lng);
                     let dist = posicionActual.distanceTo(destinoEval); 
@@ -204,24 +178,100 @@ document.addEventListener('DOMContentLoaded', () => {
                         indiceMasCercano = i;
                     }
                 }
+                
                 posicionActual = L.latLng(pendientes[indiceMasCercano].lat, pendientes[indiceMasCercano].lng);
-                rutaOptima.push(posicionActual);
+                rutaOptimaOrdenada.push({
+                    latLng: posicionActual,
+                    idPedido: pendientes[indiceMasCercano].idPedido,
+                    cardElement: pendientes[indiceMasCercano].cardElement
+                });
+                
                 pendientes.splice(indiceMasCercano, 1); 
             }
 
+            // 4. Dibujar la ruta panorámica inicial (Overview)
+            if (controlRuta != null) map.removeControl(controlRuta);
+            if (cocheMarker != null) map.removeLayer(cocheMarker);
+
             controlRuta = L.Routing.control({
-                waypoints: rutaOptima,
+                waypoints: rutaOptimaOrdenada.map(p => p.latLng),
                 routeWhileDragging: false,
                 addWaypoints: false,
                 fitSelectedRoutes: true,
-                lineOptions: { styles: [{color: '#198754', opacity: 0.8, weight: 6}] },
-                createMarker: function(i, wp, nWps) {
-                    if (i === 0) return L.marker(wp.latLng).bindPopup("<b>🟢 Central Logística (Inicio)</b>");
-                    return L.marker(wp.latLng).bindPopup("<b>📍 Parada " + i + "</b>");
+                lineOptions: { styles: [{color: '#6c757d', opacity: 0.5, weight: 4}] }, // Gris tenue para ver el panorama
+                createMarker: function(i, wp) {
+                    if (i === 0) return L.marker(wp.latLng).bindPopup("<b>🟢 Central Logística</b>");
+                    return L.marker(wp.latLng).bindPopup(`<b>📍 Parada ${i}</b>`);
                 }
             }).addTo(map);
 
             window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // 5. Reorganizar tarjetas en el DOM en el orden óptimo calculado
+            const contenedorTarjetas = document.getElementById('lista-paradas');
+            rutaOptimaOrdenada.forEach(paso => {
+                if (paso.idPedido !== 'central') {
+                    contenedorTarjetas.appendChild(paso.cardElement);
+                }
+            });
+
+            // 6. Cambiar la interfaz de botones
+            btnOptimizar.classList.add('d-none');
+            btnSiguiente.classList.remove('d-none');
+            pasoRutaActual = 0; 
+            
+            alert(`¡Ruta óptima calculada!\nTienes ${rutaOptimaOrdenada.length - 1} paradas. Pulsa 'Iniciar Navegación' para arrancar hacia el primer destino.`);
+        });
+
+        // --- B. NAVEGACIÓN PASO A PASO ---
+        btnSiguiente.addEventListener('click', () => {
+            if (pasoRutaActual >= rutaOptimaOrdenada.length - 1) {
+                alert("¡Ruta finalizada! Has completado todos los destinos planificados.");
+                btnSiguiente.classList.add('d-none');
+                btnOptimizar.classList.remove('d-none');
+                return;
+            }
+
+            const origen = rutaOptimaOrdenada[pasoRutaActual].latLng;
+            const destino = rutaOptimaOrdenada[pasoRutaActual + 1];
+
+            // Limpiamos el mapa general y trazamos solo el tramo actual
+            if (controlRuta != null) map.removeControl(controlRuta);
+            if (cocheMarker != null) map.removeLayer(cocheMarker);
+
+            controlRuta = L.Routing.control({
+                waypoints: [origen, destino.latLng],
+                routeWhileDragging: false,
+                addWaypoints: false,
+                fitSelectedRoutes: true,
+                lineOptions: { styles: [{color: '#10b981', opacity: 0.9, weight: 6}] }, // Verde intenso para el tramo activo
+                createMarker: function(i, wp) {
+                    if (i === 0) return L.marker(wp.latLng).bindPopup("<b>🚗 Tu ubicación</b>");
+                    return L.marker(wp.latLng).bindPopup("<b>📍 Siguiente Entrega</b>");
+                }
+            }).addTo(map);
+
+            // Animar el coche usando la función existente cuando se calcule el tramo
+            controlRuta.on('routesfound', function(e) {
+                animarCocheEnRuta(e.routes[0].coordinates, map);
+            });
+
+            // Resaltar visualmente la tarjeta del pedido activo
+            document.querySelectorAll('.parada-card').forEach(c => {
+                c.classList.remove('border', 'border-primary', 'border-3', 'shadow-lg');
+                c.style.opacity = "0.6"; // Atenuar los demás
+            });
+            destino.cardElement.classList.add('border', 'border-primary', 'border-3', 'shadow-lg');
+            destino.cardElement.style.opacity = "1";
+            
+            // Hacer scroll automático hacia la tarjeta que toca entregar
+            destino.cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            // Avanzar el contador interno
+            pasoRutaActual++;
+            
+            // Actualizar texto del botón para la siguiente vez
+            btnSiguiente.innerHTML = `🚗 Ir a la siguiente parada (${pasoRutaActual}/${rutaOptimaOrdenada.length - 1})`;
         });
     }
 

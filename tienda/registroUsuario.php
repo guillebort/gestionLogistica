@@ -15,79 +15,105 @@ session_start();
 
     <main class="container my-5">
         <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-dark text-white text-center">
-                        <h4>Registro de Nuevo Cliente</h4>
-                    </div>
-                    <div class="card-body">
+            <div class="col-lg-8 col-xl-7">
+                
+                <div class="text-center mb-5">
+                    <div class="display-6 mb-2">👋</div>
+                    <h2 class="fw-bold text-dark">Crear cuenta de cliente</h2>
+                    <p class="text-muted">Rellena tus datos para empezar a enviar con LogisTFG</p>
+                </div>
+
+                <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+                    <div class="card-body p-4 p-md-5">
                         <form method="post" action="../controladores/registro.php" onsubmit="return verificarPasswords()">
                         <?php 
-                            // Recogemos la ruta por si viene de comprar en la tienda
                             $urlDest = $_GET["url"] ?? null; 
                             if($urlDest != null) { 
                         ?>
                             <input type="hidden" name="url" value="<?php echo htmlspecialchars($urlDest); ?>">
                         <?php } ?>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label>Nombre:</label>
-                                    <input name="nombre" type="text" class="form-control" required/>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label>Apellidos:</label>
-                                    <input name="apellidos" type="text" class="form-control" required/>
-                                </div>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label>Dirección (Domicilio):</label>
-                                <input name="domicilio" type="text" class="form-control" required/>
-                            </div>
 
-                            <div class="row">
-                                <div class="col-md-4 mb-3">
-                                    <label>Población:</label>
-                                    <input name="poblacion" type="text" class="form-control" required/>
+                            <!-- SECCIÓN 1: Credenciales -->
+                            <h5 class="text-primary fw-bold mb-3"><span class="badge bg-primary rounded-circle me-2">1</span>Credenciales de Acceso</h5>
+                            <div class="row g-3 mb-4 bg-light p-3 rounded-3 border-0">
+                                <div class="col-12">
+                                    <div class="form-floating">
+                                        <input name="usuario" type="email" class="form-control" id="regEmail" placeholder="Email" required>
+                                        <label for="regEmail">Correo Electrónico (Será tu usuario)</label>
+                                    </div>
                                 </div>
-                                <div class="col-md-4 mb-3">
-                                    <label>Provincia:</label>
-                                    <input name="provincia" type="text" class="form-control" required/>
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input id="pass1" name="clave" type="password" class="form-control" placeholder="Contraseña" required>
+                                        <label for="pass1">Contraseña</label>
+                                    </div>
                                 </div>
-                                <div class="col-md-4 mb-3">
-                                    <label>Código Postal:</label>
-                                    <input name="cp" type="text" class="form-control" maxlength="5" required/>
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input id="pass2" name="clave2" type="password" class="form-control" placeholder="Repetir Contraseña" required>
+                                        <label for="pass2">Repetir Contraseña</label>
+                                    </div>
                                 </div>
+                                <div id="errorPass" class="col-12 text-danger small fw-medium mt-1" style="display: none;">⚠️ Las contraseñas no coinciden.</div>
                             </div>
 
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label>Teléfono:</label>
-                                    <input name="telefono" type="text" class="form-control" maxlength="9" required/>
+                            <!-- SECCIÓN 2: Datos Personales -->
+                            <h5 class="text-primary fw-bold mb-3 mt-4"><span class="badge bg-primary rounded-circle me-2">2</span>Datos Personales</h5>
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input name="nombre" type="text" class="form-control" id="regNombre" placeholder="Nombre" required>
+                                        <label for="regNombre">Nombre o Empresa</label>
+                                    </div>
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <label>Email (Será tu usuario):</label>
-                                    <input name="usuario" type="email" class="form-control" required/>
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input name="apellidos" type="text" class="form-control" id="regApe" placeholder="Apellidos" required>
+                                        <label for="regApe">Apellidos</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input name="telefono" type="tel" class="form-control" id="regTel" maxlength="9" placeholder="Teléfono" required>
+                                        <label for="regTel">Teléfono Móvil</label>
+                                    </div>
                                 </div>
                             </div>
 
-                            <hr>
-
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label>Contraseña:</label>
-                                    <input id="pass1" name="clave" type="password" class="form-control" required/>
+                            <!-- SECCIÓN 3: Dirección -->
+                            <h5 class="text-primary fw-bold mb-3 mt-4"><span class="badge bg-primary rounded-circle me-2">3</span>Dirección de Facturación</h5>
+                            <div class="row g-3 mb-4">
+                                <div class="col-12">
+                                    <div class="form-floating">
+                                        <input name="domicilio" type="text" class="form-control" id="regDom" placeholder="Dirección" required>
+                                        <label for="regDom">Dirección Completa (Calle, número, piso...)</label>
+                                    </div>
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <label>Repetir Contraseña:</label>
-                                    <input id="pass2" name="clave2" type="password" class="form-control" required/>
+                                <div class="col-md-5">
+                                    <div class="form-floating">
+                                        <input name="poblacion" type="text" class="form-control" id="regPob" placeholder="Población" required>
+                                        <label for="regPob">Población</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-floating">
+                                        <input name="provincia" type="text" class="form-control" id="regProv" placeholder="Provincia" required>
+                                        <label for="regProv">Provincia</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-floating">
+                                        <input name="cp" type="text" class="form-control" id="regCP" maxlength="5" placeholder="CP" required>
+                                        <label for="regCP">C. Postal</label>
+                                    </div>
                                 </div>
                             </div>
-                            <div id="errorPass" class="text-danger mb-3" style="display: none;">Las contraseñas no coinciden.</div>
 
-                            <div class="d-grid gap-2 mt-4">
-                                <button type="submit" class="btn btn-success btn-lg">Crear Cuenta</button>
-                                <a href="login.php" class="btn btn-outline-secondary">Cancelar y volver</a>
+                            <hr class="my-4 text-muted">
+
+                            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3">
+                                <a href="login.php" class="text-muted text-decoration-none fw-medium">← Volver al login</a>
+                                <button type="submit" class="btn btn-success btn-lg px-5 rounded-pill shadow-sm fw-bold">Registrar mi cuenta ✨</button>
                             </div>
                         </form>
                     </div>
@@ -97,7 +123,22 @@ session_start();
     </main>
 
     <?php include '../includes/pie.php'; ?>
-
     <script src="../js/logica.js"></script>
+    <script>
+        // Feedback en tiempo real para las contraseñas sin romper logica.js
+        document.getElementById('pass2').addEventListener('input', function() {
+            let pass1 = document.getElementById('pass1').value;
+            let pass2 = this.value;
+            let error = document.getElementById('errorPass');
+            if (pass2.length > 0 && pass1 !== pass2) {
+                this.classList.add('is-invalid');
+                error.style.display = 'block';
+            } else {
+                this.classList.remove('is-invalid');
+                if(pass2.length > 0) this.classList.add('is-valid');
+                error.style.display = 'none';
+            }
+        });
+    </script>
 </body>
 </html>

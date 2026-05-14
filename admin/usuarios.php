@@ -58,45 +58,69 @@ $usuarios = $con->obtenerTodosLosUsuarios();
     <meta charset="UTF-8">
     <title>Admin: Usuarios - LogisTFG</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/estilo.css">
 </head>
-<body class="bg-light">
+<body class="bg-light" style="font-family: 'Inter', sans-serif;">
     
     <?php include '../includes/menuAdmin.php'; ?>
 
     <main class="container my-5">
-        <?php if (isset($_SESSION['mensajeAdmin'])) { ?>
-            <div class="alert alert-info text-center fw-bold shadow-sm">
+        
+        <div class="mb-4 d-flex justify-content-between align-items-center">
+            <div>
+                <h3 class="fw-bold text-dark mb-0">👥 Gestión del Personal y Clientes</h3>
+                <p class="text-muted small mt-1 mb-0">Administra los accesos y roles de toda la plataforma.</p>
+            </div>
+            <span class="badge bg-primary rounded-pill px-3 py-2 shadow-sm fs-6"><?= count($usuarios) ?> Registros</span>
+        </div>
+
+        <?php if (isset($_SESSION['mensajeAdmin'])) { 
+            // Color dinámico según si es éxito o error
+            $esError = strpos($_SESSION['mensajeAdmin'], '❌') !== false;
+            $claseAlerta = $esError ? 'alert-danger text-danger-emphasis bg-danger-subtle' : 'alert-success text-success-emphasis bg-success-subtle';
+        ?>
+            <div class="alert <?= $claseAlerta ?> text-center rounded-4 shadow-sm border-0 mb-4 fw-medium">
                 <?= $_SESSION['mensajeAdmin']; unset($_SESSION['mensajeAdmin']); ?>
             </div>
         <?php } ?>
-
-        <h3 class="mb-4 text-primary">👥 Listado de Usuarios y Personal</h3>
         
-        <div class="card shadow-sm border-0">
+        <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
             <div class="card-body p-0 table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-dark">
+                <table class="table table-hover align-middle mb-0 bg-white">
+                    <thead class="table-light text-muted small text-uppercase">
                         <tr>
-                            <th>ID</th>
-                            <th>Email / Usuario</th>
-                            <th>Nombre Completo</th>
-                            <th>Estado</th>
-                            <th>Rol en el Sistema</th>
-                            <th class="text-center">Acciones de Cuenta</th>
+                            <th class="ps-4 py-3 border-0">ID</th>
+                            <th class="py-3 border-0">Email / Usuario</th>
+                            <th class="py-3 border-0">Nombre Completo</th>
+                            <th class="py-3 border-0 text-center">Estado</th>
+                            <th class="py-3 border-0">Rol del Sistema</th>
+                            <th class="pe-4 py-3 border-0 text-center">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($usuarios as $usu) { ?>
-                            <tr>
-                                <td><strong><?= $usu['id'] ?></strong></td>
-                                <td><?= htmlspecialchars($usu['usuario']) ?></td>
-                                <td><?= htmlspecialchars($usu['nombre'] . ' ' . $usu['apellidos']) ?></td>
+                        <?php foreach ($usuarios as $usu) { 
+                            $esAdminLogueado = ($usu['id'] == $codigoLogueado);
+                        ?>
+                            <tr class="border-bottom border-secondary border-opacity-10 <?= $esAdminLogueado ? 'bg-primary bg-opacity-10' : '' ?>">
+                                <td class="ps-4 fw-bold text-dark">#<?= $usu['id'] ?></td>
+                                <td>
+                                    <div class="text-primary fw-medium"><?= htmlspecialchars($usu['usuario']) ?></div>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-dark d-flex align-items-center gap-2">
+                                        <div class="bg-light rounded-circle d-flex justify-content-center align-items-center text-secondary" style="width: 32px; height: 32px;">👤</div>
+                                        <?= htmlspecialchars($usu['nombre'] . ' ' . $usu['apellidos']) ?>
+                                    </div>
+                                </td>
                                 
                                 <!-- Columna Estado -->
-                                <td>
-                                    <span class="badge <?= $usu['activo'] ? 'bg-success' : 'bg-danger' ?>">
-                                        <?= $usu['activo'] ? 'Activo' : 'Baja/Inactivo' ?>
-                                    </span>
+                                <td class="text-center">
+                                    <?php if($usu['activo']): ?>
+                                        <span class="badge bg-success bg-opacity-10 text-success-emphasis border border-success-subtle rounded-pill px-3 py-2">Activo</span>
+                                    <?php else: ?>
+                                        <span class="badge bg-danger bg-opacity-10 text-danger-emphasis border border-danger-subtle rounded-pill px-3 py-2">Inactivo</span>
+                                    <?php endif; ?>
                                 </td>
 
                                 <!-- Columna Cambio de Rol -->
@@ -104,33 +128,39 @@ $usuarios = $con->obtenerTodosLosUsuarios();
                                     <form action="usuarios.php" method="POST" class="d-flex gap-2">
                                         <input type="hidden" name="accion" value="cambiar_rol">
                                         <input type="hidden" name="id_usuario" value="<?= $usu['id'] ?>">
-                                        <select name="nuevo_rol" class="form-select form-select-sm">
+                                        <select name="nuevo_rol" class="form-select form-select-sm rounded-pill shadow-none bg-light border-0 px-3 fw-medium">
                                             <option value="0" <?= $usu['rol'] == 0 ? 'selected' : '' ?>>Cliente</option>
                                             <option value="2" <?= $usu['rol'] == 2 ? 'selected' : '' ?>>Repartidor</option>
                                             <option value="1" <?= $usu['rol'] == 1 ? 'selected' : '' ?>>Administrador</option>
                                         </select>
-                                        <button type="submit" class="btn btn-sm btn-primary">Aplicar</button>
+                                        <button type="submit" class="btn btn-sm btn-dark rounded-pill px-3 fw-bold shadow-sm">Aplicar</button>
                                     </form>
                                 </td>
 
                                 <!-- Columna Botones Activar/Borrar -->
-                                <td class="text-center">
+                                <td class="pe-4 text-center">
                                     <div class="d-flex justify-content-center gap-2">
                                         <!-- Botón Activar/Desactivar -->
                                         <form action="usuarios.php" method="POST">
                                             <input type="hidden" name="accion" value="toggle_activo">
                                             <input type="hidden" name="id_usuario" value="<?= $usu['id'] ?>">
                                             <input type="hidden" name="estado_actual" value="<?= $usu['activo'] ?>">
-                                            <button type="submit" class="btn btn-sm <?= $usu['activo'] ? 'btn-warning' : 'btn-success' ?>" <?= ($usu['id'] == $codigoLogueado) ? 'disabled' : '' ?>>
-                                                <?= $usu['activo'] ? 'Suspender' : 'Activar' ?>
-                                            </button>
+                                            <?php if($usu['activo']): ?>
+                                                <button type="submit" class="btn btn-sm btn-outline-warning rounded-pill px-3 fw-bold" <?= $esAdminLogueado ? 'disabled' : '' ?>>
+                                                    Suspender
+                                                </button>
+                                            <?php else: ?>
+                                                <button type="submit" class="btn btn-sm btn-success rounded-pill px-3 fw-bold shadow-sm" <?= $esAdminLogueado ? 'disabled' : '' ?>>
+                                                    Reactivar
+                                                </button>
+                                            <?php endif; ?>
                                         </form>
 
                                         <!-- Botón Eliminar -->
                                         <form action="usuarios.php" method="POST" onsubmit="return confirm('¿Seguro que deseas eliminar este usuario de la base de datos de forma permanente?');">
                                             <input type="hidden" name="accion" value="eliminar">
                                             <input type="hidden" name="id_usuario" value="<?= $usu['id'] ?>">
-                                            <button type="submit" class="btn btn-sm btn-danger" <?= ($usu['id'] == $codigoLogueado) ? 'disabled' : '' ?>>
+                                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold" <?= $esAdminLogueado ? 'disabled' : '' ?>>
                                                 Eliminar
                                             </button>
                                         </form>

@@ -10,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $_SESSION['lonDestino'] = $_POST['lonDestino'];
 
     // CORREGIDO: Redirige a procesarPedido.php (tu pasarela real de pago)
-    header("Location: ../tienda/procesarPedido.php"); 
+    header("Location: checkoutController.php"); 
     exit;
 }
 ?>

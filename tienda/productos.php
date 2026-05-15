@@ -1,10 +1,8 @@
 <?php
-session_start();
-require_once '../modelos/AccesoBD.php';
-require_once '../modelos/Modelos.php';
-
-$con = AccesoBD::getInstance();
-$listaProductos = $con->obtenerProductosBD();
+if (!isset($listaProductos)) {
+    header("Location: ../controladores/productoController.php");
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">

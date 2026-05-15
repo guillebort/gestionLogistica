@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['totalPedido'] = $totalPedido;
 
         $codigoUsuario = $_SESSION['codigo'] ?? 0;
-        $urlDestino = ($codigoUsuario <= 0) ? "login.php?url=datosEnvio.php" : "datosEnvio.php";
+        $urlDestino = ($codigoUsuario <= 0) ? "../tienda/login.php?url=../controladores/datosEnvioController.php" : "../controladores/datosEnvioController.php";
 
         echo json_encode(["status" => "ok", "redirect" => $urlDestino]);
     } else {

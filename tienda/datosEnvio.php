@@ -1,17 +1,8 @@
 <?php
-require_once '../modelos/AccesoBD.php';
-require_once '../modelos/Modelos.php';
-session_start();
-// 1. Seguridad: Verificar sesión y carrito
-$idUsuario = $_SESSION['codigo'] ?? null;
-if ($idUsuario == null || !isset($_SESSION['carritoJSON'])) {
-    header("Location: productos.php");
+if (!isset($u)) {
+    header("Location: ../controladores/datosEnvioController.php");
     exit;
 }
-
-// 2. Obtener datos del cliente para el autocompletado
-$con = AccesoBD::getInstance();
-$u = $con->obtenerUsuarioBD($idUsuario);
 ?>
 <!DOCTYPE html>
 <html lang="es">

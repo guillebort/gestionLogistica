@@ -1,27 +1,37 @@
 <?php
-// controladores/ProductoController.php
+// controladores/productoController.php
 session_start();
 require_once '../modelos/AccesoBD.php';
+require_once '../modelos/Modelos.php';
 
 class ProductoController {
     
     public function mostrarCatalogo() {
-        // 1. El Controlador llama al Modelo
-        $bd = AccesoBD::getInstance();
-        $listaProductos = $bd->obtenerProductosBD();
-        
-        // 2. El Controlador carga los datos de la sesión necesarios
-        $nombreUsuario = $_SESSION['nombreUsuario'] ?? '';
+        try {
+            // 1. Instanciamos el modelo
+            $con = AccesoBD::getInstance();
+            
+            // 2. Lógica de negocio: Obtener el catálogo
+            $listaProductos = $con->obtenerProductosBD();
+            
+            // Si por algún motivo la BD no devuelve nada, inicializamos un array vacío para que la vista no falle
+            if (!$listaProductos) {
+                $listaProductos = [];
+            }
 
-        // 3. El Controlador "inyecta" los datos en la Vista
-        require_once '../tienda/productos.php';
+            // 3. Renderizamos la vista de la tienda
+            require_once '../tienda/productos.php';
+
+        } catch (Exception $e) {
+            // En un entorno profesional, registraríamos el error en un log (error_log)
+            $_SESSION['mensaje'] = "Error interno al cargar el catálogo de servicios.";
+            header("Location: ../tienda/index.php");
+            exit;
+        }
     }
 }
 
-// Enrutador básico (Front Controller pattern)
-$accion = $_GET['accion'] ?? 'catalogo';
+// Ejecutamos el Front Controller
 $controller = new ProductoController();
-
-if ($accion === 'catalogo') {
-    $controller->mostrarCatalogo();
-}
+$controller->mostrarCatalogo();
+?>

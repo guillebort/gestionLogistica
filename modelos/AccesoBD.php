@@ -316,29 +316,6 @@ class AccesoBD {
         }
     }
 
-    // Obtiene todos los pedidos que acaban de entrar (Estado 1 = Pendiente)
-    public function obtenerPedidosPendientes() {
-        $lista = [];
-        try {
-            // Hacemos un JOIN para traer también el nombre del cliente y la dirección de destino
-            $sql = "SELECT p.id, p.fecha, p.importe, u.nombre as cliente, d.calle_texto as destino 
-                    FROM pedidos p 
-                    JOIN usuarios u ON p.persona = u.id
-                    JOIN direcciones d ON p.id_direccion_destino = d.id
-                    WHERE p.estado = 1 
-                    ORDER BY p.fecha ASC";
-            
-            $stmt = $this->conexionBD->query($sql);
-            
-            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                $lista[] = $row;
-            }
-        } catch (Exception $e) {
-            error_log("Error obteniendo pedidos pendientes: " . $e->getMessage());
-        }
-        return $lista;
-    }
-
     // Obtiene a los usuarios que son repartidores (Rol = 2)
     public function obtenerRepartidores() {
         $repartidores = [];

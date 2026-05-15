@@ -1,17 +1,12 @@
 <?php
-session_start();
+
+if (!isset($u) && !isset($historial)) {
+    header("Location: ../controladores/usuarioController.php");
+    exit;
+}
+
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-}
-require_once '../includes/controlSesion.php';
-require_once '../modelos/AccesoBD.php';
-require_once '../modelos/Modelos.php';
-    
-// REDIRECCIÓN MAESTRA: Si no está logueado, lo mandamos al login.
-$codigoLogueado = $_SESSION["codigo"] ?? 0;
-if ($codigoLogueado <= 0) {
-    header("Location: login.php");
-    exit;
 }
 ?>
 <!DOCTYPE html>

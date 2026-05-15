@@ -1,25 +1,11 @@
 <?php
-require_once '../modelos/AccesoBD.php';
-require_once '../modelos/Modelos.php';
-session_start();
-if (empty($_SESSION['csrf_token'])) {
-    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-}
-// Recuperamos los datos de la sesión
-$listaCarrito = $_SESSION["carritoJSON"] ?? [];
-$total = $_SESSION["totalPedido"] ?? 0.0;
+// tienda/procesarPedido.php
+// VISTA PURA: La lógica ya se ha procesado en controladores/checkoutController.php
 
-if (empty($listaCarrito)) {
-    header("Location: carrito.php");
+// Medida de seguridad antiespionaje: Evitar acceso directo a la vista
+if (!isset($listaCarrito) || !isset($misTarjetas)) {
+    header("Location: ../controladores/checkoutController.php");
     exit;
-}
-
-// Conseguir las tarjetas del cliente logueado
-$codigoLogueado = $_SESSION["codigo"] ?? 0;
-$misTarjetas = [];
-if ($codigoLogueado > 0) {
-    $con = AccesoBD::getInstance();
-    $misTarjetas = $con->obtenerTarjetasUsuario($codigoLogueado);
 }
 ?>
 <!DOCTYPE html>
@@ -90,7 +76,7 @@ if ($codigoLogueado > 0) {
                         <div class="card-body p-4 p-md-5">
                             <h5 class="fw-bold mb-4 border-bottom pb-2">Método de Pago</h5>
 
-                            <!-- SELECT VISUALMENTE OCULTO (Para no romper tu logica.js original) -->
+                            <!-- SELECT VISUALMENTE OCULTO -->
                             <select class="d-none" name="tarjetaGuardada" id="tarjetaGuardada">
                                 <option value="NUEVA" id="opt_NUEVA" selected>Nueva</option>
                                 <?php foreach ($misTarjetas as $t) { ?>
@@ -179,20 +165,5 @@ if ($codigoLogueado > 0) {
     <?php include '../includes/pie.php'; ?>
     
     <script src="../js/logica.js?v=<?= time(); ?>"></script>
-    <script>
-        // Sincroniza los radio buttons visuales (nuevos) con el select original (invisible)
-        // para que logica.js procese todo automáticamente sin romperse.
-        const radioTarjetas = document.querySelectorAll('.tarjeta-radio');
-        const selectReal = document.getElementById('tarjetaGuardada');
-
-        radioTarjetas.forEach(radio => {
-            radio.addEventListener('change', function() {
-                // Selecciona el option adecuado en el select oculto
-                document.getElementById('opt_' + this.value).selected = true;
-                // Dispara el evento 'change' del select real para que actúe logica.js
-                selectReal.dispatchEvent(new Event('change'));
-            });
-        });
-    </script>
 </body>
 </html>

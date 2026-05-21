@@ -1,46 +1,82 @@
 <?php
-// --- Archivo: registro.php ---
+// controladores/registro.php
 session_start();
 require_once '../modelos/AccesoBD.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $usuario = $_POST['usuario'] ?? '';
-    $nombre = $_POST['nombre'] ?? '';
-    $apellidos = $_POST['apellidos'] ?? '';
-    $domicilio = $_POST['domicilio'] ?? '';
-    $poblacion = $_POST['poblacion'] ?? '';
-    $provincia = $_POST['provincia'] ?? '';
-    $cp = $_POST['cp'] ?? '';
-    $telefono = $_POST['telefono'] ?? '';
-    $clave = $_POST['clave'] ?? '';
-    $clave2 = $_POST['clave2'] ?? '';
+// Cabecera REST
+header('Content-Type: application/json; charset=utf-8');
 
-    if ($clave !== $clave2) {
-        header("Location: registroUsuario.php?error=Las contraseñas no coinciden");
-        exit;
-    }
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode(["status" => "error", "message" => "Método no permitido."]);
+    exit;
+}
 
+// Leer payload JSON o FormData estándar
+$jsonInput = json_decode(file_get_contents('php://input'), true);
+
+// Función auxiliar para extraer datos venga como venga
+function getParam($key, $jsonInput) {
+    return $jsonInput[$key] ?? $_POST[$key] ?? '';
+}
+
+$usuario   = filter_var(getParam('usuario', $jsonInput), FILTER_SANITIZE_EMAIL);
+$nombre    = getParam('nombre', $jsonInput);
+$apellidos = getParam('apellidos', $jsonInput);
+$domicilio = getParam('domicilio', $jsonInput);
+$poblacion = getParam('poblacion', $jsonInput);
+$provincia = getParam('provincia', $jsonInput);
+$cp        = getParam('cp', $jsonInput);
+$telefono  = getParam('telefono', $jsonInput);
+$clave     = getParam('clave', $jsonInput);
+$clave2    = getParam('clave2', $jsonInput);
+$urlDestino= getParam('url', $jsonInput) ?: 'usuario.php';
+
+// 1. Validación de Backend (Defensa en profundidad)
+if (empty($usuario) || empty($clave) || empty($nombre)) {
+    http_response_code(400); // Bad Request
+    echo json_encode(["status" => "error", "message" => "Faltan campos obligatorios."]);
+    exit;
+}
+
+if ($clave !== $clave2) {
+    http_response_code(400); // Bad Request
+    echo json_encode(["status" => "error", "message" => "Las contraseñas no coinciden. Intento de evasión de frontend detectado."]);
+    exit;
+}
+
+try {
     $con = AccesoBD::getInstance();
+    
+    // 2. Intentar registrar al usuario
     $exito = $con->registrarUsuarioBD($usuario, $clave, $nombre, $apellidos, $domicilio, $poblacion, $provincia, $cp, $telefono);
 
     if ($exito) {
-            $idNuevo = $con->comprobarUsuarioBD($usuario, $clave);
-            if ($idNuevo != -1) {
-                $_SESSION['codigo'] = $idNuevo;
-                $_SESSION['nombreUsuario'] = $nombre;
-            }
-            $rutaDestino = $_POST['url'] ?? 'usuario.php';
-            $_SESSION['mensaje'] = "✅ ¡Cuenta creada! Bienvenido a la tienda.";
-            
-            // SOLUCIÓN: Añadir '../tienda/' para volver a la carpeta correcta
-            header("Location: ../tienda/" . ltrim($rutaDestino, '/'));
-        } else {
-            $_SESSION['mensaje'] = "❌ Error al registrar. Ese correo ya existe.";
-            
-            // SOLUCIÓN PARA EL ERROR: Mejor usar el archivo de registro como fallback
-            $rutaOrigen = $_SERVER['HTTP_REFERER'] ?? '../tienda/registroUsuario.php';
-            header("Location: " . $rutaOrigen);
+        // 3. Autologin inmediato tras el registro
+        $idNuevo = $con->comprobarUsuarioBD($usuario, $clave);
+        if ($idNuevo != -1) {
+            session_regenerate_id(true); // Prevenir Session Fixation
+            $_SESSION['codigo'] = $idNuevo;
+            $_SESSION['nombreUsuario'] = $nombre;
+            $_SESSION['rol'] = 0; // Rol cliente por defecto
         }
-        exit;
+        
+        $rutaRedirect = "../tienda/" . ltrim($urlDestino, '/');
+        
+        http_response_code(201); // 201 Created
+        echo json_encode([
+            "status" => "success", 
+            "message" => "¡Cuenta creada! Bienvenido a LogisTFG.",
+            "data" => ["redirect" => $rutaRedirect]
+        ]);
+    } else {
+        // Falló la inserción (generalmente porque el usuario/email ya tiene el constraint UNIQUE en MySQL)
+        http_response_code(409); // 409 Conflict
+        echo json_encode(["status" => "error", "message" => "El correo electrónico introducido ya está registrado en el sistema."]);
     }
+} catch (Exception $e) {
+    http_response_code(500); // Internal Server Error
+    echo json_encode(["status" => "error", "message" => "Error técnico en la plataforma logística."]);
+}
+exit;
 ?>

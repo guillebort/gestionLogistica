@@ -25,7 +25,7 @@ session_start();
 
                 <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
                     <div class="card-body p-4 p-md-5">
-                        <form method="post" action="../controladores/registro.php" onsubmit="return verificarPasswords()">
+                        <form method="post" action="../controladores/registro.php">
                         <?php 
                             $urlDest = $_GET["url"] ?? null; 
                             if($urlDest != null) { 

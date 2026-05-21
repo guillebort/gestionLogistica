@@ -1,8 +1,12 @@
 <?php
 // controladores/checkoutController.php
-session_start();
+
+// 1. PRIMERO cargamos las clases para que PHP sepa qué es un ProductoCarrito
 require_once '../modelos/AccesoBD.php';
 require_once '../modelos/Modelos.php';
+
+// 2. LUEGO iniciamos la sesión (así PHP puede reconstruir los objetos correctamente)
+session_start();
 
 class CheckoutController {
     
@@ -31,7 +35,7 @@ class CheckoutController {
             $misTarjetas = $con->obtenerTarjetasUsuario($codigoLogueado);
         } else {
             // Regla de negocio: Si no está logueado, lo mandamos al login
-            header("Location: ../controladores/login.php?url=datosEnvio.php");
+            header("Location: ../tienda/login.php?origen=carrito&url=../controladores/datosEnvioController.php");
             exit;
         }
 

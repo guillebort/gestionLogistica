@@ -54,7 +54,7 @@ if (empty($_SESSION['csrf_token'])) {
                             </div>
                             
                             <!-- Formulario Original de Modificación -->
-                            <form action="../controladores/modificarUsuario.php" method="POST" onsubmit="return validarModificacion()" class="text-start mt-4">
+                            <form action="../controladores/modificarUsuario.php" method="POST" class="text-start mt-4">
                                 <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
                                 <div class="row g-3">
                                     <div class="col-md-6">

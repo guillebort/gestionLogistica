@@ -1,71 +1,88 @@
-const CACHE_NAME = 'logistfg-repartidor-v2'; // Cambiamos versión para limpiar la caché antigua
-const ASSETS_TO_CACHE = [
-    './offline.html', // <-- Metemos la página offline en lugar del .php
+// repartidor/sw.js
+const CACHE_NAME = 'logistfg-repartidor-v3';
+const ASSETS_APP_SHELL = [
+    './offline.html',
     '../css/estilo.css',
     '../js/logica.js',
     './manifest.json',
     'https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css',
-    'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
+    'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
+    'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
+    'https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js'
 ];
 
-// 1. INSTALACIÓN
+// 1. INSTALACIÓN (Caché del App Shell)
 self.addEventListener('install', (event) => {
+    self.skipWaiting(); // Fuerza la instalación inmediata
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            return cache.addAll(ASSETS_TO_CACHE);
+            console.log('[Service Worker] Precaching App Shell');
+            return cache.addAll(ASSETS_APP_SHELL);
         })
     );
 });
 
-// 2. ACTIVACIÓN (Limpieza de cachés viejas)
+// 2. ACTIVACIÓN (Limpieza de cachés antiguas)
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((cacheNames) => {
             return Promise.all(
                 cacheNames.map((cache) => {
                     if (cache !== CACHE_NAME) {
+                        console.log('[Service Worker] Borrando caché antigua:', cache);
                         return caches.delete(cache);
                     }
                 })
             );
         })
     );
+    self.clients.claim(); // Toma el control de las pestañas abiertas inmediatamente
 });
 
-// 3. FETCH: Estrategia para PWA con backend PHP
+// 3. FETCH (Estrategias de Red)
 self.addEventListener('fetch', (event) => {
-    // Si la petición es de navegación (pidiendo un archivo HTML o PHP entero)
+    // A. Peticiones de Navegación (HTML/PHP): Network First con Fallback a offline.html
     if (event.request.mode === 'navigate') {
         event.respondWith(
             fetch(event.request).catch(() => {
-                // Si la red falla (offline), devolvemos la página offline genérica
+                console.warn('[Service Worker] Sin red. Sirviendo página offline.');
                 return caches.match('./offline.html');
             })
         );
-    } else {
-        // Para el resto de cosas (CSS, JS, imágenes), intentamos red primero, y si no, tiramos de caché
+    } 
+    // B. Peticiones de API (POST a PHP): No las cacheamos en Cache Storage, van por Background Sync
+    else if (event.request.method === 'POST') {
+        return; // Dejamos que el navegador intente el POST normalmente (si falla, el catch del Frontend usa IndexedDB)
+    }
+    // C. Peticiones de Estáticos (CSS, JS, Imágenes): Cache First, fallback a Red
+    else {
         event.respondWith(
-            fetch(event.request)
-                .then((networkResponse) => {
+            caches.match(event.request).then((cachedResponse) => {
+                if (cachedResponse) {
+                    return cachedResponse; // Devolvemos desde caché
+                }
+                // Si no está en caché, lo pedimos a la red y lo guardamos
+                return fetch(event.request).then((networkResponse) => {
                     return caches.open(CACHE_NAME).then((cache) => {
-                        // Guardamos copia de los assets estáticos
-                        if (event.request.url.includes('.css') || event.request.url.includes('.js')) {
+                        // Solo cacheamos peticiones GET válidas
+                        if (event.request.method === 'GET' && networkResponse.status === 200) {
                             cache.put(event.request, networkResponse.clone());
                         }
                         return networkResponse;
                     });
-                })
-                .catch(() => {
-                    return caches.match(event.request);
-                })
+                });
+            }).catch(() => {
+                // Silenciamos errores de fetch estáticos en modo offline
+                return new Response(""); 
+            })
         );
     }
 });
 
-// 4. BACKGROUND SYNC (Lo tenías muy bien planteado)
+// 4. BACKGROUND SYNC (Sincronización en segundo plano)
 self.addEventListener('sync', function(event) {
     if (event.tag === 'sync-entregas') {
-        console.log("Internet recuperado: Sincronizando entregas pendientes...");
+        console.log("[Service Worker] 🌐 Conexión recuperada. Iniciando Sync en segundo plano...");
         event.waitUntil(sincronizarEntregasPendientes());
     }
 });
@@ -73,6 +90,7 @@ self.addEventListener('sync', function(event) {
 function sincronizarEntregasPendientes() {
     return new Promise((resolve, reject) => {
         let request = indexedDB.open('LogisTFG_Offline', 1);
+        
         request.onsuccess = (e) => {
             let db = e.target.result;
             if (!db.objectStoreNames.contains('entregas_pendientes')) return resolve();
@@ -84,10 +102,10 @@ function sincronizarEntregasPendientes() {
             cursorReq.onsuccess = (event) => {
                 let cursor = event.target.result;
                 if (cursor) {
-                    let payload = cursor.value;
+                    let payload = cursor.value; // Datos guardados por el Frontend (idPedido, estado, etc.)
                     let key = cursor.key;
 
-                    // Enviar al servidor MySQL a través de PHP
+                    // Reintentar el envío al backend
                     fetch('../controladores/actualizarEstadoReparto.php', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -95,15 +113,18 @@ function sincronizarEntregasPendientes() {
                     }).then(response => response.text())
                       .then(data => {
                           if (data.trim() === "OK") {
-                              // Borrar de IndexedDB si el servidor lo procesó bien
+                              console.log(`[Service Worker] Entrega ${key} sincronizada con éxito.`);
+                              // Eliminamos el registro de IndexedDB porque ya está en MySQL
                               db.transaction('entregas_pendientes', 'readwrite').objectStore('entregas_pendientes').delete(key);
                           }
-                      });
-                    cursor.continue();
+                      }).catch(err => console.error("[Service Worker] Fallo en la sincronización:", err));
+                    
+                    cursor.continue(); // Pasar al siguiente elemento en la cola offline
                 } else {
-                    resolve();
+                    resolve(); // Fin de la cola
                 }
             };
         };
+        request.onerror = () => reject();
     });
 }

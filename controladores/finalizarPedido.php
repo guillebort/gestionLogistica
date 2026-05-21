@@ -1,9 +1,14 @@
 <?php
+// controladores/finalizarPedido.php
 
-
+// 1. PRIMERO cargamos las clases SIEMPRE
 require_once '../vendor/autoload.php';
 require_once '../modelos/AccesoBD.php';
+require_once '../modelos/Modelos.php';
+
+// 2. LUEGO iniciamos la sesión
 session_start();
+
 use servicios\pdfService;
 use servicios\mailService;
 
@@ -24,8 +29,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $con = AccesoBD::getInstance();
-    
-    // ... [Tu lógica actual de tarjetas se mantiene igual] ...
 
     $total = $_SESSION['totalPedido'];
     $dirOrigen = $_SESSION['direccionOrigen'];
@@ -61,3 +64,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     exit;
 }
+?>

@@ -31,6 +31,7 @@ if ($origen === 'carrito') {
     <title><?= $tituloPanel ?> - LogisTFG</title>
     <link rel="icon" type="image/ico" href="../img/icono.ico" sizes="64x64">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="[https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css](https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css)"/>
     <link rel="stylesheet" href="../css/estilo.css">
 </head>
 <body class="bg-light d-flex flex-column vh-100">

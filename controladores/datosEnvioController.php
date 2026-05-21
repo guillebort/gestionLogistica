@@ -1,8 +1,12 @@
 <?php
 // controladores/datosEnvioController.php
-session_start();
+
+// 1. PRIMERO las clases
 require_once '../modelos/AccesoBD.php';
 require_once '../modelos/Modelos.php';
+
+// 2. LUEGO la sesión
+session_start();
 
 class DatosEnvioController {
     public function cargarFormularioRuta() {

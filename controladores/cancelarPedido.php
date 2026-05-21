@@ -1,39 +1,54 @@
 <?php
+// controladores/cancelarPedido.php
 session_start();
 require_once '../modelos/AccesoBD.php';
 
+header('Content-Type: application/json; charset=utf-8');
+
 $idUsuario = $_SESSION['codigo'] ?? null;
-if ($idUsuario == null) {
-    header("Location: login.php");
+if (!$idUsuario) {
+    http_response_code(401);
+    echo json_encode(["status" => "error", "message" => "No autorizado. Inicia sesión."]);
     exit;
 }
 
-// 1. Verificamos que sea POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    die("Método no permitido.");
+    http_response_code(405);
+    echo json_encode(["status" => "error", "message" => "Método no permitido."]);
+    exit;
 }
 
-// 2. Verificamos el Token CSRF
-if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
-    die("Error de seguridad: Token CSRF inválido.");
+// Para APIs JSON, solemos leer del body
+$jsonInput = json_decode(file_get_contents('php://input'), true);
+$idPedido = $jsonInput['id_pedido'] ?? filter_input(INPUT_POST, 'id_pedido', FILTER_VALIDATE_INT);
+$tokenCsrf = $jsonInput['csrf_token'] ?? filter_input(INPUT_POST, 'csrf_token', FILTER_SANITIZE_STRING);
+
+if (!$tokenCsrf || !hash_equals($_SESSION['csrf_token'], $tokenCsrf)) {
+    http_response_code(403);
+    echo json_encode(["status" => "error", "message" => "Error de seguridad (CSRF)."]);
+    exit;
+}
+
+if (!$idPedido) {
+    http_response_code(400);
+    echo json_encode(["status" => "error", "message" => "ID de pedido no proporcionado."]);
+    exit;
 }
 
 try {
-    // 3. Recogemos el ID por POST en lugar de GET
-    $idPedido = isset($_POST['id_pedido']) ? (int)$_POST['id_pedido'] : 0;
-    
     $con = AccesoBD::getInstance();
     $exito = $con->cancelarPedido($idPedido, $idUsuario);
 
     if ($exito) {
-        $_SESSION['mensaje'] = "✅ Pedido #" . $idPedido . " cancelado. El stock ha sido devuelto.";
+        http_response_code(200);
+        echo json_encode(["status" => "success", "message" => "Pedido #$idPedido cancelado correctamente. Stock restaurado."]);
     } else {
-        $_SESSION['mensaje'] = "❌ No se pudo cancelar el pedido. (Quizás ya está enviado).";
+        http_response_code(409);
+        echo json_encode(["status" => "error", "message" => "No se pudo cancelar el pedido. Es posible que ya esté en ruta."]);
     }
 } catch (Exception $e) {
-    $_SESSION['mensaje'] = "❌ Error técnico al intentar cancelar.";
+    http_response_code(500);
+    echo json_encode(["status" => "error", "message" => "Error técnico en el servidor."]);
 }
-
-header("Location: ../tienda/usuario.php");
 exit;
 ?>

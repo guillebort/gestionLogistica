@@ -134,8 +134,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (btnOptimizar && btnSiguiente) {
         
-        // --- A. CALCULAR RUTA ÓPTIMA Y PREPARAR JORNADA ---
-        btnOptimizar.addEventListener('click', () => {
+        // --- A. CALCULAR RUTA ÓPTIMA CON API REAL (OpenRouteService) ---
+        btnOptimizar.addEventListener('click', async () => {
             if (!map) return;
             const paradas = document.querySelectorAll('.parada-card');
             if (paradas.length === 0) {
@@ -143,84 +143,124 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // 1. Obtener punto de origen (central logística) de la primera tarjeta
+            // 1. Preparar las coordenadas (Formato ORS: [longitud, latitud] ¡Importante el orden!)
+            // Índice 0 será nuestra Central Logística
             const latOrigen = parseFloat(paradas[0].querySelector('.btn-simular-ruta').getAttribute('data-lato'));
             const lonOrigen = parseFloat(paradas[0].querySelector('.btn-simular-ruta').getAttribute('data-lono'));
-            let posicionActual = L.latLng(latOrigen, lonOrigen);
+            
+            let localizaciones = [[lonOrigen, latOrigen]];
+            let infoParadas = [{ idPedido: 'central', cardElement: null, latLng: L.latLng(latOrigen, lonOrigen) }];
 
-            rutaOptimaOrdenada = [{
-                latLng: posicionActual,
-                idPedido: 'central'
-            }];
-
-            // 2. Extraer todos los destinos
-            let pendientes = [];
+            // Añadir el resto de destinos
             paradas.forEach(card => {
                 const btn = card.querySelector('.btn-simular-ruta');
-                pendientes.push({
+                const lat = parseFloat(btn.getAttribute('data-latd'));
+                const lon = parseFloat(btn.getAttribute('data-lond'));
+                localizaciones.push([lon, lat]);
+                infoParadas.push({
                     idPedido: card.id,
                     cardElement: card,
-                    lat: parseFloat(btn.getAttribute('data-latd')),
-                    lng: parseFloat(btn.getAttribute('data-lond'))
+                    latLng: L.latLng(lat, lon)
                 });
             });
 
-            // 3. Algoritmo: Vecino Más Cercano
-            while (pendientes.length > 0) {
-                let indiceMasCercano = -1;
-                let distanciaMin = Infinity;
+            // 2. Llamada a la API de OpenRouteService (Matrix)
+            const apiKey = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjYzNmZkNTNkOWJjNDRjMzBiNGY1NTQ2NmY1MjE2YzM4IiwiaCI6Im11cm11cjY0In0='; // Sustituye por tu clave real
+            const url = 'https://api.openrouteservice.org/v2/matrix/driving-car';
+
+            btnOptimizar.innerHTML = '⏳ Calculando ruta real...';
+            btnOptimizar.disabled = true;
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'Authorization': apiKey
+                    },
+                    body: JSON.stringify({
+                        locations: localizaciones,
+                        metrics: ["distance"] // Queremos la distancia en metros
+                    })
+                });
+
+                if (!response.ok) throw new Error("Fallo en la API de enrutamiento");
                 
-                for (let i = 0; i < pendientes.length; i++) {
-                    let destinoEval = L.latLng(pendientes[i].lat, pendientes[i].lng);
-                    let dist = posicionActual.distanceTo(destinoEval); 
-                    if (dist < distanciaMin) {
-                        distanciaMin = dist;
-                        indiceMasCercano = i;
+                const data = await response.json();
+                const matrizDistancias = data.distances; // Matriz NxN con distancias reales
+
+                // 3. Algoritmo: Vecino Más Cercano (Nearest Neighbor) usando la matriz real
+                let noVisitados = Array.from({length: infoParadas.length - 1}, (_, i) => i + 1); // Índices del 1 al N
+                let indiceActual = 0; // Empezamos en la central (índice 0)
+                
+                rutaOptimaOrdenada = [infoParadas[0]];
+
+                while (noVisitados.length > 0) {
+                    let indiceMasCercano = -1;
+                    let distanciaMin = Infinity;
+                    let indexEnArrayNoVisitados = -1;
+                    
+                    for (let i = 0; i < noVisitados.length; i++) {
+                        let candidato = noVisitados[i];
+                        // Buscamos la distancia en la matriz devuelta por la API
+                        let distReal = matrizDistancias[indiceActual][candidato]; 
+                        
+                        if (distReal < distanciaMin) {
+                            distanciaMin = distReal;
+                            indiceMasCercano = candidato;
+                            indexEnArrayNoVisitados = i;
+                        }
                     }
+                    
+                    // Saltamos al vecino más cercano
+                    indiceActual = indiceMasCercano;
+                    rutaOptimaOrdenada.push(infoParadas[indiceActual]);
+                    noVisitados.splice(indexEnArrayNoVisitados, 1); 
                 }
-                
-                posicionActual = L.latLng(pendientes[indiceMasCercano].lat, pendientes[indiceMasCercano].lng);
-                rutaOptimaOrdenada.push({
-                    latLng: posicionActual,
-                    idPedido: pendientes[indiceMasCercano].idPedido,
-                    cardElement: pendientes[indiceMasCercano].cardElement
+
+                // 4. Dibujar la ruta panorámica inicial (Overview)
+                if (controlRuta != null) map.removeControl(controlRuta);
+                if (cocheMarker != null) map.removeLayer(cocheMarker);
+
+                controlRuta = L.Routing.control({
+                    waypoints: rutaOptimaOrdenada.map(p => p.latLng),
+                    routeWhileDragging: false,
+                    addWaypoints: false,
+                    fitSelectedRoutes: true,
+                    lineOptions: { styles: [{color: '#6c757d', opacity: 0.5, weight: 4}] },
+                    createMarker: function(i, wp) {
+                        if (i === 0) return L.marker(wp.latLng).bindPopup("<b>🟢 Central Logística</b>");
+                        return L.marker(wp.latLng).bindPopup(`<b>📍 Parada ${i}</b>`);
+                    }
+                }).addTo(map);
+
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                // 5. Reorganizar tarjetas en el DOM
+                const contenedorTarjetas = document.getElementById('lista-paradas');
+                rutaOptimaOrdenada.forEach(paso => {
+                    if (paso.idPedido !== 'central') {
+                        contenedorTarjetas.appendChild(paso.cardElement);
+                    }
                 });
+
+                // 6. Cambiar la interfaz de botones
+                btnOptimizar.classList.add('d-none');
+                btnOptimizar.innerHTML = '🗺️ Calcular Ruta Óptima';
+                btnOptimizar.disabled = false;
                 
-                pendientes.splice(indiceMasCercano, 1); 
+                btnSiguiente.classList.remove('d-none');
+                pasoRutaActual = 0; 
+                
+                alert(`¡Ruta óptima calculada con datos de tráfico real!\nTienes ${rutaOptimaOrdenada.length - 1} paradas.`);
+
+            } catch (error) {
+                console.error(error);
+                alert("Hubo un error calculando la ruta con la API. Revisa tu conexión o tu API Key.");
+                btnOptimizar.innerHTML = '🗺️ Calcular Ruta Óptima';
+                btnOptimizar.disabled = false;
             }
-
-            // 4. Dibujar la ruta panorámica inicial (Overview)
-            if (controlRuta != null) map.removeControl(controlRuta);
-            if (cocheMarker != null) map.removeLayer(cocheMarker);
-
-            controlRuta = L.Routing.control({
-                waypoints: rutaOptimaOrdenada.map(p => p.latLng),
-                routeWhileDragging: false,
-                addWaypoints: false,
-                fitSelectedRoutes: true,
-                lineOptions: { styles: [{color: '#6c757d', opacity: 0.5, weight: 4}] }, // Gris tenue para ver el panorama
-                createMarker: function(i, wp) {
-                    if (i === 0) return L.marker(wp.latLng).bindPopup("<b>🟢 Central Logística</b>");
-                    return L.marker(wp.latLng).bindPopup(`<b>📍 Parada ${i}</b>`);
-                }
-            }).addTo(map);
-
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-
-            // 5. Reorganizar tarjetas en el DOM en el orden óptimo calculado
-            const contenedorTarjetas = document.getElementById('lista-paradas');
-            rutaOptimaOrdenada.forEach(paso => {
-                if (paso.idPedido !== 'central') {
-                    contenedorTarjetas.appendChild(paso.cardElement);
-                }
-            });
-
-            // 6. Cambiar la interfaz de botones
-            btnOptimizar.classList.add('d-none');
-            btnSiguiente.classList.remove('d-none');
-            pasoRutaActual = 0; 
-            
-            alert(`¡Ruta óptima calculada!\nTienes ${rutaOptimaOrdenada.length - 1} paradas. Pulsa 'Iniciar Navegación' para arrancar hacia el primer destino.`);
         });
 
         // --- B. NAVEGACIÓN PASO A PASO ---
@@ -374,6 +414,188 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- Lógica para Asignar Repartidor (Admin) vía API REST ---
+    const formsAsignacion = document.querySelectorAll('form[action="../controladores/asignarRepartidor.php"]');
+    
+    formsAsignacion.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault(); // Evitamos que la página recargue
+            
+            const formData = new FormData(this);
+            const selectRepartidor = this.querySelector('select');
+            
+            if (selectRepartidor.value === "") {
+                alert("Debes seleccionar un repartidor primero.");
+                return;
+            }
+
+            fetch('../controladores/asignarRepartidor.php', {
+                method: 'POST',
+                headers: { 'Accept': 'application/json' },
+                body: formData // Fetch formatea automáticamente los FormData
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message || "Error de red");
+                return data;
+            })
+            .then(data => {
+                if (data.status === "success") {
+                    // Ocultamos la tarjeta del pedido asignado con una animación suave
+                    const tarjetaPedido = this.closest('.bg-light');
+                    tarjetaPedido.style.transition = "opacity 0.5s";
+                    tarjetaPedido.style.opacity = "0";
+                    setTimeout(() => tarjetaPedido.remove(), 500);
+                    
+                    // Opcional: Actualizar el contador de pendientes
+                    let badgePendientes = document.querySelector('.card-header .badge');
+                    if (badgePendientes) {
+                        let actual = parseInt(badgePendientes.innerText);
+                        badgePendientes.innerText = (actual - 1) + " Pdte.";
+                    }
+                    
+                    // Mostrar notificación de éxito
+                    console.log(data.message);
+                }
+            })
+            .catch(error => {
+                alert("Error al asignar: " + error.message);
+            });
+        });
+    });
+
+    /* ==========================================
+       LÓGICA DE AUTENTICACIÓN Y REGISTRO AJAX (SPA UX)
+       ========================================== */
+    const formsAuth = document.querySelectorAll('form[action="../controladores/login.php"], form[action="../controladores/loginAdminController.php"], form[action="../controladores/registro.php"]');
+    
+    formsAuth.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault(); // Detenemos la recarga tradicional
+            
+            // Si es el formulario de registro, validamos contraseñas aquí mismo antes de llamar a la API
+            const inputPass1 = this.querySelector('input[name="clave"]');
+            const inputPass2 = this.querySelector('input[name="clave2"]');
+            if (inputPass1 && inputPass2 && inputPass1.value !== inputPass2.value) {
+                mostrarErrorAuth(this, "⚠️ Las contraseñas no coinciden.");
+                return;
+            }
+
+            const btnSubmit = this.querySelector('button[type="submit"]');
+            const originalText = btnSubmit.innerHTML;
+            
+            // 1. Mostrar estado de carga (Spinner)
+            btnSubmit.disabled = true;
+            btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Procesando...';
+            
+            // 2. Ocultar errores previos
+            let errorDiv = this.parentElement.querySelector('.alert-ajax-error');
+            if (errorDiv) errorDiv.classList.add('d-none');
+
+            // 3. Enviar datos al endpoint REST
+            const formData = new FormData(this);
+            
+            fetch(this.action, {
+                method: 'POST',
+                headers: { 'Accept': 'application/json' },
+                body: formData
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message || "Error al conectar con la base de datos");
+                return data;
+            })
+            .then(data => {
+                if (data.status === "success") {
+                    btnSubmit.classList.remove('btn-primary', 'btn-dark');
+                    btnSubmit.classList.add('btn-success');
+                    btnSubmit.innerHTML = '¡Completado! 🚀';
+                    
+                    setTimeout(() => {
+                        window.location.href = data.data.redirect;
+                    }, 500);
+                }
+            })
+            .catch(error => {
+                btnSubmit.disabled = false;
+                btnSubmit.innerHTML = originalText;
+                mostrarErrorAuth(this, error.message);
+            });
+        });
+    });
+
+    // Función auxiliar para mostrar el error y hacer la animación
+    function mostrarErrorAuth(formulario, mensaje) {
+        let errorDiv = formulario.parentElement.querySelector('.alert-ajax-error');
+        if (!errorDiv) {
+            errorDiv = document.createElement('div');
+            errorDiv.className = 'alert alert-danger text-center rounded-4 shadow-sm mb-4 border-0 d-none alert-ajax-error fw-medium';
+            formulario.parentElement.insertBefore(errorDiv, formulario);
+        }
+        errorDiv.innerText = "⚠️ " + mensaje;
+        errorDiv.classList.remove('d-none');
+        
+        // Efecto sacudida (Shake)
+        formulario.classList.add('animate__animated', 'animate__shakeX');
+        setTimeout(() => formulario.classList.remove('animate__animated', 'animate__shakeX'), 1000);
+    }
+
+    /* ==========================================
+       LÓGICA PARA GUARDAR RUTA (PASO 1 CHECKOUT)
+       ========================================== */
+    const formRuta = document.querySelector('form[action="../controladores/guardarRuta.php"]');
+    
+    if (formRuta) {
+        formRuta.addEventListener('submit', function(e) {
+            e.preventDefault(); // Evitamos la recarga
+            
+            const btnSubmit = this.querySelector('button[type="submit"]');
+            const originalText = btnSubmit.innerHTML;
+            
+            // Verificamos que las coordenadas no sean 0.0 (es decir, que hayan usado el autocompletado de OpenStreetMap)
+            const latO = document.getElementById('lat_origen').value;
+            const latD = document.getElementById('lat_destino').value;
+            
+            if (latO === "0.0" || latD === "0.0") {
+                alert("⚠️ Por favor, selecciona una dirección válida de la lista de sugerencias para calcular las coordenadas GPS exactas.");
+                return;
+            }
+
+            // Mostramos el Spinner
+            btnSubmit.disabled = true;
+            btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Calculando ruta...';
+
+            const formData = new FormData(this);
+
+            fetch(this.action, {
+                method: 'POST',
+                headers: { 'Accept': 'application/json' },
+                body: formData
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message || "Error al procesar la ruta");
+                return data;
+            })
+            .then(data => {
+                if (data.status === "success") {
+                    btnSubmit.classList.replace('btn-primary', 'btn-success');
+                    btnSubmit.innerHTML = '¡Ruta Confirmada! ➔';
+                    
+                    // Transición suave hacia la pasarela de pago
+                    setTimeout(() => {
+                        window.location.href = data.data.redirect;
+                    }, 400);
+                }
+            })
+            .catch(error => {
+                btnSubmit.disabled = false;
+                btnSubmit.innerHTML = originalText;
+                alert("Error: " + error.message);
+            });
+        });
+    }
+
 }); // FIN DEL DOMContentLoaded
 
 
@@ -432,16 +654,51 @@ function eliminarFilaCarrito(idFila) {
     }
 }
 
+// --- Lógica para Cancelar un Pedido (Cliente) vía API REST ---
 function cancelarPedido(idFila) {
-    if(confirm("¿Estás seguro de que deseas cancelar este pedido?")) {
-        let fila = document.getElementById(idFila);
-        if(fila) {
-            fila.querySelector('.badge').className = "badge bg-danger";
-            fila.querySelector('.badge').innerText = "Cancelado";
-            fila.querySelector('.btn-cancelar-pedido').disabled = true;
-            fila.querySelector('.btn-cancelar-pedido').innerText = "Anulado";
-            alert("Pedido cancelado correctamente.");
-        }
+    if(confirm("¿Estás seguro de que deseas cancelar este pedido? Se liberará el stock al momento.")) {
+        
+        // Extraemos el token CSRF del formulario oculto en la vista
+        const csrfToken = document.querySelector('input[name="csrf_token"]')?.value;
+
+        fetch('../controladores/cancelarPedido.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                id_pedido: idFila,
+                csrf_token: csrfToken
+            })
+        })
+        .then(async response => {
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || "Error al conectar con el servidor");
+            return data;
+        })
+        .then(data => {
+            if (data.status === "success") {
+                // Actualizamos la interfaz sin recargar la página
+                let boton = document.querySelector(`#collapse${idFila} button[type="submit"]`);
+                let badge = document.querySelector(`#heading${idFila} .badge`);
+                
+                if (badge) {
+                    badge.className = "badge rounded-pill bg-danger me-3";
+                    badge.innerText = "Cancelado";
+                }
+                if (boton) {
+                    boton.disabled = true;
+                    boton.innerText = "Anulado";
+                    boton.classList.replace('btn-outline-danger', 'btn-secondary');
+                }
+                
+                alert(data.message); // Mensaje de éxito del servidor
+            }
+        })
+        .catch(error => {
+            alert("Error: " + error.message);
+        });
     }
 }
 
@@ -633,25 +890,36 @@ function procesarEstadoReparto(idPedido, nuevoEstado, cardElement, motivo = '') 
 
     fetch('../controladores/actualizarEstadoReparto.php', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        headers: { 
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json' // Indicamos que esperamos JSON
+        },
         body: payload
     })
-    .then(response => {
-        if (!response.ok) throw new Error("Fallo de red");
-        return response.text();
+    .then(async response => {
+        // Parseamos la respuesta a JSON independientemente del código de estado
+        const data = await response.json();
+        
+        // Si el código HTTP no es 2xx, lanzamos el error con el mensaje del backend
+        if (!response.ok) {
+            throw new Error(data.message || "Fallo de red o servidor");
+        }
+        return data; // Si todo va bien, pasamos los datos al siguiente then
     })
     .then(data => {
-        if(data.trim() === "OK") {
+        // Ahora comprobamos nuestro estándar de status "success"
+        if(data.status === "success") {
             cardElement.style.transition = "opacity 0.5s, transform 0.5s";
             cardElement.style.opacity = "0";
             cardElement.style.transform = "translateX(100%)";
             setTimeout(() => cardElement.remove(), 500);
-        } else {
-            alert("Error al actualizar la base de datos MySQL.");
+            console.log(data.message); // Opcional: mostrar en consola el mensaje del server
         }
     })
     .catch(error => {
-        console.warn("Sin conexión. Guardando entrega en modo offline.");
+        console.warn("Problema detectado o sin conexión: ", error.message);
+        
+        // Lógica de PWA Offline (IndexedDB)
         guardarEnIndexedDB(payload);
         if ('serviceWorker' in navigator && 'SyncManager' in window) {
             navigator.serviceWorker.ready.then(function(swRegistration) {
@@ -659,7 +927,7 @@ function procesarEstadoReparto(idPedido, nuevoEstado, cardElement, motivo = '') 
             });
         }
         cardElement.style.opacity = "0.5";
-        alert("Sin conexión. La entrega se sincronizará automáticamente al recuperar la señal.");
+        alert(`La entrega se ha guardado en local y se sincronizará luego.\nMotivo: ${error.message}`);
     });
 }
 

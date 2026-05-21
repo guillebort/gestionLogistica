@@ -1,36 +1,44 @@
 <?php
-// --- Archivo: controladores/asignarRepartidor.php ---
+// controladores/asignarRepartidor.php
 session_start();
 require_once '../modelos/AccesoBD.php';
 
-// Bloqueo de seguridad extra: si un cliente averigua esta URL y hace POST, le denegamos la acción
+header('Content-Type: application/json; charset=utf-8');
+
 $codigoLogueado = $_SESSION['codigo'] ?? 0;
-$con = AccesoBD::getInstance();
-$usuarioActual = $con->obtenerUsuarioBD($codigoLogueado);
+$rol = $_SESSION['rol'] ?? 0;
 
-if ($usuarioActual == null || $usuarioActual->getRol() != 1) {
-    die("Acceso denegado. No tienes permisos de administrador.");
+// Verificamos rol de admin (rol 1)
+if ($codigoLogueado <= 0 || $rol != 1) {
+    http_response_code(403);
+    echo json_encode(["status" => "error", "message" => "Acceso denegado. Permisos insuficientes."]);
+    exit;
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $idPedido = $_POST['idPedido'] ?? 0;
-    $idRepartidor = $_POST['idRepartidor'] ?? 0;
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode(["status" => "error", "message" => "Método no permitido."]);
+    exit;
+}
+
+$idPedido = filter_input(INPUT_POST, 'idPedido', FILTER_VALIDATE_INT);
+$idRepartidor = filter_input(INPUT_POST, 'idRepartidor', FILTER_VALIDATE_INT);
+$nuevoEstado = 2; // "Enviado / En ruta"
+
+if ($idPedido > 0 && $idRepartidor > 0) {
+    $con = AccesoBD::getInstance();
+    $exito = $con->asignarRepartidor($idPedido, $idRepartidor, $nuevoEstado);
     
-    // Estado 2 = "Enviado" / "Asignado a Ruta"
-    $nuevoEstado = 2; 
-
-    if ($idPedido > 0 && $idRepartidor > 0) {
-        $exito = $con->asignarRepartidor($idPedido, $idRepartidor, $nuevoEstado);
-        
-        if ($exito) {
-            $_SESSION['mensajeAdmin'] = "✅ Pedido #$idPedido asignado correctamente a ruta.";
-        } else {
-            $_SESSION['mensajeAdmin'] = "❌ Hubo un error al asignar el pedido #$idPedido.";
-        }
+    if ($exito) {
+        http_response_code(200);
+        echo json_encode(["status" => "success", "message" => "Pedido #$idPedido asignado correctamente al repartidor."]);
+    } else {
+        http_response_code(500);
+        echo json_encode(["status" => "error", "message" => "Error al actualizar la base de datos."]);
     }
+} else {
+    http_response_code(400);
+    echo json_encode(["status" => "error", "message" => "Datos de asignación inválidos."]);
 }
-
-// Devolvemos al admin a su panel
-header("Location: ../admin/index.php");
 exit;
 ?>

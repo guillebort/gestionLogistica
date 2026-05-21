@@ -1,5 +1,5 @@
 <?php
-
+// controladores/modificarUsuario.php
 session_start();
 require_once '../modelos/AccesoBD.php';
 
@@ -11,9 +11,11 @@ if ($codigo <= 0) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
+    // Verificación del Token CSRF
     if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
         die("Error de seguridad: Token CSRF inválido o solicitud caducada.");
     }
+    
     $nombre = $_POST['nombre'] ?? '';
     $apellidos = $_POST['apellidos'] ?? '';
     $domicilio = $_POST['domicilio'] ?? '';
@@ -24,6 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $clave1 = $_POST['clave1'] ?? '';
     $clave2 = $_POST['clave2'] ?? '';
 
+    // Validación de contraseñas
     if (!empty($clave1) && $clave1 !== $clave2) {
         $_SESSION['mensaje'] = "❌ Las contraseñas no coinciden.";
         header("Location: ../tienda/usuario.php");
@@ -33,7 +36,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $con = AccesoBD::getInstance();
     $exito = $con->modificarUsuarioBD($codigo, $clave1, $nombre, $apellidos, $domicilio, $poblacion, $provincia, $cp, $telefono);
 
-    $_SESSION['mensaje'] = $exito ? "✅ Perfil actualizado correctamente." : "❌ Hubo un error al actualizar tus datos.";
+    if ($exito) {
+        // Actualizamos el nombre en sesión por si lo ha cambiado
+        $_SESSION['nombreUsuario'] = $nombre;
+        $_SESSION['mensaje'] = "✅ Perfil actualizado correctamente.";
+    } else {
+        $_SESSION['mensaje'] = "❌ Hubo un error al actualizar tus datos.";
+    }
+    
     header("Location: ../tienda/usuario.php");
     exit;
 }

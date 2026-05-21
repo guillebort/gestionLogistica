@@ -14,6 +14,7 @@ if (isset($_SESSION['codigo']) && isset($_SESSION['rol']) && $_SESSION['rol'] ==
     <title>Acceso Admin - LogisTFG</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="[https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css](https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css)"/>
     <link rel="stylesheet" href="../css/estilo.css">
     <style>
         .split-bg-admin {

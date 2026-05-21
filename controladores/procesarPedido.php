@@ -1,17 +1,20 @@
 <?php
-// --- Archivo: procesarPedido.php ---
-session_start();
+// controladores/procesarPedido.php
+
+// 1. PRIMERO cargamos las clases SIEMPRE
 require_once '../modelos/AccesoBD.php';
+require_once '../modelos/Modelos.php';
 
-
+// 2. LUEGO iniciamos la sesión
+session_start();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $totalPedido = 0.0;
-    unset($_SESSION['carritoJSON']); // Limpiar viejo
+    unset($_SESSION['carritoJSON']); // Limpiar carrito viejo en sesión
     $carritoJSON = [];
     $con = AccesoBD::getInstance();
 
-    // Leer el JSON que manda el JS
+    // Leer el JSON que manda el fetch de JS
     $jsonInput = file_get_contents('php://input');
     $productosInput = json_decode($jsonInput, true);
 
@@ -23,10 +26,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $nuevo->setPrecio((float)$prod['precio']);
             
             $cantidad = (int)$prod['cantidad'];
+            
+            // Validación vital de logística: Comprobar stock real en el momento de procesar
             $existencias = $con->obtenerExistencias($nuevo->getCodigo());
 
             if ($cantidad > $existencias) {
-                $cantidad = $existencias;
+                $cantidad = $existencias; // Ajustamos al máximo disponible
             }
 
             if ($cantidad > 0) {
@@ -44,11 +49,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['totalPedido'] = $totalPedido;
 
         $codigoUsuario = $_SESSION['codigo'] ?? 0;
-        $urlDestino = ($codigoUsuario <= 0) ? "../tienda/login.php?url=../controladores/datosEnvioController.php" : "../controladores/datosEnvioController.php";
+        
+        if ($codigoUsuario <= 0) {
+            $urlDestino = "../tienda/login.php?origen=carrito&url=../controladores/datosEnvioController.php";
+        } else {
+            $urlDestino = "../controladores/datosEnvioController.php";
+        }
 
-        echo json_encode(["status" => "ok", "redirect" => $urlDestino]);
+        echo json_encode([
+            "status" => "success", 
+            "message" => "Carrito procesado correctamente",
+            "redirect" => $urlDestino
+        ]);
     } else {
-        echo json_encode(["status" => "error", "message" => "Carrito vacío o sin stock."]);
+        http_response_code(400); // Bad Request
+        echo json_encode([
+            "status" => "error", 
+            "message" => "El carrito está vacío o los servicios ya no tienen cupos disponibles."
+        ]);
     }
 }
 ?>

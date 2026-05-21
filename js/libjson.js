@@ -8,13 +8,19 @@ function EnviarCarrito(url, valores) {
     };
     
     fetch(url, options)
-        .then(response => response.json()) // 1. Cambiamos .text() por .json()
+        .then(response => response.json()) 
         .then(data => {
-            // 2. Si el servidor nos dice que todo OK, redirigimos de verdad
-            if (data.status === "ok") {
-                window.location.href = data.redirect;
+            // Ampliamos la validación para aceptar "ok" o "success"
+            if (data.status === "ok" || data.status === "success") {
+                // Soportamos tanto la ruta antigua como el nuevo estándar REST
+                const destino = data.redirect || (data.data && data.data.redirect);
+                if (destino) {
+                    window.location.href = destino;
+                } else {
+                    console.warn("El servidor no envió una ruta de destino.");
+                }
             } else {
-                alert("Error: " + data.message);
+                alert("Error: " + (data.message || "Fallo al procesar el carrito"));
             }
         })
         .catch(error => {

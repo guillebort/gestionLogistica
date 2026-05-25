@@ -315,26 +315,88 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Gestión de entregas e incidencias
+    // Gestión de entregas
     const botonesEntregado = document.querySelectorAll('.btn-entregado');
     const botonesIncidencia = document.querySelectorAll('.btn-incidencia');
 
     botonesEntregado.forEach(btn => {
         btn.addEventListener('click', (e) => {
-            if(confirm("¿Confirmar entrega exitosa?")) {
-                const pedidoId = e.target.getAttribute('data-pedido');
-                procesarEstadoReparto(pedidoId, 3, e.target.closest('.card')); 
-            }
+            const pedidoId = btn.getAttribute('data-pedido');
+            Swal.fire({
+                title: 'Firma de Recepción',
+                html: `
+                    <p class="text-muted small mb-2">Firme en el recuadro inferior para confirmar la entrega.</p>
+                    <div class="border rounded-3 border-primary shadow-sm" style="background: #fff; overflow: hidden;">
+                        <canvas id="firmaCanvas" style="width: 100%; height: 250px; touch-action: none; display: block;"></canvas>
+                    </div>
+                    <button type="button" id="btnLimpiarFirma" class="btn btn-sm btn-link text-danger mt-2">Limpiar firma</button>
+                `,
+                showCancelButton: true,
+                confirmButtonColor: '#198754',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Confirmar Entrega ✔️',
+                cancelButtonText: 'Cancelar',
+                didOpen: () => {
+                    // Truco para que el canvas se ajuste perfectamente al modal de SweetAlert
+                    const canvas = document.getElementById('firmaCanvas');
+                    // Forzamos el tamaño real del canvas basado en el CSS
+                    canvas.width = canvas.offsetWidth;
+                    canvas.height = canvas.offsetHeight;
+                    
+                    // Iniciamos la librería
+                    window.signaturePad = new SignaturePad(canvas, {
+                        penColor: "rgb(15, 23, 42)" 
+                    });
+
+                    document.getElementById('btnLimpiarFirma').addEventListener('click', () => {
+                        window.signaturePad.clear();
+                    });
+                },
+                preConfirm: () => {
+                    if (window.signaturePad.isEmpty()) {
+                        Swal.showValidationMessage('⚠️ Es obligatorio firmar para entregar el paquete');
+                        return false;
+                    }
+                    return window.signaturePad.toDataURL(); // Extraemos la firma en Base64
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const firma = result.value;
+                    
+                    
+                    // Enviamos el estado 3 (Entregado) y la firma al backend
+                    procesarEstadoReparto(pedidoId, 3, btn.closest('.card'), '', firma); 
+                }
+            });
         });
     });
 
+    // Gestión de Incidencias (Sustituto moderno del prompt)
     botonesIncidencia.forEach(btn => {
         btn.addEventListener('click', (e) => {
-            const motivo = prompt("Describe la incidencia (Ej: Ausente, Dirección incorrecta):");
-            if (motivo) {
-                const pedidoId = e.target.getAttribute('data-pedido');
-                procesarEstadoReparto(pedidoId, 4, e.target.closest('.card'), motivo); 
-            }
+            Swal.fire({
+                title: 'Reportar Incidencia',
+                input: 'text',
+                inputLabel: 'Describe la incidencia (Ej: Ausente, Dirección incorrecta):',
+                inputPlaceholder: 'Escribe el motivo aquí...',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Reportar ❌',
+                cancelButtonText: 'Cancelar',
+                inputValidator: (value) => {
+                    if (!value) {
+                        return '¡Necesitas escribir un motivo!';
+                    }
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const pedidoId = e.target.getAttribute('data-pedido');
+                    procesarEstadoReparto(pedidoId, 4, e.target.closest('.card'), result.value); 
+                    Swal.fire('Reportado', 'La incidencia ha sido registrada.', 'info');
+                }
+            });
         });
     });
 
@@ -656,50 +718,57 @@ function eliminarFilaCarrito(idFila) {
 
 // --- Lógica para Cancelar un Pedido (Cliente) vía API REST ---
 function cancelarPedido(idFila) {
-    if(confirm("¿Estás seguro de que deseas cancelar este pedido? Se liberará el stock al momento.")) {
-        
-        // Extraemos el token CSRF del formulario oculto en la vista
-        const csrfToken = document.querySelector('input[name="csrf_token"]')?.value;
+    Swal.fire({
+        title: '¿Cancelar envío?',
+        text: "Se liberará el stock al momento. Esta acción no se puede deshacer.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, cancelar pedido',
+        cancelButtonText: 'Volver'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const csrfToken = document.querySelector('input[name="csrf_token"]')?.value;
 
-        fetch('../controladores/cancelarPedido.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({
-                id_pedido: idFila,
-                csrf_token: csrfToken
+            fetch('../controladores/cancelarPedido.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    id_pedido: idFila,
+                    csrf_token: csrfToken
+                })
             })
-        })
-        .then(async response => {
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.message || "Error al conectar con el servidor");
-            return data;
-        })
-        .then(data => {
-            if (data.status === "success") {
-                // Actualizamos la interfaz sin recargar la página
-                let boton = document.querySelector(`#collapse${idFila} button[type="submit"]`);
-                let badge = document.querySelector(`#heading${idFila} .badge`);
-                
-                if (badge) {
-                    badge.className = "badge rounded-pill bg-danger me-3";
-                    badge.innerText = "Cancelado";
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message || "Error al conectar con el servidor");
+                return data;
+            })
+            .then(data => {
+                if (data.status === "success") {
+                    let boton = document.querySelector(`#collapse${idFila} button[type="submit"]`);
+                    let badge = document.querySelector(`#heading${idFila} .badge`);
+                    
+                    if (badge) {
+                        badge.className = "badge rounded-pill bg-danger me-3";
+                        badge.innerText = "Cancelado";
+                    }
+                    if (boton) {
+                        boton.disabled = true;
+                        boton.innerText = "Anulado";
+                        boton.classList.replace('btn-outline-danger', 'btn-secondary');
+                    }
+                    Swal.fire('Cancelado', data.message, 'success');
                 }
-                if (boton) {
-                    boton.disabled = true;
-                    boton.innerText = "Anulado";
-                    boton.classList.replace('btn-outline-danger', 'btn-secondary');
-                }
-                
-                alert(data.message); // Mensaje de éxito del servidor
-            }
-        })
-        .catch(error => {
-            alert("Error: " + error.message);
-        });
-    }
+            })
+            .catch(error => {
+                Swal.fire('Error', error.message, 'error');
+            });
+        }
+    });
 }
 
 function validarModificacion() {
@@ -863,30 +932,12 @@ function activarAutocompletadoUnico(idInput, idLista) {
 }
 
 function imprimirAlbaran(idPedido, cliente) {
-    let ventana = window.open('', 'PRINT', 'height=600,width=800');
-    ventana.document.write('<!DOCTYPE html><html lang="es"><head><title>Albarán Pedido #' + idPedido + '</title>');
-    ventana.document.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">');
-    ventana.document.write('</head><body style="padding: 40px;">');
-    ventana.document.write('<div class="d-flex justify-content-between align-items-center mb-4">');
-    ventana.document.write('<h1>📦 Albarán de Entrega</h1>');
-    ventana.document.write('<h3>LogisTFG</h3>');
-    ventana.document.write('</div><hr>');
-    ventana.document.write('<p><strong>Pedido ID:</strong> #' + idPedido + '</p>');
-    ventana.document.write('<p><strong>Cliente Receptor:</strong> ' + cliente + '</p>');
-    ventana.document.write('<p><strong>Fecha de Emisión:</strong> ' + new Date().toLocaleDateString() + '</p>');
-    ventana.document.write('<br><div class="alert alert-secondary border-dark text-dark">Documento de control logístico interno. El receptor acredita que el bulto ha llegado en perfectas condiciones.</div>');
-    ventana.document.write('<br><br><br><br><p class="text-center"><strong>Firma del Cliente o Sello:</strong> <br><br><br>_________________________</p>');
-    ventana.document.write('</body></html>');
-    ventana.document.close(); 
-    ventana.focus(); 
-    setTimeout(function() {
-        ventana.print();
-        ventana.close();
-    }, 500); 
+    // Redirigir al controlador que genera el PDF oficial
+    window.open('../controladores/descargarAlbaran.php?id=' + idPedido, '_blank');
 }
 
-function procesarEstadoReparto(idPedido, nuevoEstado, cardElement, motivo = '') {
-    const payload = `idPedido=${idPedido}&estado=${nuevoEstado}&motivo=${encodeURIComponent(motivo)}`;
+function procesarEstadoReparto(idPedido, nuevoEstado, cardElement, motivo = '', firma='') {
+    const payload = `idPedido=${idPedido}&estado=${nuevoEstado}&motivo=${encodeURIComponent(motivo)}&firma=${encodeURIComponent(firma)}`;
 
     fetch('../controladores/actualizarEstadoReparto.php', {
         method: 'POST',

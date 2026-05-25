@@ -43,6 +43,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['mensajeAdmin'] = "❌ Error al actualizar el rol.";
             }
         }
+    } elseif ($accion === 'crear_personal') {
+        $n_email = filter_input(INPUT_POST, 'nuevo_email', FILTER_SANITIZE_EMAIL);
+        $n_clave = $_POST['nueva_clave'] ?? '';
+        $n_nombre = filter_input(INPUT_POST, 'nuevo_nombre', FILTER_SANITIZE_STRING);
+        $n_apellidos = filter_input(INPUT_POST, 'nuevo_apellidos', FILTER_SANITIZE_STRING);
+        $n_telefono = filter_input(INPUT_POST, 'nuevo_telefono', FILTER_SANITIZE_STRING);
+        $n_domicilio = filter_input(INPUT_POST, 'nuevo_domicilio', FILTER_SANITIZE_STRING);
+        $n_poblacion = filter_input(INPUT_POST, 'nuevo_poblacion', FILTER_SANITIZE_STRING);
+        $n_provincia = filter_input(INPUT_POST, 'nuevo_provincia', FILTER_SANITIZE_STRING);
+        $n_cp = filter_input(INPUT_POST, 'nuevo_cp', FILTER_SANITIZE_STRING);
+        $n_rol = filter_input(INPUT_POST, 'nuevo_rol', FILTER_VALIDATE_INT);
+
+        if (!empty($n_email) && !empty($n_clave) && !empty($n_nombre) && isset($n_rol)) {
+            // Pasamos todos los datos capturados a la función del modelo
+            if ($con->registrarUsuarioBD($n_email, $n_clave, $n_nombre, $n_apellidos, $n_domicilio, $n_poblacion, $n_provincia, $n_cp, $n_telefono, $n_rol)) {
+                $_SESSION['mensajeAdmin'] = "✅ Personal registrado correctamente.";
+            } else {
+                $_SESSION['mensajeAdmin'] = "❌ Error: Ese correo ya existe en el sistema o los datos son inválidos.";
+            }
+        } else {
+            $_SESSION['mensajeAdmin'] = "❌ Error: Rellena los campos obligatorios.";
+        }
     }
     
     header("Location: usuarios.php");
@@ -85,8 +107,76 @@ $usuarios = $con->obtenerTodosLosUsuarios();
             </div>
         <?php } ?>
         
-        <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
-            <div class="card-body p-0 table-responsive">
+        <div class="mb-4 text-end">
+            <button class="btn btn-dark rounded-pill fw-bold shadow-sm px-4" type="button" data-bs-toggle="collapse" data-bs-target="#formNuevoPersonal" aria-expanded="false" aria-controls="formNuevoPersonal">
+                ➕ Añadir Personal
+            </button>
+        </div>
+
+        <div class="collapse mb-4" id="formNuevoPersonal">
+            <div class="card card-body bg-white border-0 shadow-sm rounded-4 p-4">
+                <h6 class="fw-bold text-primary mb-3">Dar de alta un Administrador o Repartidor</h6>
+                <form action="usuarios.php" method="POST" class="row g-3">
+                    <input type="hidden" name="accion" value="crear_personal">
+                    
+                    <!-- Datos Personales -->
+                    <div class="col-md-4">
+                        <label class="form-label text-muted small fw-medium">Nombre</label>
+                        <input type="text" name="nuevo_nombre" class="form-control bg-light border-0 rounded-3" required>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label text-muted small fw-medium">Apellidos</label>
+                        <input type="text" name="nuevo_apellidos" class="form-control bg-light border-0 rounded-3"  required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label text-muted small fw-medium">Teléfono</label>
+                        <input type="tel" name="nuevo_telefono" class="form-control bg-light border-0 rounded-3" maxlength="9" required>
+                    </div>
+
+                    <!-- Dirección -->
+                    <div class="col-md-12">
+                        <label class="form-label text-muted small fw-medium">Dirección Completa</label>
+                        <input type="text" name="nuevo_domicilio" class="form-control bg-light border-0 rounded-3" required>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label text-muted small fw-medium">Población</label>
+                        <input type="text" name="nuevo_poblacion" class="form-control bg-light border-0 rounded-3"  required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-muted small fw-medium">Provincia</label>
+                        <input type="text" name="nuevo_provincia" class="form-control bg-light border-0 rounded-3" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label text-muted small fw-medium">C. Postal</label>
+                        <input type="text" name="nuevo_cp" class="form-control bg-light border-0 rounded-3" maxlength="5" required>
+                    </div>
+
+                    <!-- Credenciales y Rol -->
+                    <div class="col-md-4 mt-4">
+                        <label class="form-label text-muted small fw-medium">Correo Electrónico (Usuario)</label>
+                        <input type="email" name="nuevo_email" class="form-control bg-light border-0 rounded-3 border-start border-primary border-4" required>
+                    </div>
+                    <div class="col-md-4 mt-4">
+                        <label class="form-label text-muted small fw-medium">Contraseña de acceso</label>
+                        <input type="password" name="nueva_clave" class="form-control bg-light border-0 rounded-3 border-start border-primary border-4" required>
+                    </div>
+                    <div class="col-md-4 mt-4">
+                        <label class="form-label text-muted small fw-medium">Rol del sistema</label>
+                        <select name="nuevo_rol" class="form-select bg-light border-0 rounded-3 border-start border-primary border-4" required>
+                            <option value="2">Repartidor</option>
+                            <option value="1">Administrador</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Botonera -->
+                    <div class="col-12 d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                        <button type="button" class="btn btn-outline-secondary rounded-pill fw-bold shadow-sm px-4" data-bs-toggle="collapse" data-bs-target="#formNuevoPersonal">Cancelar</button>
+                        <button type="submit" class="btn btn-success rounded-pill fw-bold shadow-sm px-5">Guardar Personal</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- FIN NUEVO FORMULARIO COMPLETO -->
                 <table class="table table-hover align-middle mb-0 bg-white">
                     <thead class="table-light text-muted small text-uppercase">
                         <tr>
@@ -173,5 +263,7 @@ $usuarios = $con->obtenerTodosLosUsuarios();
             </div>
         </div>
     </main>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/logica.js"></script>
 </body>
 </html>

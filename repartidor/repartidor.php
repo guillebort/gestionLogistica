@@ -77,7 +77,7 @@ $paradas = $con->obtenerRutasRepartidor($idRepartidor);
         </div>
         
         <!-- MAPA (Con bordes redondeados y sombra) -->
-        <div id="mapa-repartidor" class="rounded-4 shadow-sm border-0 mb-4"></div>
+        <div id="mapa-repartidor" class="rounded-4 shadow-sm border-0 mb-4" style="height: 400px; width: 100%;"></div>
 
         <!-- LISTADO DE PARADAS -->
         <div id="lista-paradas">
@@ -157,12 +157,11 @@ $paradas = $con->obtenerRutasRepartidor($idRepartidor);
         </div>
     </main>
 
-    <!-- Scripts Esenciales -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
-    
-    <!-- Lógica JavaScript Principal -->
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
     <script src="../js/logica.js?v=<?= time(); ?>"></script>
 </body>
 </html>

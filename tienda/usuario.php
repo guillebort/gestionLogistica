@@ -171,21 +171,23 @@ if (empty($_SESSION['csrf_token'])) {
                                             </tbody>
                                         </table>
                                         
-                                        <!-- Lógica original de Cancelar Pedido -->
-                                        <?php if (strcasecmp($ped->getEstado(), "Pendiente") == 0) { ?>
-                                            <div class="text-end mt-3">
+                                        <!-- Lógica Cancelar Pedido -->
+                                        <div class="text-end mt-3 d-flex justify-content-end gap-2">
+                                            <a href="../controladores/descargarAlbaran.php?id=<?php echo $ped->getId(); ?>" target="_blank" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                                                📄 Descargar Albarán
+                                            </a>
+
+                                            <!-- Lógica Cancelar Pedido ( si está Pendiente) -->
+                                            <?php if (strcasecmp($ped->getEstado(), "Pendiente") == 0) { ?>
                                                 <form action="../controladores/cancelarPedido.php" method="POST" class="d-inline" onsubmit="return confirm('¿Estás seguro de que quieres cancelar este pedido? Se liberará el stock.');">
-                                                    <!-- Token de seguridad -->
                                                     <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
-                                                    <!-- ID del pedido a cancelar -->
                                                     <input type="hidden" name="id_pedido" value="<?php echo $ped->getId(); ?>">
-                                                    
                                                     <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3">
                                                         Cancelar Envío ❌
                                                     </button>
                                                 </form>
-                                            </div>
-                                        <?php } ?>
+                                            <?php } ?>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

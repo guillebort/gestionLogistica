@@ -33,6 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $idPedido = filter_input(INPUT_POST, 'idPedido', FILTER_VALIDATE_INT);
 $estado = filter_input(INPUT_POST, 'estado', FILTER_VALIDATE_INT);
 $motivo = filter_input(INPUT_POST, 'motivo', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+$firma = $_POST['firma'] ?? null;
 
 // 5. Control de Parámetros (HTTP 400)
 if (!$idPedido || !$estado) {
@@ -46,7 +47,7 @@ if (!$idPedido || !$estado) {
 
 // 6. Lógica de negocio y respuesta (HTTP 200 o HTTP 500)
 $con = AccesoBD::getInstance();
-$exito = $con->actualizarEstadoReparto($idPedido, $idRepartidor, $estado);
+$exito = $con->actualizarEstadoReparto($idPedido, $idRepartidor, $estado, $firma);
 
 if ($exito) {
     http_response_code(200); // 200 OK

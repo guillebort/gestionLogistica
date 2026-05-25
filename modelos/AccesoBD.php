@@ -69,13 +69,16 @@ class AccesoBD {
         return -1; // Fallo de autenticación
     }
 
-    public function registrarUsuarioBD($usuario, $clave, $nombre, $apellidos, $domicilio, $poblacion, $provincia, $cp, $telefono) {
+    public function registrarUsuarioBD($usuario, $clave, $nombre, $apellidos, $domicilio, $poblacion, $provincia, $cp, $telefono, $rol = 0) {
         try {
             $hashClave = password_hash($clave, PASSWORD_DEFAULT);
 
-            $sql = "INSERT INTO usuarios (usuario, clave, nombre, apellidos, domicilio, poblacion, provincia, cp, telefono, activo, rol) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 0)";
+            // Cambiamos el 0 final por un ?
+            $sql = "INSERT INTO usuarios (usuario, clave, nombre, apellidos, domicilio, poblacion, provincia, cp, telefono, activo, rol) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)";
             $stmt = $this->conexionBD->prepare($sql);
-            return $stmt->execute([$usuario, $hashClave, $nombre, $apellidos, $domicilio, $poblacion, $provincia, $cp, $telefono]);
+            
+            // Añadimos $rol al final del array
+            return $stmt->execute([$usuario, $hashClave, $nombre, $apellidos, $domicilio, $poblacion, $provincia, $cp, $telefono, $rol]);
         } catch (Exception $e) {
             return false;
         }
@@ -594,15 +597,38 @@ class AccesoBD {
     }
 
     // Función para que el repartidor cambie el estado del pedido (3 = Entregado) o reporte incidencia
-    public function actualizarEstadoReparto($idPedido, $idRepartidor, $nuevoEstado) {
+    public function actualizarEstadoReparto($idPedido, $idRepartidor, $nuevoEstado, $firma = null) {
         try {
-            // Verificamos que el pedido es suyo antes de actualizar
-            $sql = "UPDATE pedidos SET estado = ? WHERE id = ? AND id_repartidor = ?";
-            $stmt = $this->conexionBD->prepare($sql);
-            $stmt->execute([$nuevoEstado, $idPedido, $idRepartidor]);
+            if ($nuevoEstado == 3 && !empty($firma)) {
+                // Si es entregado y viene con firma
+                $sql = "UPDATE pedidos SET estado = ?, firma = ? WHERE id = ? AND id_repartidor = ?";
+                $stmt = $this->conexionBD->prepare($sql);
+                $stmt->execute([$nuevoEstado, $firma, $idPedido, $idRepartidor]);
+            } else {
+                // Si es incidencia o no trae firma
+                $sql = "UPDATE pedidos SET estado = ? WHERE id = ? AND id_repartidor = ?";
+                $stmt = $this->conexionBD->prepare($sql);
+                $stmt->execute([$nuevoEstado, $idPedido, $idRepartidor]);
+            }
             return $stmt->rowCount() > 0;
         } catch (Exception $e) {
             return false;
+        }
+    }
+    public function obtenerAlbaranPedido($idPedido) {
+        try {
+            $sql = "SELECT p.id, p.fecha, p.importe, p.firma, u.nombre as cliente, 
+                           dorigen.calle_texto as origen, ddestino.calle_texto as destino
+                    FROM pedidos p
+                    JOIN usuarios u ON p.persona = u.id
+                    JOIN direcciones dorigen ON p.id_direccion_origen = dorigen.id
+                    JOIN direcciones ddestino ON p.id_direccion_destino = ddestino.id
+                    WHERE p.id = ?";
+            $stmt = $this->conexionBD->prepare($sql);
+            $stmt->execute([$idPedido]);
+            return $stmt->fetch(PDO::FETCH_ASSOC); // Devuelve un array asociativo directo
+        } catch (Exception $e) {
+            return null;
         }
     }
 

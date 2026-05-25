@@ -1,6 +1,14 @@
 // Variable global
 let carrito = [];
 
+const Toast = Swal.mixin({
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timer: 3000,
+    timerProgressBar: true
+});
+
 // Cargar al iniciar
 function cargarCarrito() {
     let guardado = localStorage.getItem("mi-carrito");
@@ -17,30 +25,22 @@ function guardarYRenderizar() {
 // FUNCIÓN PARA AÑADIR (Mejorada)
 function anadirCarrito(codigo, descripcion, precio, existencias) {
     cargarCarrito();
-    
     let item = carrito.find(p => p.codigo == codigo);
     
     if (item) {
         if (item.cantidad < existencias) {
             item.cantidad++;
-            alert("✅ +1 unidad de " + descripcion);
+            Toast.fire({ icon: 'success', title: `+1 unidad de ${descripcion}` });
         } else {
-            alert("⚠️ Stock máximo alcanzado");
+            Toast.fire({ icon: 'warning', title: 'Stock máximo alcanzado' });
         }
     } else {
         if (existencias > 0) {
-            carrito.push({
-                codigo: codigo,
-                descripcion: descripcion,
-                precio: precio,
-                existencias: existencias,
-                cantidad: 1
-            });
-            alert("🛒 Añadido: " + descripcion);
+            carrito.push({ codigo, descripcion, precio, existencias, cantidad: 1 });
+            Toast.fire({ icon: 'success', title: `🛒 Añadido: ${descripcion}` });
         }
     }
     localStorage.setItem("mi-carrito", JSON.stringify(carrito));
-    // IMPORTANTE: No hacemos reload ni nada para que no desaparezcan los productos de la vista
 }
 
 // FUNCIÓN PARA PINTAR LA TABLA (Con botones +/- y eliminar)
@@ -107,15 +107,39 @@ function cambiarCantidad(index, delta) {
 }
 
 function eliminarItem(index) {
-    if(confirm("¿Eliminar este servicio?")) {
-        carrito.splice(index, 1);
-        guardarYRenderizar();
-    }
+    Swal.fire({
+        title: '¿Eliminar este servicio?',
+        text: "Se quitará de tu cesta",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            carrito.splice(index, 1);
+            guardarYRenderizar();
+            Toast.fire({ icon: 'info', title: 'Servicio eliminado' });
+        }
+    });
 }
 
 function vaciarCarrito() {
-    if(confirm("¿Vaciar toda la cesta?")) {
-        carrito = [];
-        guardarYRenderizar();
-    }
+    Swal.fire({
+        title: '¿Vaciar toda la cesta?',
+        text: "Perderás todos los servicios seleccionados",
+        icon: 'error',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, vaciar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            carrito = [];
+            guardarYRenderizar();
+            Toast.fire({ icon: 'success', title: 'Cesta vaciada' });
+        }
+    });
 }

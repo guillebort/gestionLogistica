@@ -33,17 +33,7 @@ $pedidosJson = json_encode($pedidosPendientes);
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/estilo.css">
     
-    <style> 
-        #mapa-logistico { 
-            height: 450px; 
-            width: 100%; 
-            border-radius: 1rem; 
-            z-index: 1; 
-        } 
-        /* Ocultar barra de scroll en la lista de asignación para diseño más limpio */
-        .scroll-invisible::-webkit-scrollbar { width: 6px; }
-        .scroll-invisible::-webkit-scrollbar-thumb { background-color: #dee2e6; border-radius: 10px; }
-    </style>
+   
 </head>
 <body class="bg-light" style="font-family: 'Inter', sans-serif;">
     
@@ -56,7 +46,7 @@ $pedidosJson = json_encode($pedidosPendientes);
             <p class="text-muted">Resumen de la actividad operativa y financiera.</p>
         </div>
 
-        <!-- DASHBOARD DE ESTADÍSTICAS MODERNIZADO -->
+        <!-- DASHBOARD -->
         <div class="row g-4 mb-5">
             <div class="col-md-4">
                 <div class="card shadow-sm border-0 rounded-4 h-100">
@@ -99,10 +89,10 @@ $pedidosJson = json_encode($pedidosPendientes);
             </div>
         <?php } ?>
 
-        <!-- SECCIÓN DE LOGÍSTICA: MAPA Y ASIGNACIÓN -->
+        
         <div class="row g-4">
             
-            <!-- COLUMNA IZQUIERDA: MAPA LEAFLET -->
+            <!-- MAPA -->
             <div class="col-lg-7">
                 <div class="card shadow-sm h-100 border-0 rounded-4">
                     <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
@@ -115,7 +105,7 @@ $pedidosJson = json_encode($pedidosPendientes);
                 </div>
             </div>
 
-            <!-- COLUMNA DERECHA: ASIGNACIÓN MANUAL -->
+            <!-- ASIGNACI0N REPARTIDOR -->
             <div class="col-lg-5">
                 <div class="card shadow-sm h-100 border-0 rounded-4">
                     <div class="card-header bg-white border-0 pt-4 pb-2 px-4 d-flex justify-content-between align-items-center">
@@ -167,6 +157,7 @@ $pedidosJson = json_encode($pedidosPendientes);
             </div>
         </div>
     </main>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="../js/logica.js"></script>
 </body>
 </html>

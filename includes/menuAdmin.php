@@ -10,7 +10,7 @@ $nombreAdmin = $_SESSION['nombreAdmin'] ?? 'Administrador';
 $paginaActual = basename($_SERVER['PHP_SELF']);
 ?>
 
-<nav class="navbar navbar-expand-lg sticky-top">
+<nav class="navbar navbar-expand-lg sticky-top navbar-admin navbar-dark">
     <div class="container-fluid px-4 py-1">
         
         <!-- Logo Admin -->

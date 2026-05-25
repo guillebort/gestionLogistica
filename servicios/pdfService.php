@@ -46,4 +46,74 @@ class PdfService {
         
         return $dompdf->output(); // Devuelve el PDF en memoria
     }
+
+    public function generarAlbaranPdf($datosPedido) {
+        // Habilitar isRemoteEnabled es CRÍTICO para que lea imágenes Base64
+        $options = new Options();
+        $options->set('defaultFont', 'Helvetica');
+        $options->set('isRemoteEnabled', true); 
+        $dompdf = new Dompdf($options);
+        
+        // Cargamos el CSS de forma nativa para que Dompdf lo pueda leer
+        $rutaCss = realpath(__DIR__ . '/../css/estilo.css');
+        $cssContent = file_get_contents($rutaCss);
+        
+        $fecha = date('d/m/Y', strtotime($datosPedido['fecha']));
+        $firmaHtml = "";
+
+        // Pintar imagen Base64 o texto de pendiente
+        if (!empty($datosPedido['firma'])) {
+            $firmaHtml = "<img src='{$datosPedido['firma']}' class='pdf-firma-img'>";
+        } else {
+            $firmaHtml = "<div class='pdf-pendiente'>[Pendiente de rúbrica]</div>";
+        }
+
+        $htmlPdf = "
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>{$cssContent}</style>
+        </head>
+        <body class='pdf-container'>
+            <div class='pdf-header'>
+                <h1 class='pdf-title'>LogisTFG</h1>
+                <h2 class='pdf-subtitle'>Albarán de Entrega (POD)</h2>
+            </div>
+            
+            <hr class='pdf-divider'>
+
+            <table class='pdf-table-info'>
+                <tr><th>Pedido Ref.</th><td>#{$datosPedido['id']}</td></tr>
+                <tr><th>Fecha</th><td>{$fecha}</td></tr>
+                <tr><th>Cliente</th><td>{$datosPedido['cliente']}</td></tr>
+                <tr><th>Recogida</th><td>{$datosPedido['origen']}</td></tr>
+                <tr><th>Destino</th><td>{$datosPedido['destino']}</td></tr>
+                <tr><th>Importe</th><td><strong>{$datosPedido['importe']} €</strong></td></tr>
+            </table>
+
+            <table class='pdf-table-firmas'>
+                <tr>
+                    <td class='pdf-col-firma'>
+                        <div class='pdf-firma-titulo'>Responsable Logístico</div>
+                        <div style='height: 85px;'></div> <!-- Espaciador -->
+                        <div class='pdf-firma-linea'></div>
+                        <div class='pdf-firma-sub'>Firma Autorizada</div>
+                    </td>
+                    <td class='pdf-col-firma'>
+                        <div class='pdf-firma-titulo'>Conformidad del Receptor</div>
+                        <div style='height: 85px; text-align: center;'>{$firmaHtml}</div>
+                        <div class='pdf-firma-linea'></div>
+                        <div class='pdf-firma-sub'>Prueba Digital de Entrega</div>
+                    </td>
+                </tr>
+            </table>
+        </body>
+        </html>";
+        
+        $dompdf->loadHtml($htmlPdf);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+        
+        return $dompdf->output();
+    }
 }

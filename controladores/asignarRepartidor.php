@@ -8,7 +8,7 @@ header('Content-Type: application/json; charset=utf-8');
 $codigoLogueado = $_SESSION['codigo'] ?? 0;
 $rol = $_SESSION['rol'] ?? 0;
 
-// Verificamos rol de admin (rol 1)
+// Verificamos rol de admin (1)
 if ($codigoLogueado <= 0 || $rol != 1) {
     http_response_code(403);
     echo json_encode(["status" => "error", "message" => "Acceso denegado. Permisos insuficientes."]);

@@ -1,17 +1,14 @@
 /**
- * TFG - LogisTFG
  * Archivo Principal de Lógica Frontend
  */
 
 const DB_NAME = 'LogisTFG_Offline';
 const STORE_NAME = 'entregas_pendientes';
 
-/* ==========================================
-   1. EVENTOS (Esperamos a que cargue el DOM)
-   ========================================== */
+/*EVENTOS (Esperamos a que cargue el DOM)*/
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- 1. LÓGICA DE USUARIO (usuario.html) ---
+    // LÓGICA DE USUARIO
     const radioAcceso = document.getElementById('radioAcceso');
     const radioRegistro = document.getElementById('radioRegistro');
     if (radioAcceso && radioRegistro) {
@@ -19,42 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
         radioRegistro.addEventListener('change', cambiarModoUsuario);
     }
 
-    // --- 2. LÓGICA DE PRODUCTOS (productos.html) ---
-    const botonesAñadir = document.querySelectorAll('.btn-add-carrito');
-    botonesAñadir.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const servicio = e.target.getAttribute('data-servicio');
-            const precio = e.target.getAttribute('data-precio');
-            alert(`¡Has añadido el servicio: ${servicio} al carrito por ${precio}€!`);
-        });
-    });
-
-    // --- 3. LÓGICA DE CARRITO (carrito.html) ---
-    const inputsCantidad = document.querySelectorAll('.input-cantidad');
-    inputsCantidad.forEach(input => {
-        input.addEventListener('change', recalcularCarrito);
-    });
-
-    const botonesEliminar = document.querySelectorAll('.btn-eliminar-fila');
-    botonesEliminar.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const filaId = e.target.getAttribute('data-fila');
-            eliminarFilaCarrito(filaId);
-        });
-    });
-
-    const btnFormalizar = document.getElementById('btnFormalizar');
-    if (btnFormalizar) {
-        btnFormalizar.addEventListener('click', () => {
-            if (document.querySelectorAll("#cuerpo_carrito tr").length === 0) {
-                alert("No tienes ningún servicio en el carrito para formalizar.");
-            } else {
-                window.location.href = "checkout.html";
-            }
-        });
-    }
-
-    // --- 4. LÓGICA MI CUENTA (miCuenta.html) ---
+    // LÓGICA MI CUENTa
     const botonesCancelar = document.querySelectorAll('.btn-cancelar-pedido');
     botonesCancelar.forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -63,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // --- 5. LÓGICA CHECKOUT (checkout.html) ---
+    //  LÓGICA CHECKOUT
     const formCheckout = document.getElementById('formCheckout');
     if (formCheckout) {
         formCheckout.addEventListener('submit', () => {
@@ -71,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- 6. LÓGICA PARA LA PASARELA DE PAGO (Tarjetas) ---
+    // LÓGICA PARA LA PASARELA DE PAGO 
     const selectTarjeta = document.getElementById('tarjetaGuardada');
     const seccionNueva = document.getElementById('seccionNuevaTarjeta');
 
@@ -104,18 +66,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- 7. AUTOCOMPLETADO DE DIRECCIONES (Nominatim OSM) ---
+    //AUTOCOMPLETADO DE DIRECCIONES (Nominatim OSM) 
     activarAutocompletado('input_origen', 'lista_origen', 'lat_origen', 'lon_origen');
     activarAutocompletado('input_destino', 'lista_destino', 'lat_destino', 'lon_destino');
     activarAutocompletadoUnico('input_direccion', 'lista_sugerencias');
 
-    // --- 8. LÓGICA DEL MAPA DEL REPARTIDOR UNIFICADA (Leaflet + Routing) ---
+    // LÓGICA DEL MAPA DEL REPARTIDOR UNIFICADA (Leaflet + Routing) 
     const mapaElem = document.getElementById('mapa-repartidor');
     let map = null;
     let controlRuta = null;
     let cocheMarker = null;
 
-    // Variables globales para la navegación paso a paso
+    // Variables globales para la navegación
     let rutaOptimaOrdenada = [];
     let pasoRutaActual = 0;
 
@@ -126,7 +88,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }).addTo(map);
     }
 
-    // Ocultamos los botones de simulación individual (ahora navegamos paso a paso)
     document.querySelectorAll('.btn-simular-ruta').forEach(btn => btn.style.display = 'none');
 
     const btnOptimizar = document.getElementById('btn-optimizar-ruta');
@@ -134,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (btnOptimizar && btnSiguiente) {
         
-        // --- A. CALCULAR RUTA ÓPTIMA CON API REAL (OpenRouteService) ---
+        //CALCULAR RUTA ÓPTIMA CON API REAL (OpenRouteService)
         btnOptimizar.addEventListener('click', async () => {
             if (!map) return;
             const paradas = document.querySelectorAll('.parada-card');
@@ -143,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // 1. Preparar las coordenadas (Formato ORS: [longitud, latitud] ¡Importante el orden!)
+            // 1. Preparar las coordenadas (Formato ORS: [longitud, latitud])
             // Índice 0 será nuestra Central Logística
             const latOrigen = parseFloat(paradas[0].querySelector('.btn-simular-ruta').getAttribute('data-lato'));
             const lonOrigen = parseFloat(paradas[0].querySelector('.btn-simular-ruta').getAttribute('data-lono'));
@@ -164,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
 
-            // 2. Llamada a la API de OpenRouteService (Matrix)
+            // 2. Llamada a la API de OpenRouteService
             const apiKey = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjYzNmZkNTNkOWJjNDRjMzBiNGY1NTQ2NmY1MjE2YzM4IiwiaCI6Im11cm11cjY0In0='; // Sustituye por tu clave real
             const url = 'https://api.openrouteservice.org/v2/matrix/driving-car';
 
@@ -190,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json();
                 const matrizDistancias = data.distances; // Matriz NxN con distancias reales
 
-                // 3. Algoritmo: Vecino Más Cercano (Nearest Neighbor) usando la matriz real
+                // 3. Algoritmo: Vecino Más Cercano  usando la matriz real
                 let noVisitados = Array.from({length: infoParadas.length - 1}, (_, i) => i + 1); // Índices del 1 al N
                 let indiceActual = 0; // Empezamos en la central (índice 0)
                 
@@ -403,9 +364,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Iniciar IndexedDB para modo offline
     initDB();
 
-    /* ==========================================
-       9. LÓGICA DE VALIDACIÓN REGISTRO USUARIO
-       ========================================== */
+    /*LÓGICA DE VALIDACIÓN REGISTRO USUARIO*/
     const pass2Registro = document.getElementById('pass2');
     if (pass2Registro) {
         pass2Registro.addEventListener('input', function() {
@@ -423,9 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    /* ==========================================
-       10. LÓGICA DE SINCRONIZACIÓN DE TARJETAS
-       ========================================== */
+    /*LÓGICA DE SINCRONIZACIÓN DE TARJETAS*/
     const radioTarjetas = document.querySelectorAll('.tarjeta-radio');
     const selectReal = document.getElementById('tarjetaGuardada');
     if (radioTarjetas.length > 0 && selectReal) {
@@ -437,9 +394,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    /* ==========================================
-       11. INICIALIZACIÓN MAPA LOGÍSTICO (ADMIN)
-       ========================================== */
+    /*11. INICIALIZACIÓN MAPA LOGÍSTICO (ADMIN)*/
     const mapaAdminElem = document.getElementById('mapa-logistico');
     if (mapaAdminElem) {
         // Inicializar mapa centrado en España/Valencia
@@ -476,7 +431,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Lógica para Asignar Repartidor (Admin) vía API REST ---
+    //  Lógica para Asignar Repartidor (Admin) vía API REST 
     const formsAsignacion = document.querySelectorAll('form[action="../controladores/asignarRepartidor.php"]');
     
     formsAsignacion.forEach(form => {
@@ -509,7 +464,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     tarjetaPedido.style.opacity = "0";
                     setTimeout(() => tarjetaPedido.remove(), 500);
                     
-                    // Opcional: Actualizar el contador de pendientes
+                    // actualizar el contador de pendientes
                     let badgePendientes = document.querySelector('.card-header .badge');
                     if (badgePendientes) {
                         let actual = parseInt(badgePendientes.innerText);
@@ -526,9 +481,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    /* ==========================================
-       LÓGICA DE AUTENTICACIÓN Y REGISTRO AJAX (SPA UX)
-       ========================================== */
+    /* LÓGICA DE AUTENTICACIÓN Y REGISTRO AJAX (SPA UX)*/
     const formsAuth = document.querySelectorAll('form[action="../controladores/login.php"], form[action="../controladores/loginAdminController.php"], form[action="../controladores/registro.php"]');
     
     formsAuth.forEach(form => {
@@ -602,9 +555,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => formulario.classList.remove('animate__animated', 'animate__shakeX'), 1000);
     }
 
-    /* ==========================================
-       LÓGICA PARA GUARDAR RUTA (PASO 1 CHECKOUT)
-       ========================================== */
+    /* LÓGICA PARA GUARDAR RUTA (CHECKOUT)*/
     const formRuta = document.querySelector('form[action="../controladores/guardarRuta.php"]');
     
     if (formRuta) {
@@ -614,7 +565,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const btnSubmit = this.querySelector('button[type="submit"]');
             const originalText = btnSubmit.innerHTML;
             
-            // Verificamos que las coordenadas no sean 0.0 (es decir, que hayan usado el autocompletado de OpenStreetMap)
+            // Verificamos que las coordenadas no sean 0.0 (que hayan usado el autocompletado de OpenStreetMap)
             const latO = document.getElementById('lat_origen').value;
             const latD = document.getElementById('lat_destino').value;
             
@@ -623,7 +574,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Mostramos el Spinner
             btnSubmit.disabled = true;
             btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Calculando ruta...';
 
@@ -661,9 +611,7 @@ document.addEventListener('DOMContentLoaded', () => {
 }); // FIN DEL DOMContentLoaded
 
 
-/* ==========================================
-   2. FUNCIONES GLOBALES / AUXILIARES
-   ========================================== */
+/*FUNCIONES GLOBALES / AUXILIARES*/
 
 function cambiarModoUsuario() {
     const radioRegistro = document.getElementById('radioRegistro');
@@ -682,37 +630,6 @@ function cambiarModoUsuario() {
         btnSubmit.textContent = 'Entrar';
         inputsExtra.forEach(input => input.removeAttribute('required'));
         if (formulario) formulario.action = '../controladores/login.php';
-    }
-}
-
-function recalcularCarrito() {
-    let filas = document.querySelectorAll("#cuerpo_carrito tr");
-    let totalGeneral = 0;
-    filas.forEach(fila => {
-        let id = fila.id.split('_')[1];
-        let precioElem = document.getElementById('precio_' + id);
-        if(!precioElem) return; 
-        
-        let precio = parseFloat(precioElem.innerText);
-        let cantidad = parseInt(document.getElementById('cant_' + id).value);
-        let subtotal = precio * cantidad;
-        
-        document.getElementById('sub_' + id).innerText = subtotal.toFixed(2);
-        totalGeneral += subtotal;
-    });
-    let totalElem = document.getElementById('total_carrito');
-    if(totalElem) totalElem.innerText = totalGeneral.toFixed(2);
-}
-
-function eliminarFilaCarrito(idFila) {
-    let fila = document.getElementById(idFila);
-    if(fila) {
-        fila.parentNode.removeChild(fila);
-        recalcularCarrito();
-    }
-    if (document.querySelectorAll("#cuerpo_carrito tr").length === 0) {
-        document.getElementById('cuerpo_carrito').innerHTML = "<tr><td colspan='5' class='text-center text-muted'>Tu carrito está vacío.</td></tr>";
-        document.getElementById('total_carrito').innerText = "0.00";
     }
 }
 
@@ -771,39 +688,11 @@ function cancelarPedido(idFila) {
     });
 }
 
-function validarModificacion() {
-    var inputPass1 = document.getElementById("mod_pass1");
-    var inputPass2 = document.getElementById("mod_pass2");
-    if (inputPass1.value !== "" || inputPass2.value !== "") {
-        if (inputPass1.value !== inputPass2.value) {
-            document.getElementById("errorModPass").classList.remove("d-none");
-            inputPass1.value = "";
-            inputPass2.value = "";
-            inputPass1.focus();
-            return false; 
-        }
-    }
-    document.getElementById("errorModPass").classList.add("d-none");
-    return true; 
-}
-
 function limpiarCarritoLocal(event) {
     if (event) event.preventDefault();
     localStorage.removeItem("mi-carrito");
     sessionStorage.clear();
     window.location.href = '../controladores/logout.php';
-}
-
-function verificarPasswords() {
-    var inputPass1 = document.getElementById("pass1");
-    var inputPass2 = document.getElementById("pass2");
-    if (inputPass1 && inputPass2) {
-        if (inputPass1.value !== inputPass2.value) {
-            document.getElementById("errorPass").style.display = "block";
-            return false; 
-        }
-    }
-    return true; 
 }
 
 function alternarCamposTarjeta() {
@@ -955,7 +844,7 @@ function procesarEstadoReparto(idPedido, nuevoEstado, cardElement, motivo = '', 
         if (!response.ok) {
             throw new Error(data.message || "Fallo de red o servidor");
         }
-        return data; // Si todo va bien, pasamos los datos al siguiente then
+        return data;
     })
     .then(data => {
         // Ahora comprobamos nuestro estándar de status "success"
@@ -964,7 +853,7 @@ function procesarEstadoReparto(idPedido, nuevoEstado, cardElement, motivo = '', 
             cardElement.style.opacity = "0";
             cardElement.style.transform = "translateX(100%)";
             setTimeout(() => cardElement.remove(), 500);
-            console.log(data.message); // Opcional: mostrar en consola el mensaje del server
+            console.log(data.message);
         }
     })
     .catch(error => {
@@ -1038,9 +927,7 @@ function animarCocheEnRuta(coordenadas, mapaInstance) {
     setTimeout(moverCoche, 1500); 
 }
 
-/* ==========================================
-   3. INDEXEDDB (OFFLINE)
-   ========================================== */
+/*INDEXEDDB (OFFLINE)*/
 
 function initDB() {
     return new Promise((resolve, reject) => {
@@ -1064,9 +951,7 @@ function guardarEnIndexedDB(payload) {
     });
 }
 
-/* ==========================================
-   4. REGISTRO DEL SERVICE WORKER (PWA)
-   ========================================== */
+/* REGISTRO DEL SERVICE WORKER (PWA)*/
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
@@ -1079,21 +964,20 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-// --- AUTO CIERRE DE SESIÓN POR INACTIVIDAD ---
+// AUTO CIERRE DE SESIÓN POR INACTIVIDAD
 function controlInactividad() {
     let tiempo;
-    const tiempoLimite = 15 * 60 * 1000; // 15 minutos en milisegundos
+    const tiempoLimite = 5 * 60 * 1000; // 5 minutos en milisegundos
 
     // Eventos que indican que el usuario sigue activo
     window.onload = resetearTiempo;
     document.onmousemove = resetearTiempo;
     document.onkeypress = resetearTiempo;
-    document.ontouchstart = resetearTiempo; // Importante para la vista del repartidor
+    document.ontouchstart = resetearTiempo;
     document.onclick = resetearTiempo;
 
     function expirarSesion() {
         alert("⏱️ Tu sesión ha expirado por inactividad por motivos de seguridad.");
-        // Reutilizamos tu controlador de logout existente
         window.location.href = '../controladores/logout.php';
     }
 
@@ -1104,7 +988,6 @@ function controlInactividad() {
 }
 
 // Iniciar el control solo si hay indicios de estar logueado 
-// (Por ejemplo, si el botón de "Cerrar Sesión" existe en el DOM)
 document.addEventListener('DOMContentLoaded', () => {
     // Si la URL actual no es el login, activamos el temporizador
     if (!window.location.href.includes("login")) {

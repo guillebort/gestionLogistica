@@ -1,12 +1,12 @@
 <?php
 // controladores/RepartidorController.php
-session_start();
 require_once '../modelos/AccesoBD.php';
+session_start();
 
 class RepartidorController {
     
     public function mostrarPanel() {
-        // 1. Validación de seguridad y rol
+        // Validación de seguridad y rol
         $rolUsuario = $_SESSION['rol'] ?? 0; 
         $idRepartidor = $_SESSION['codigo'] ?? 0;
 
@@ -16,19 +16,18 @@ class RepartidorController {
             exit;
         }
 
-        // 2. Conexión al Modelo para obtener los datos
+        // obtenemos los datos
         $con = AccesoBD::getInstance();
         $nombreRepartidor = $_SESSION['nombreUsuario'] ?? 'Repartidor';
         
         // Obtenemos las rutas/pedidos asignados a este repartidor en concreto
         $paradas = $con->obtenerRutasRepartidor($idRepartidor);
 
-        // 3. Inyectamos los datos en la Vista "tonta"
+        // inyectamos los datos en la vista
         require_once '../repartidor/repartidor.php';
     }
 }
 
-// Enrutador frontal básico
 $controller = new RepartidorController();
 $controller->mostrarPanel();
 

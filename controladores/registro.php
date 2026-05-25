@@ -1,9 +1,9 @@
 <?php
 // controladores/registro.php
-session_start();
-require_once '../modelos/AccesoBD.php';
 
-// Cabecera REST
+require_once '../modelos/AccesoBD.php';
+session_start();
+
 header('Content-Type: application/json; charset=utf-8');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -32,7 +32,7 @@ $clave     = getParam('clave', $jsonInput);
 $clave2    = getParam('clave2', $jsonInput);
 $urlDestino= getParam('url', $jsonInput) ?: 'usuario.php';
 
-// 1. Validación de Backend (Defensa en profundidad)
+// Validación de Backend 
 if (empty($usuario) || empty($clave) || empty($nombre)) {
     http_response_code(400); // Bad Request
     echo json_encode(["status" => "error", "message" => "Faltan campos obligatorios."]);
@@ -48,17 +48,17 @@ if ($clave !== $clave2) {
 try {
     $con = AccesoBD::getInstance();
     
-    // 2. Intentar registrar al usuario
+    // Intentamos registrar al usuario
     $exito = $con->registrarUsuarioBD($usuario, $clave, $nombre, $apellidos, $domicilio, $poblacion, $provincia, $cp, $telefono);
 
     if ($exito) {
-        // 3. Autologin inmediato tras el registro
+        // Autologin inmediato tras el registro
         $idNuevo = $con->comprobarUsuarioBD($usuario, $clave);
         if ($idNuevo != -1) {
             session_regenerate_id(true); // Prevenir Session Fixation
             $_SESSION['codigo'] = $idNuevo;
             $_SESSION['nombreUsuario'] = $nombre;
-            $_SESSION['rol'] = 0; // Rol cliente por defecto
+            $_SESSION['rol'] = 0; // Rol cliente 
         }
         
         $rutaRedirect = "../tienda/" . ltrim($urlDestino, '/');

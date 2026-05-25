@@ -22,21 +22,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($codigo > 0) {
             $u = $con->obtenerUsuarioBD($codigo);
             
-            // Guardamos los datos vitales en la sesión
+            // Guardamos los datos en la sesión
             $_SESSION['codigo'] = $codigo;
             $_SESSION['nombreUsuario'] = $u->getNombre();
             $_SESSION['rol'] = $u->getRol(); 
             
-            // Redirección directa basada en el ROL del usuario
+            // Redirección directa basada en el rol del usuario
             if ($_SESSION['rol'] == 1) {
-                // Es Administrador
+                // Es Administrador(rol 1)
                 $_SESSION['nombreAdmin'] = $u->getNombre();
                 header("Location: ../admin/index.php");
             } elseif ($_SESSION['rol'] == 2) {
-                // Es Repartidor
+                // Es Repartidor(rol 2)
                 header("Location: ../repartidor/repartidor.php");
             } else {
-                // Es Cliente normal (Rol 0)
+                // Es Cliente normal (rol 0)
                 header("Location: ../tienda/" . ltrim($urlDestino, '/'));
             }
             exit;

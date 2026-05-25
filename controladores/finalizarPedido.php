@@ -1,12 +1,10 @@
 <?php
 // controladores/finalizarPedido.php
 
-// 1. PRIMERO cargamos las clases SIEMPRE
 require_once '../vendor/autoload.php';
 require_once '../modelos/AccesoBD.php';
 require_once '../modelos/Modelos.php';
 
-// 2. LUEGO iniciamos la sesión
 session_start();
 
 use servicios\pdfService;
@@ -38,23 +36,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $latDestino = $_SESSION['latDestino'] ?? 0.0;
     $lonDestino = $_SESSION['lonDestino'] ?? 0.0;
 
-    // 1. Guardar en Base de Datos
+    // Guardamos en Base de Datos
     $idNuevoPedido = $con->guardarPedido($idUsuario, $total, $carrito, $dirOrigen, $latOrigen, $lonOrigen, $dirDestino, $latDestino, $lonDestino);
 
     if ($idNuevoPedido > 0) {
         $usuarioDatos = $con->obtenerUsuarioBD($idUsuario);
         
         if ($usuarioDatos != null) {
-            // 2. Generar PDF (Delegado al servicio)
+            // Generamos PDF
             $pdfService = new PdfService();
             $pdfOutput = $pdfService->generarTicketReserva($idNuevoPedido, $usuarioDatos, $dirOrigen, $dirDestino, $total);
             
-            // 3. Enviar Mail (Delegado al servicio)
+            // Enviar Mail
             $mailService = new MailService();
             $mailService->enviarConfirmacionConTicket($usuarioDatos, $idNuevoPedido, $pdfOutput);
         }
 
-        // 4. Limpiar sesión y Redirigir
+        // limpiamos la sesión y redirigimos
         unset($_SESSION['carritoJSON'], $_SESSION['totalPedido'], $_SESSION['direccionOrigen'], $_SESSION['direccionDestino']);
         $_SESSION['mensaje'] = "REF-LOGIS-" . $idNuevoPedido;
         header("Location: ../tienda/pedidoCompletado.php");

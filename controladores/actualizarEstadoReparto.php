@@ -1,12 +1,10 @@
 <?php
-// controladores/actualizarEstadoReparto.php
 session_start();
 require_once '../modelos/AccesoBD.php';
 
-// 1. Cabecera estandarizada para respuestas JSON
 header('Content-Type: application/json; charset=utf-8');
 
-// 2. Control de Acceso (Autorización - HTTP 403)
+// Control de Acceso
 $idRepartidor = $_SESSION['codigo'] ?? 0;
 $rol = $_SESSION['rol'] ?? 0;
 
@@ -19,7 +17,7 @@ if ($idRepartidor <= 0 || $rol != 2) {
     exit;
 }
 
-// 3. Control de Método (HTTP 405)
+// Control de Método
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405); // 405 Method Not Allowed
     echo json_encode([
@@ -29,13 +27,13 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-// 4. Saneamiento y validación de datos
+// Saneamiento y validación de datos
 $idPedido = filter_input(INPUT_POST, 'idPedido', FILTER_VALIDATE_INT);
 $estado = filter_input(INPUT_POST, 'estado', FILTER_VALIDATE_INT);
 $motivo = filter_input(INPUT_POST, 'motivo', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 $firma = $_POST['firma'] ?? null;
 
-// 5. Control de Parámetros (HTTP 400)
+// Control de Parámetros (HTTP 400)
 if (!$idPedido || !$estado) {
     http_response_code(400); // 400 Bad Request
     echo json_encode([
@@ -45,7 +43,7 @@ if (!$idPedido || !$estado) {
     exit;
 }
 
-// 6. Lógica de negocio y respuesta (HTTP 200 o HTTP 500)
+// lógica de negocio y respuesta (HTTP 200 o HTTP 500)
 $con = AccesoBD::getInstance();
 $exito = $con->actualizarEstadoReparto($idPedido, $idRepartidor, $estado, $firma);
 

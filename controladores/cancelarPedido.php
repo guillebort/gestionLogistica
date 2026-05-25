@@ -18,7 +18,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-// Para APIs JSON, solemos leer del body
 $jsonInput = json_decode(file_get_contents('php://input'), true);
 $idPedido = $jsonInput['id_pedido'] ?? filter_input(INPUT_POST, 'id_pedido', FILTER_VALIDATE_INT);
 $tokenCsrf = $jsonInput['csrf_token'] ?? filter_input(INPUT_POST, 'csrf_token', FILTER_SANITIZE_STRING);

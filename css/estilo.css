@@ -1,11 +1,10 @@
-/* ==========================================
-   css/estilo.css - LogisTFG Modernizado
-   ========================================== */
+/*
+   css/estilo.css
 
 /* --- 1. Tipografía y Fondo General --- */
 body {
-    font-family: 'Inter', sans-serif; /* Tipografía más moderna y limpia */
-    background-color: #f4f7f6; /* Un gris muy sutil, casi azulado, más elegante que el #f8f9fa */
+    font-family: 'Inter', sans-serif; 
+    background-color: #f4f7f6; 
     color: #2c3e50;
     -webkit-font-smoothing: antialiased;
 }
@@ -101,10 +100,6 @@ body {
     box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.15);
 }
 
-/* ==========================================
-   ESTILOS EXTRAÍDOS DE LAS VISTAS (PHP)
-   ========================================== */
-
 /* --- De: admin/index.php --- */
 #mapa-logistico { 
     height: 450px; 
@@ -147,9 +142,6 @@ body {
 .timeline-reparto { position: relative; margin-left: 0.5rem; padding-left: 1.5rem; border-left: 2px solid #0d6efd; }
 .timeline-punto { position: absolute; left: -8px; width: 14px; height: 14px; border-radius: 50%; }
 
-/* ==========================================
-   ESTILOS EXTRAÍDOS DEL HTML (LIMPIEZA DE INLINE STYLES)
-   ========================================== */
 
 /* --- Iconos y Tarjetas del Dashboard (Admin) --- */
 .icon-dashboard {
@@ -273,6 +265,7 @@ body {
     font-size: 4rem; 
     opacity: 0.8;
 }
+
 /*ESTILOS PARA LOS PDF*/
 .pdf-container { font-family: 'Helvetica', Arial, sans-serif; color: #2c3e50; padding: 20px; }
 .pdf-header { text-align: center; margin-bottom: 30px; }
@@ -290,9 +283,8 @@ body {
 .pdf-firma-img { max-height: 80px; max-width: 180px; margin-bottom: 5px; }
 .pdf-pendiente { padding-top: 30px; font-style: italic; color: #94a3b8; font-size: 11px; margin-bottom: 10px; }
 
-/* ==========================================
-   MENÚ DE ADMINISTRACIÓN (DISEÑO PREMIUM)
-   ========================================== */
+/*
+   MENÚ DE ADMINISTRACIÓN */
 .navbar-admin {
     background: rgba(15, 23, 42, 0.95) !important; /* Azul medianoche muy elegante */
     backdrop-filter: blur(12px);

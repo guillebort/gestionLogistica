@@ -7,14 +7,13 @@ require_once '../modelos/Modelos.php';
 
 class UsuarioController {
     public function mostrarPerfil() {
-        // 1. Control de acceso
+
         $codigoLogueado = $_SESSION["codigo"] ?? 0;
         if ($codigoLogueado <= 0) {
             header("Location: ../tienda/login.php");
             exit;
         }
 
-        // 2. Lógica de negocio (BD)
         try {
             $con = AccesoBD::getInstance();
             $u = $con->obtenerUsuarioBD($codigoLogueado);
@@ -25,7 +24,6 @@ class UsuarioController {
                 $historial = [];
             }
 
-            // 3. Renderizamos la Vista
             require_once '../tienda/usuario.php';
 
         } catch (Exception $e) {

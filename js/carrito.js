@@ -1,4 +1,3 @@
-// Variable global
 let carrito = [];
 
 const Toast = Swal.mixin({
@@ -9,7 +8,6 @@ const Toast = Swal.mixin({
     timerProgressBar: true
 });
 
-// Cargar al iniciar
 function cargarCarrito() {
     let guardado = localStorage.getItem("mi-carrito");
     carrito = guardado ? JSON.parse(guardado) : [];
@@ -22,7 +20,6 @@ function guardarYRenderizar() {
     }
 }
 
-// FUNCIÓN PARA AÑADIR (Mejorada)
 function anadirCarrito(codigo, descripcion, precio, existencias) {
     cargarCarrito();
     let item = carrito.find(p => p.codigo == codigo);
@@ -43,7 +40,6 @@ function anadirCarrito(codigo, descripcion, precio, existencias) {
     localStorage.setItem("mi-carrito", JSON.stringify(carrito));
 }
 
-// FUNCIÓN PARA PINTAR LA TABLA (Con botones +/- y eliminar)
 function renderizarCarrito() {
     cargarCarrito();
     let cuerpo = document.getElementById("cuerpo-tabla");

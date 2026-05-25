@@ -1,8 +1,8 @@
 <?php
-session_start();
+
 require_once '../includes/controlSesion.php';
 require_once '../modelos/AccesoBD.php';
-
+session_start();
 // 1. Validación de seguridad y rol
 $rolUsuario = $_SESSION['rol'] ?? 0; 
 $idRepartidor = $_SESSION['codigo'] ?? 0;

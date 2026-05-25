@@ -7,7 +7,7 @@ require_once '../servicios/pdfService.php';
 
 use servicios\PdfService;
 
-// Verificamos permisos (Solo Admin o clientes logueados)
+// Verificamos permisos
 if (!isset($_SESSION['codigo'])) {
     die("Acceso denegado.");
 }
@@ -28,7 +28,7 @@ if (!$datosPedido) {
 $pdfService = new PdfService();
 $pdfOutput = $pdfService->generarAlbaranPdf($datosPedido);
 
-// Enviar el archivo binario al navegador (Attachment => false lo abre en una pestaña nueva)
+// Enviar el archivo binario al navegador
 header('Content-Type: application/pdf');
 header('Content-Disposition: inline; filename="Albaran_Pedido_'.$idPedido.'.pdf"');
 header('Cache-Control: private, max-age=0, must-revalidate');

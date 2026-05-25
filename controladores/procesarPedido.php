@@ -1,11 +1,9 @@
 <?php
 // controladores/procesarPedido.php
 
-// 1. PRIMERO cargamos las clases SIEMPRE
 require_once '../modelos/AccesoBD.php';
 require_once '../modelos/Modelos.php';
 
-// 2. LUEGO iniciamos la sesión
 session_start();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -27,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $cantidad = (int)$prod['cantidad'];
             
-            // Validación vital de logística: Comprobar stock real en el momento de procesar
+            // comprobamos el stock real en el momento de procesar
             $existencias = $con->obtenerExistencias($nuevo->getCodigo());
 
             if ($cantidad > $existencias) {

@@ -1,11 +1,9 @@
 <?php
 // controladores/checkoutController.php
 
-// 1. PRIMERO cargamos las clases para que PHP sepa qué es un ProductoCarrito
 require_once '../modelos/AccesoBD.php';
 require_once '../modelos/Modelos.php';
 
-// 2. LUEGO iniciamos la sesión (así PHP puede reconstruir los objetos correctamente)
 session_start();
 
 class CheckoutController {
@@ -20,7 +18,7 @@ class CheckoutController {
         $listaCarrito = $_SESSION["carritoJSON"] ?? [];
         $total = $_SESSION["totalPedido"] ?? 0.0;
 
-        // Regla de negocio: Si el carrito está vacío, no se puede hacer checkout
+        //Si el carrito está vacío, no se puede hacer checkout
         if (empty($listaCarrito)) {
             header("Location: ../tienda/carrito.php");
             exit;

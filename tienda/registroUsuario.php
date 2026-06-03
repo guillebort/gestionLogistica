@@ -82,30 +82,27 @@ session_start();
 
                             <!-- SECCIÓN 3: Dirección -->
                             <h5 class="text-primary fw-bold mb-3 mt-4"><span class="badge bg-primary rounded-circle me-2">3</span>Dirección de Facturación</h5>
-                            <div class="row g-3 mb-4">
-                                <div class="col-12">
-                                    <div class="form-floating">
-                                        <input name="domicilio" type="text" class="form-control" id="regDom" placeholder="Dirección" required>
-                                        <label for="regDom">Dirección Completa (Calle, número, piso...)</label>
-                                    </div>
+                            <div class="mb-3 position-relative">
+                                <label class="form-label text-muted small fw-medium">Dirección Completa / Domicilio</label>
+                                <input type="text" name="domicilio" id="input_direccion" class="form-control bg-light border-0 rounded-3" autocomplete="off" required>
+                                
+                                <ul id="lista_sugerencias" class="list-group position-absolute w-100 shadow-sm" style="z-index: 1000; display: none; max-height: 200px; overflow-y: auto;"></ul>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-5 mb-3">
+                                    <label class="form-label text-muted small fw-medium">Población</label>
+                                    <input type="text" name="poblacion" id="input_poblacion" class="form-control bg-light border-0 rounded-3" required>
                                 </div>
-                                <div class="col-md-5">
-                                    <div class="form-floating">
-                                        <input name="poblacion" type="text" class="form-control" id="regPob" placeholder="Población" required>
-                                        <label for="regPob">Población</label>
-                                    </div>
+                                
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label text-muted small fw-medium">Provincia</label>
+                                    <input type="text" name="provincia" id="input_provincia" class="form-control bg-light border-0 rounded-3" required>
                                 </div>
-                                <div class="col-md-4">
-                                    <div class="form-floating">
-                                        <input name="provincia" type="text" class="form-control" id="regProv" placeholder="Provincia" required>
-                                        <label for="regProv">Provincia</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-floating">
-                                        <input name="cp" type="text" class="form-control" id="regCP" maxlength="5" placeholder="CP" required>
-                                        <label for="regCP">C. Postal</label>
-                                    </div>
+                                
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label text-muted small fw-medium">C. Postal</label>
+                                    <input type="text" name="cp" id="input_cp" class="form-control bg-light border-0 rounded-3" maxlength="5" required>
                                 </div>
                             </div>
 

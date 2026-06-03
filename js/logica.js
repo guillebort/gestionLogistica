@@ -800,14 +800,23 @@ function activarAutocompletadoUnico(idInput, idLista) {
                                 li.innerHTML = `<strong>${place.display_name.split(',')[0]}</strong> <small class="text-muted d-block">${place.display_name}</small>`;
                                 
                                 li.onclick = function() {
+                                    // 1. Rellenar calle
                                     inputDireccion.value = place.display_name.split(',')[0];
+                                    
                                     const addr = place.address;
                                     const ciudad = addr.city || addr.town || addr.village || addr.municipality || "";
+                                    const provincia = addr.province || addr.state || addr.county || ""; // NUEVO
                                     const codigoPostal = addr.postcode || ""; 
+                                    
+                                    // 2. Rellenar campos extra si existen en el DOM
                                     if(document.getElementById('input_poblacion')) document.getElementById('input_poblacion').value = ciudad;
+                                    if(document.getElementById('input_provincia')) document.getElementById('input_provincia').value = provincia; // NUEVO
                                     if(document.getElementById('input_cp')) document.getElementById('input_cp').value = codigoPostal;
+                                    
+                                    // 3. Rellenar coordenadas (si se necesitan)
                                     if(document.getElementById('lat_input')) document.getElementById('lat_input').value = place.lat;
                                     if(document.getElementById('lon_input')) document.getElementById('lon_input').value = place.lon;
+                                    
                                     listaSugerencias.style.display = 'none';
                                 };
                                 listaSugerencias.appendChild(li);

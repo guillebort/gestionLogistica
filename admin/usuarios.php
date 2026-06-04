@@ -107,38 +107,61 @@ $usuarios = $con->obtenerTodosLosUsuarios();
             </div>
         <?php } ?>
         
-        <div class="mb-4 text-end">
-            <button class="btn btn-dark rounded-pill fw-bold shadow-sm px-4" type="button" data-bs-toggle="collapse" data-bs-target="#formNuevoPersonal" aria-expanded="false" aria-controls="formNuevoPersonal">
-                ➕ Añadir Personal
-            </button>
-        </div>
+       <div class="mb-4">
+    <button class="btn btn-primary fw-bold px-4 shadow-sm rounded-pill d-flex align-items-center gap-2" type="button" data-bs-toggle="collapse" data-bs-target="#formularioNuevoUsuario" aria-expanded="false">
+        ➕ Añadir Nuevo Usuario
+    </button>
+</div>
 
-        <div class="collapse mb-4" id="formNuevoPersonal">
-            <div class="card card-body bg-white border-0 shadow-sm rounded-4 p-4">
-                <h6 class="fw-bold text-primary mb-3">Dar de alta un Administrador o Repartidor</h6>
-                <form action="usuarios.php" method="POST" class="row g-3">
-                    <input type="hidden" name="accion" value="crear_personal">
-                    
-                    <!-- Datos Personales -->
-                    <div class="col-md-4">
-                        <label class="form-label text-muted small fw-medium">Nombre</label>
-                        <input type="text" name="nuevo_nombre" class="form-control bg-light border-0 rounded-3" required>
-                    </div>
-                    <div class="col-md-5">
-                        <label class="form-label text-muted small fw-medium">Apellidos</label>
-                        <input type="text" name="nuevo_apellidos" class="form-control bg-light border-0 rounded-3"  required>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label text-muted small fw-medium">Teléfono</label>
-                        <input type="tel" name="nuevo_telefono" class="form-control bg-light border-0 rounded-3" maxlength="9" required>
-                    </div>
+<div class="collapse mb-5" id="formularioNuevoUsuario">
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+            
+            <form action="usuarios.php" method="POST" class="row g-4">
+                
+                <div class="col-12 mb-0">
+                    <h6 class="fw-bold text-secondary border-bottom pb-2">Datos de la Cuenta</h6>
+                </div>
+                
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold text-muted">Nombre</label>
+                    <input type="text" name="nombre" class="form-control" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold text-muted">Apellidos</label>
+                    <input type="text" name="apellidos" class="form-control" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold text-muted">Teléfono</label>
+                    <input type="tel" name="telefono" id="telefono" class="form-control" maxlength="9" required>
+                </div>
+                
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold text-muted">Correo Electrónico</label>
+                    <input type="email" name="email" class="form-control" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold text-muted">Contraseña</label>
+                    <input type="password" name="password" class="form-control" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold text-muted">Rol</label>
+                    <select name="rol" class="form-select" required>
+                        <option value="" selected disabled>Selecciona un rol...</option>
+                        <option value="2">🚚 Repartidor</option>
+                        <option value="1">⚙️ Administrador</option>
+                    </select>
+                </div>
 
-                    <!-- Dirección -->
-                    <div class="mb-3 position-relative">
-                                <label class="form-label text-muted small fw-medium">Dirección Completa / Domicilio</label>
+                <div class="col-12 mt-4 mb-0">
+                    <h6 class="fw-bold text-secondary border-bottom pb-2">📍 Ubicación</h6>
+                </div>
+                
+                <div class="mb-3 position-relative">
+                                <label class="form-label small fw-bold text-muted">Dirección Completa / Domicilio</label>
                                 <input type="text" name="domicilio" id="input_direccion" class="form-control bg-light border-0 rounded-3" autocomplete="off" required>
                                 
-                                <ul id="lista_sugerencias" class="list-group position-absolute w-100 shadow-sm" style="z-index: 1000; display: none; max-height: 200px; overflow-y: auto;"></ul>
+                                <ul id="lista_sugerencias" class="list-group position-absolute w-100 shadow-sm"></ul>
                             </div>
 
                             <div class="row">
@@ -157,32 +180,15 @@ $usuarios = $con->obtenerTodosLosUsuarios();
                                     <input type="text" name="cp" id="input_cp" class="form-control bg-light border-0 rounded-3" maxlength="5" required>
                                 </div>
                             </div>
-
-                    <!-- Credenciales y Rol -->
-                    <div class="col-md-4 mt-4">
-                        <label class="form-label text-muted small fw-medium">Correo Electrónico (Usuario)</label>
-                        <input type="email" name="nuevo_email" class="form-control bg-light border-0 rounded-3 border-start border-primary border-4" required>
-                    </div>
-                    <div class="col-md-4 mt-4">
-                        <label class="form-label text-muted small fw-medium">Contraseña de acceso</label>
-                        <input type="password" name="nueva_clave" class="form-control bg-light border-0 rounded-3 border-start border-primary border-4" required>
-                    </div>
-                    <div class="col-md-4 mt-4">
-                        <label class="form-label text-muted small fw-medium">Rol del sistema</label>
-                        <select name="nuevo_rol" class="form-select bg-light border-0 rounded-3 border-start border-primary border-4" required>
-                            <option value="2">Repartidor</option>
-                            <option value="1">Administrador</option>
-                        </select>
-                    </div>
-                    
-                    <!-- Botonera -->
-                    <div class="col-12 d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
-                        <button type="button" class="btn btn-outline-secondary rounded-pill fw-bold shadow-sm px-4" data-bs-toggle="collapse" data-bs-target="#formNuevoPersonal">Cancelar</button>
-                        <button type="submit" class="btn btn-success rounded-pill fw-bold shadow-sm px-5">Guardar Personal</button>
-                    </div>
-                </form>
-            </div>
+                
+                <div class="col-12 text-end mt-4">
+                    <button type="button" class="btn btn-light px-4 me-2" data-bs-toggle="collapse" data-bs-target="#formularioNuevoUsuario">Cancelar</button>
+                    <button type="submit" name="crear_usuario" class="btn btn-primary fw-bold px-4">💾 Guardar Usuario</button>
+                </div>
+            </form>
         </div>
+    </div>
+</div>
         <!-- FIN NUEVO FORMULARIO COMPLETO -->
                 <table class="table table-hover align-middle mb-0 bg-white">
                     <thead class="table-light text-muted small text-uppercase">

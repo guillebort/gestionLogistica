@@ -25,7 +25,7 @@
             
             <!-- Acceso Oculto a la Administración -->
             <div class="col-md-4 text-center text-md-end">
-                <a href="../admin/loginAdmin.php" class="btn btn-light btn-sm rounded-pill px-4 fw-medium text-muted shadow-sm">
+                <a href="../admin/index.php" class="btn btn-light btn-sm rounded-pill px-4 fw-medium text-muted shadow-sm">
                     ⚙️ Panel Admin
                 </a>
             </div>

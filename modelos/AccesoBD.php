@@ -362,7 +362,7 @@ class AccesoBD {
         }
     }
 
-    public function obtenerPedidosFiltrados($idUsuario, $idProducto, $fecha, $operadorFecha, $logica = 'AND') {
+    public function obtenerPedidosFiltrados($idUsuario, $idProducto, $fecha, $operadorFecha) {
         $sql = "SELECT p.*, u.nombre as cliente, e.descripcion as estado_nombre 
                 FROM pedidos p 
                 JOIN usuarios u ON p.persona = u.id 
@@ -391,9 +391,9 @@ class AccesoBD {
             $params[] = $fecha;
         }
 
-        // Si hay filtros, los unimos con la lógica seleccionada (AND/OR)
+        // Unimos SIEMPRE con AND (Estándar de usabilidad para filtros)
         if (count($condiciones) > 0) {
-            $sql .= " AND (" . implode(" $logica ", $condiciones) . ")";
+            $sql .= " AND (" . implode(" AND ", $condiciones) . ")";
         }
 
         $sql .= " GROUP BY p.id ORDER BY p.fecha DESC";
@@ -659,6 +659,16 @@ class AccesoBD {
             return false;
         }
     }
+
+    public function eliminarProducto($id) {
+    try {
+        $stmt = $this->conexionBD->prepare("DELETE FROM productos WHERE id = ?");
+        return $stmt->execute([$id]);
+    } catch (PDOException $e) {
+        error_log("Error borrando producto: " . $e->getMessage());
+        return false;
+    }
+}
 
 }
 ?>

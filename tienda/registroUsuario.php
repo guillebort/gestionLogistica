@@ -110,7 +110,7 @@ session_start();
 
                             <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3">
                                 <a href="login.php" class="text-muted text-decoration-none fw-medium">← Volver al login</a>
-                                <button type="submit" class="btn btn-success btn-lg px-5 rounded-pill shadow-sm fw-bold">Registrar mi cuenta ✨</button>
+                                <button type="submit" class="btn btn-success btn-lg px-5 rounded-pill shadow-sm fw-bold">Registrar cuenta </button>
                             </div>
                         </form>
                     </div>

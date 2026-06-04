@@ -7,6 +7,17 @@ $codigoLogueado = $_SESSION['codigo'] ?? 0;
 $con = AccesoBD::getInstance();
 $usuarioActual = $con->obtenerUsuarioBD($codigoLogueado);
 
+// LÓGICA PARA ELIMINAR PRODUCTO EN EL MISMO ARCHIVO
+if (isset($_GET['eliminar'])) {
+    $idEliminar = filter_input(INPUT_GET, 'eliminar', FILTER_VALIDATE_INT);
+    if ($idEliminar) {
+        // Asegúrate de que esta función existe en tu AccesoBD.php
+        $con->eliminarProducto($idEliminar); 
+        header("Location: productos.php?msg=borrado");
+        exit;
+    }
+}
+
 // SEGURIDAD: Comprobamos que está logueado y que su ROL es Administrador
 if ($usuarioActual == null || $usuarioActual->getRol() != 1) {
     header("Location: ../tienda/loginTienda.php");
@@ -166,6 +177,11 @@ $listaProductos = $con->obtenerProductosPaginados($limite, $offset);
                                     </td>
                                     <td class="pe-4 text-end">
                                         <button type="submit" class="btn btn-warning btn-sm rounded-pill px-3 fw-bold shadow-sm">Actualizar</button>
+                                    </td>
+                                    <td class="pe-4 text-end">
+                                        <button href="productos.php?eliminar=<?= $producto->getId() ?>"
+                                            class="btn btn-outline-danger btn-sm rounded-pill shadow-sm fw-bold" 
+                                            onclick="return confirm('¿Seguro que quieres eliminar este servicio?');"> eliminar</button>
                                     </td>
                                 </form>
                             </tr>

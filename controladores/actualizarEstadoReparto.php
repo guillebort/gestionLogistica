@@ -43,11 +43,45 @@ if (!$idPedido || !$estado) {
     exit;
 }
 
-// lógica de negocio y respuesta (HTTP 200 o HTTP 500)
+// Lógica de negocio y respuesta (HTTP 200 o HTTP 500)
 $con = AccesoBD::getInstance();
 $exito = $con->actualizarEstadoReparto($idPedido, $idRepartidor, $estado, $firma);
 
 if ($exito) {
+    
+    // --- INICIO MÓDULO DE CORREO ELECTRÓNICO ---
+    // Extraemos el email y nombre cruzando con la tabla usuarios
+    $cliente = $con->obtenerDatosEmailCliente($idPedido);
+    
+    if ($cliente && !empty($cliente['email'])) {
+        $emailDestino = $cliente['email'];
+        $nombreCliente = $cliente['nombre'];
+        $enviarCorreo = true;
+        
+        if ($estado == 2) { 
+            $asunto = "🚚 Tu pedido #$idPedido está EN CAMINO";
+            $mensaje = "Hola $nombreCliente,\n\nEl repartidor acaba de recoger tu paquete en origen. ¡Ya está en camino hacia la dirección de entrega!\n\nPronto lo recibirás.";
+        } elseif ($estado == 3) { 
+            $asunto = "✅ Tu pedido #$idPedido ha sido ENTREGADO";
+            $mensaje = "Hola $nombreCliente,\n\nTe confirmamos que tu pedido #$idPedido ha sido entregado con éxito en su destino.\n\nGracias por confiar en nuestra empresa de logística.";
+        } elseif ($estado == 4) { 
+            $asunto = "⚠️ Incidencia con tu pedido #$idPedido";
+            $mensaje = "Hola $nombreCliente,\n\nHa ocurrido una incidencia intentando entregar tu pedido #$idPedido.\nMotivo reportado: $motivo\n\nNos pondremos en contacto contigo pronto para solucionarlo.";
+        } else {
+            $enviarCorreo = false; // Si es otro estado raro, no mandamos nada
+        }
+
+        if ($enviarCorreo) {
+            $cabeceras = "From: envios@tudominio.com\r\n"; // Cambia tudominio.com por tu web real
+            $cabeceras .= "Reply-To: soporte@tudominio.com\r\n";
+            $cabeceras .= "X-Mailer: PHP/" . phpversion();
+            
+            // Enviamos el correo (el @ evita que salgan warnings feos en el JSON si falla el servidor SMTP local)
+            @mail($emailDestino, $asunto, $mensaje, $cabeceras);
+        }
+    }
+    // --- FIN MÓDULO DE CORREO ELECTRÓNICO ---
+
     http_response_code(200); // 200 OK
     echo json_encode([
         "status" => "success", 

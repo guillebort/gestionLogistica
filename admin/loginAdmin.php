@@ -78,5 +78,7 @@ if (isset($_SESSION['codigo']) && isset($_SESSION['rol']) && $_SESSION['rol'] ==
             </div>
         </div>
     </main>
+    
+    <script src="../js/logica.js"></script>
 </body>
 </html>

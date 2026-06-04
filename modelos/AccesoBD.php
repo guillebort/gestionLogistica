@@ -632,5 +632,33 @@ class AccesoBD {
         }
     }
 
+    // Actualiza el estado del pedido y guarda la firma si la hay
+    public function actualizarEstadoPedido($idPedido, $nuevoEstado, $firma = null) {
+        try {
+            $sql = "UPDATE pedidos SET estado = ?, firma = ? WHERE id = ?";
+            $stmt = $this->conexionBD->prepare($sql);
+            return $stmt->execute([$nuevoEstado, $firma, $idPedido]);
+        } catch (PDOException $e) {
+            error_log("Error actualizando estado en BD: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    // Obtiene los datos del cliente cruzando con la tabla usuarios para mandarle el correo
+    public function obtenerDatosEmailCliente($idPedido) {
+        try {
+            $sql = "SELECT u.email, u.nombre 
+                    FROM pedidos p 
+                    JOIN usuarios u ON p.persona = u.id 
+                    WHERE p.id = ?";
+            $stmt = $this->conexionBD->prepare($sql);
+            $stmt->execute([$idPedido]);
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error obteniendo datos del cliente: " . $e->getMessage());
+            return false;
+        }
+    }
+
 }
 ?>

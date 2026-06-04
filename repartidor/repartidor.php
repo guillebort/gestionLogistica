@@ -2,7 +2,7 @@
 
 require_once '../includes/controlSesion.php';
 require_once '../modelos/AccesoBD.php';
-session_start();
+
 // 1. Validación de seguridad y rol
 $rolUsuario = $_SESSION['rol'] ?? 0; 
 $idRepartidor = $_SESSION['codigo'] ?? 0;
@@ -66,15 +66,6 @@ $paradas = $con->obtenerRutasRepartidor($idRepartidor);
             </div>
         </div>
 
-        <!-- BOTONES DE NAVEGACIÓN UNIFICADA -->
-        <div class="d-grid gap-2 mb-4">
-            <button id="btn-optimizar-ruta" class="btn btn-dark btn-lg rounded-pill shadow-sm fw-bold py-3 d-flex justify-content-center align-items-center gap-2">
-                🗺️ Calcular Ruta Óptima
-            </button>
-            <button id="btn-siguiente-parada" class="btn btn-primary btn-lg rounded-pill shadow-sm fw-bold py-3 d-flex justify-content-center align-items-center gap-2 d-none">
-                🚗 Iniciar Navegación
-            </button>
-        </div>
         
         <!-- MAPA (Con bordes redondeados y sombra) -->
         <div id="mapa-repartidor" class="rounded-4 shadow-sm border-0 mb-4" style="height: 400px; width: 100%;"></div>
@@ -105,8 +96,9 @@ $paradas = $con->obtenerRutasRepartidor($idRepartidor);
                                         data-lato="<?= $parada['lat_origen'] ?>" 
                                         data-lono="<?= $parada['lon_origen'] ?>" 
                                         data-latd="<?= $parada['lat_destino'] ?>" 
-                                        data-lond="<?= $parada['lon_destino'] ?>">
-                                    🚗 Simular
+                                        data-lond="<?= $parada['lon_destino'] ?>"
+                                        data-cliente="<?= htmlspecialchars( $parada['cliente'] ) ?>">
+                                        🗺️ Iniciar Entrega
                                 </button>
                             </div>
                             

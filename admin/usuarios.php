@@ -134,22 +134,29 @@ $usuarios = $con->obtenerTodosLosUsuarios();
                     </div>
 
                     <!-- Dirección -->
-                    <div class="col-md-12">
-                        <label class="form-label text-muted small fw-medium">Dirección Completa</label>
-                        <input type="text" name="nuevo_domicilio" class="form-control bg-light border-0 rounded-3" required>
-                    </div>
-                    <div class="col-md-5">
-                        <label class="form-label text-muted small fw-medium">Población</label>
-                        <input type="text" name="nuevo_poblacion" class="form-control bg-light border-0 rounded-3"  required>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label text-muted small fw-medium">Provincia</label>
-                        <input type="text" name="nuevo_provincia" class="form-control bg-light border-0 rounded-3" required>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label text-muted small fw-medium">C. Postal</label>
-                        <input type="text" name="nuevo_cp" class="form-control bg-light border-0 rounded-3" maxlength="5" required>
-                    </div>
+                    <div class="mb-3 position-relative">
+                                <label class="form-label text-muted small fw-medium">Dirección Completa / Domicilio</label>
+                                <input type="text" name="domicilio" id="input_direccion" class="form-control bg-light border-0 rounded-3" autocomplete="off" required>
+                                
+                                <ul id="lista_sugerencias" class="list-group position-absolute w-100 shadow-sm" style="z-index: 1000; display: none; max-height: 200px; overflow-y: auto;"></ul>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-5 mb-3">
+                                    <label class="form-label text-muted small fw-medium">Población</label>
+                                    <input type="text" name="poblacion" id="input_poblacion" class="form-control bg-light border-0 rounded-3" required>
+                                </div>
+                                
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label text-muted small fw-medium">Provincia</label>
+                                    <input type="text" name="provincia" id="input_provincia" class="form-control bg-light border-0 rounded-3" required>
+                                </div>
+                                
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label text-muted small fw-medium">C. Postal</label>
+                                    <input type="text" name="cp" id="input_cp" class="form-control bg-light border-0 rounded-3" maxlength="5" required>
+                                </div>
+                            </div>
 
                     <!-- Credenciales y Rol -->
                     <div class="col-md-4 mt-4">

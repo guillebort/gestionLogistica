@@ -5,6 +5,10 @@
 const DB_NAME = 'LogisTFG_Offline';
 const STORE_NAME = 'entregas_pendientes';
 
+let map = null;
+let controlRuta = null;
+let cocheMarker = null;
+
 /*EVENTOS (Esperamos a que cargue el DOM)*/
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -71,211 +75,110 @@ document.addEventListener('DOMContentLoaded', () => {
     activarAutocompletado('input_destino', 'lista_destino', 'lat_destino', 'lon_destino');
     activarAutocompletadoUnico('input_direccion', 'lista_sugerencias');
 
-    // LÓGICA DEL MAPA DEL REPARTIDOR UNIFICADA (Leaflet + Routing) 
+    // LÓGICA DEL MAPA DEL REPARTIDOR (Rutas individuales 2 Fases) 
     const mapaElem = document.getElementById('mapa-repartidor');
-    let map = null;
-    let controlRuta = null;
-    let cocheMarker = null;
-
-    // Variables globales para la navegación
-    let rutaOptimaOrdenada = [];
-    let pasoRutaActual = 0;
+    
+    // COORDENADAS FIJAS DE LA EMPRESA (Av. de la Universidad, Burjassot)
+    const latEmpresa = 39.5126;
+    const lonEmpresa = -0.4244;
+    
+    // El coche arranca físicamente aparcado en la central
+    let ubicacionActualCoche = L.latLng(latEmpresa, lonEmpresa);
 
     if (mapaElem) {
-        map = L.map('mapa-repartidor').setView([39.4699, -0.3762], 12);
+        map = L.map('mapa-repartidor').setView([latEmpresa, lonEmpresa], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap'
         }).addTo(map);
+
+        L.marker([latEmpresa, lonEmpresa]).addTo(map).bindPopup("<b>🏢 Sede Central (Burjassot)</b>").openPopup();
     }
 
-    document.querySelectorAll('.btn-simular-ruta').forEach(btn => btn.style.display = 'none');
+    // CONECTAMOS LOS BOTONES DE LOS PEDIDOS (.btn-simular-ruta)
+    const botonesRuta = document.querySelectorAll('.btn-simular-ruta');
 
-    const btnOptimizar = document.getElementById('btn-optimizar-ruta');
-    const btnSiguiente = document.getElementById('btn-siguiente-parada');
+    botonesRuta.forEach(boton => {
+        boton.style.display = 'inline-block';
 
-    if (btnOptimizar && btnSiguiente) {
-        
-        //CALCULAR RUTA ÓPTIMA CON API REAL (OpenRouteService)
-        btnOptimizar.addEventListener('click', async () => {
+        boton.addEventListener('click', function() {
             if (!map) return;
-            const paradas = document.querySelectorAll('.parada-card');
-            if (paradas.length === 0) {
-                alert("No hay entregas pendientes para organizar.");
+
+            console.log("▶️ INICIANDO RUTA...");
+
+            botonesRuta.forEach(b => b.disabled = true); // Bloquear botones temporalmente
+
+            // Capturamos datos blindados
+            const latOrigen = parseFloat(boton.getAttribute('data-lato'));
+            const lonOrigen = parseFloat(boton.getAttribute('data-lono'));
+            const latDestino = parseFloat(boton.getAttribute('data-latd'));
+            const lonDestino = parseFloat(boton.getAttribute('data-lond'));
+            const cliente = boton.getAttribute('data-cliente') || "el cliente";
+            
+            const tarjetaPedido = boton.closest('.parada-card');
+            const idPedido = tarjetaPedido ? tarjetaPedido.id.replace('pedido-', '') : null;
+
+            if (!idPedido) {
+                alert("Error crítico: No se encontró el ID del pedido.");
                 return;
             }
 
-            // 1. Preparar las coordenadas (Formato ORS: [longitud, latitud])
-            // Índice 0 será nuestra Central Logística
-            const latOrigen = parseFloat(paradas[0].querySelector('.btn-simular-ruta').getAttribute('data-lato'));
-            const lonOrigen = parseFloat(paradas[0].querySelector('.btn-simular-ruta').getAttribute('data-lono'));
-            
-            let localizaciones = [[lonOrigen, latOrigen]];
-            let infoParadas = [{ idPedido: 'central', cardElement: null, latLng: L.latLng(latOrigen, lonOrigen) }];
+            const puntoRecogida = L.latLng(latOrigen, lonOrigen);
+            const puntoEntrega = L.latLng(latDestino, lonDestino);
 
-            // Añadir el resto de destinos
-            paradas.forEach(card => {
-                const btn = card.querySelector('.btn-simular-ruta');
-                const lat = parseFloat(btn.getAttribute('data-latd'));
-                const lon = parseFloat(btn.getAttribute('data-lond'));
-                localizaciones.push([lon, lat]);
-                infoParadas.push({
-                    idPedido: card.id,
-                    cardElement: card,
-                    latLng: L.latLng(lat, lon)
-                });
-            });
+            if(mapaElem) mapaElem.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-            // 2. Llamada a la API de OpenRouteService
-            const apiKey = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjYzNmZkNTNkOWJjNDRjMzBiNGY1NTQ2NmY1MjE2YzM4IiwiaCI6Im11cm11cjY0In0='; // Sustituye por tu clave real
-            const url = 'https://api.openrouteservice.org/v2/matrix/driving-car';
-
-            btnOptimizar.innerHTML = '⏳ Calculando ruta real...';
-            btnOptimizar.disabled = true;
-
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                        'Authorization': apiKey
-                    },
-                    body: JSON.stringify({
-                        locations: localizaciones,
-                        metrics: ["distance"] // Queremos la distancia en metros
-                    })
-                });
-
-                if (!response.ok) throw new Error("Fallo en la API de enrutamiento");
-                
-                const data = await response.json();
-                const matrizDistancias = data.distances; // Matriz NxN con distancias reales
-
-                // 3. Algoritmo: Vecino Más Cercano  usando la matriz real
-                let noVisitados = Array.from({length: infoParadas.length - 1}, (_, i) => i + 1); // Índices del 1 al N
-                let indiceActual = 0; // Empezamos en la central (índice 0)
-                
-                rutaOptimaOrdenada = [infoParadas[0]];
-
-                while (noVisitados.length > 0) {
-                    let indiceMasCercano = -1;
-                    let distanciaMin = Infinity;
-                    let indexEnArrayNoVisitados = -1;
+            // --- FASE 1: EN RUTA HACIA LA RECOGIDA ---
+            console.log("📍 FASE 1: Yendo a origen...");
+            trazarTramo(
+                ubicacionActualCoche, 
+                puntoRecogida, 
+                `🚚 Yendo a por el paquete de <b>${cliente}</b>...`, 
+                `📦 Paquete recogido de <b>${cliente}</b>`, 
+                () => {
+                    console.log("✅ FASE 1 COMPLETADA. Paquete recogido.");
                     
-                    for (let i = 0; i < noVisitados.length; i++) {
-                        let candidato = noVisitados[i];
-                        // Buscamos la distancia en la matriz devuelta por la API
-                        let distReal = matrizDistancias[indiceActual][candidato]; 
+                    // Actualizamos BD al estado 2 y enviamos el correo
+                    if (typeof procesarEstadoReparto === 'function') {
+                        console.log("📧 Disparando actualización de estado 2 y envío de email...");
+                        procesarEstadoReparto(idPedido, 2, tarjetaPedido);
+                    }
+
+                    // Pausa automática estricta de 2.5 segundos
+                    setTimeout(() => {
+                        console.log("📍 FASE 2: Arrancando hacia destino...");
                         
-                        if (distReal < distanciaMin) {
-                            distanciaMin = distReal;
-                            indiceMasCercano = candidato;
-                            indexEnArrayNoVisitados = i;
-                        }
-                    }
-                    
-                    // Saltamos al vecino más cercano
-                    indiceActual = indiceMasCercano;
-                    rutaOptimaOrdenada.push(infoParadas[indiceActual]);
-                    noVisitados.splice(indexEnArrayNoVisitados, 1); 
+                        // --- FASE 2: EN RUTA HACIA LA ENTREGA EN DESTINO ---
+                        trazarTramo(
+                            puntoRecogida, 
+                            puntoEntrega, 
+                            `🚚 Llevando el paquete a <b>${cliente}</b>...`, 
+                            `✅ Llegada al destino de ${cliente}`, 
+                            () => {
+                                console.log("✅ FASE 2 COMPLETADA. Llegamos al destino.");
+                                
+                                ubicacionActualCoche = puntoEntrega;
+                                
+                                botonesRuta.forEach(b => {
+                                    if (!b.classList.contains('btn-success')) b.disabled = false;
+                                });
+
+                                boton.classList.replace('btn-primary', 'btn-success');
+                                boton.innerHTML = "✅ Envíos Completados";
+                                boton.disabled = true;
+
+                                if (typeof Swal !== 'undefined') {
+                                    Swal.fire('Destino Alcanzado', 'Procede a la entrega y solicita la firma en la tarjeta.', 'success');
+                                } else {
+                                    alert("Destino alcanzado. Procede a pedir la firma.");
+                                }
+                            }
+                        );
+                    }, 2500); 
                 }
-
-                // 4. Dibujar la ruta panorámica inicial (Overview)
-                if (controlRuta != null) map.removeControl(controlRuta);
-                if (cocheMarker != null) map.removeLayer(cocheMarker);
-
-                controlRuta = L.Routing.control({
-                    waypoints: rutaOptimaOrdenada.map(p => p.latLng),
-                    routeWhileDragging: false,
-                    addWaypoints: false,
-                    fitSelectedRoutes: true,
-                    lineOptions: { styles: [{color: '#6c757d', opacity: 0.5, weight: 4}] },
-                    createMarker: function(i, wp) {
-                        if (i === 0) return L.marker(wp.latLng).bindPopup("<b>🟢 Central Logística</b>");
-                        return L.marker(wp.latLng).bindPopup(`<b>📍 Parada ${i}</b>`);
-                    }
-                }).addTo(map);
-
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-
-                // 5. Reorganizar tarjetas en el DOM
-                const contenedorTarjetas = document.getElementById('lista-paradas');
-                rutaOptimaOrdenada.forEach(paso => {
-                    if (paso.idPedido !== 'central') {
-                        contenedorTarjetas.appendChild(paso.cardElement);
-                    }
-                });
-
-                // 6. Cambiar la interfaz de botones
-                btnOptimizar.classList.add('d-none');
-                btnOptimizar.innerHTML = '🗺️ Calcular Ruta Óptima';
-                btnOptimizar.disabled = false;
-                
-                btnSiguiente.classList.remove('d-none');
-                pasoRutaActual = 0; 
-                
-                alert(`¡Ruta óptima calculada con datos de tráfico real!\nTienes ${rutaOptimaOrdenada.length - 1} paradas.`);
-
-            } catch (error) {
-                console.error(error);
-                alert("Hubo un error calculando la ruta con la API. Revisa tu conexión o tu API Key.");
-                btnOptimizar.innerHTML = '🗺️ Calcular Ruta Óptima';
-                btnOptimizar.disabled = false;
-            }
+            );
         });
-
-        // --- B. NAVEGACIÓN PASO A PASO ---
-        btnSiguiente.addEventListener('click', () => {
-            if (pasoRutaActual >= rutaOptimaOrdenada.length - 1) {
-                alert("¡Ruta finalizada! Has completado todos los destinos planificados.");
-                btnSiguiente.classList.add('d-none');
-                btnOptimizar.classList.remove('d-none');
-                return;
-            }
-
-            const origen = rutaOptimaOrdenada[pasoRutaActual].latLng;
-            const destino = rutaOptimaOrdenada[pasoRutaActual + 1];
-
-            // Limpiamos el mapa general y trazamos solo el tramo actual
-            if (controlRuta != null) map.removeControl(controlRuta);
-            if (cocheMarker != null) map.removeLayer(cocheMarker);
-
-            controlRuta = L.Routing.control({
-                waypoints: [origen, destino.latLng],
-                routeWhileDragging: false,
-                addWaypoints: false,
-                fitSelectedRoutes: true,
-                lineOptions: { styles: [{color: '#10b981', opacity: 0.9, weight: 6}] }, // Verde intenso para el tramo activo
-                createMarker: function(i, wp) {
-                    if (i === 0) return L.marker(wp.latLng).bindPopup("<b>🚗 Tu ubicación</b>");
-                    return L.marker(wp.latLng).bindPopup("<b>📍 Siguiente Entrega</b>");
-                }
-            }).addTo(map);
-
-            // Animar el coche usando la función existente cuando se calcule el tramo
-            controlRuta.on('routesfound', function(e) {
-                animarCocheEnRuta(e.routes[0].coordinates, map);
-            });
-
-            // Resaltar visualmente la tarjeta del pedido activo
-            document.querySelectorAll('.parada-card').forEach(c => {
-                c.classList.remove('border', 'border-primary', 'border-3', 'shadow-lg');
-                c.style.opacity = "0.6"; // Atenuar los demás
-            });
-            destino.cardElement.classList.add('border', 'border-primary', 'border-3', 'shadow-lg');
-            destino.cardElement.style.opacity = "1";
-            
-            // Hacer scroll automático hacia la tarjeta que toca entregar
-            destino.cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-            // Avanzar el contador interno
-            pasoRutaActual++;
-            
-            // Actualizar texto del botón para la siguiente vez
-            btnSiguiente.innerHTML = `🚗 Ir a la siguiente parada (${pasoRutaActual}/${rutaOptimaOrdenada.length - 1})`;
-        });
-    }
-
+    });
+       
     // Gestión de entregas
     const botonesEntregado = document.querySelectorAll('.btn-entregado');
     const botonesIncidencia = document.querySelectorAll('.btn-incidencia');
@@ -841,59 +744,92 @@ function procesarEstadoReparto(idPedido, nuevoEstado, cardElement, motivo = '', 
         method: 'POST',
         headers: { 
             'Content-Type': 'application/x-www-form-urlencoded',
-            'Accept': 'application/json' // Indicamos que esperamos JSON
+            'Accept': 'application/json'
         },
         body: payload
     })
     .then(async response => {
-        // Parseamos la respuesta a JSON independientemente del código de estado
         const data = await response.json();
-        
-        // Si el código HTTP no es 2xx, lanzamos el error con el mensaje del backend
-        if (!response.ok) {
-            throw new Error(data.message || "Fallo de red o servidor");
-        }
+        if (!response.ok) throw new Error(data.message || "Fallo de red o servidor");
         return data;
     })
     .then(data => {
-        // Ahora comprobamos nuestro estándar de status "success"
         if(data.status === "success") {
-            cardElement.style.transition = "opacity 0.5s, transform 0.5s";
-            cardElement.style.opacity = "0";
-            cardElement.style.transform = "translateX(100%)";
-            setTimeout(() => cardElement.remove(), 500);
-            console.log(data.message);
+            // Si el estado es 3 (Entregado) o 4 (Incidencia), DESAPARECEMOS LA TARJETA
+            if (nuevoEstado == 3 || nuevoEstado == 4) {
+                cardElement.style.transition = "opacity 0.5s, transform 0.5s";
+                cardElement.style.opacity = "0";
+                cardElement.style.transform = "translateX(100%)";
+                setTimeout(() => cardElement.remove(), 500);
+            } 
+            // Si el estado es 2 (Reenviamos el 2 para notificar al recoger), CAMBIAMOS LA CHAPA
+            else if (nuevoEstado == 2) {
+                let badge = cardElement.querySelector('.badge');
+                if (badge) {
+                    badge.className = "badge bg-info text-dark fw-bold rounded-pill px-3";
+                    badge.innerText = "Yendo al Destino";
+                }
+            }
         }
     })
     .catch(error => {
-        console.warn("Problema detectado o sin conexión: ", error.message);
-        
-        // Lógica de PWA Offline (IndexedDB)
         guardarEnIndexedDB(payload);
-        if ('serviceWorker' in navigator && 'SyncManager' in window) {
-            navigator.serviceWorker.ready.then(function(swRegistration) {
-                return swRegistration.sync.register('sync-entregas');
-            });
-        }
-        cardElement.style.opacity = "0.5";
-        alert(`La entrega se ha guardado en local y se sincronizará luego.\nMotivo: ${error.message}`);
     });
 }
 
-function animarCocheEnRuta(coordenadas, mapaInstance) {
-    const dyInicial = coordenadas[1].lat - coordenadas[0].lat;
-    const dxInicial = coordenadas[1].lng - coordenadas[0].lng;
+// --- FUNCIONES LOGÍSTICAS DE ENRUTAMIENTO Y ANIMACIÓN ---
+
+function trazarTramo(origen, destino, msjSalida, msjLlegada, callbackFinal) {
+    if (controlRuta !== null) {
+        map.removeControl(controlRuta);
+        controlRuta = null;
+    }
+    if (cocheMarker !== null) {
+        map.removeLayer(cocheMarker);
+        cocheMarker = null;
+    }
+
+    controlRuta = L.Routing.control({
+        waypoints: [origen, destino],
+        router: L.Routing.osrmv1({ serviceUrl: 'https://router.project-osrm.org/route/v1' }),
+        lineOptions: { styles: [{ color: '#0d6efd', opacity: 0.8, weight: 6 }] },
+        createMarker: function() { return null; },
+        fitSelectedRoutes: true,
+        show: false
+    }).addTo(map);
+
+    // Bandera de seguridad para evitar múltiples ejecuciones
+    let animacionLanzada = false;
+
+    controlRuta.on('routesfound', function(e) {
+        if (!animacionLanzada) {
+            animacionLanzada = true;
+            animarCocheEnRuta(e.routes[0].coordinates, map, msjSalida, msjLlegada, callbackFinal);
+        }
+    });
+
+    controlRuta.on('routingerror', function(e) {
+        console.error("Error en OSRM (API Rutas): ", e);
+        alert("La API de rutas ha fallado. Revisa tu conexión a internet.");
+    });
+}
+
+function animarCocheEnRuta(coordenadas, mapaInstance, msjSalida, msjLlegada, callbackFinal) {
+    if (!coordenadas || coordenadas.length === 0) return;
+
+    const dyInicial = coordenadas[1] ? coordenadas[1].lat - coordenadas[0].lat : 0;
+    const dxInicial = coordenadas[1] ? coordenadas[1].lng - coordenadas[0].lng : 0;
     let anguloAnterior = (Math.atan2(dxInicial, dyInicial) * (180 / Math.PI)) - 90;
     
     const iconoCocheRealista = L.divIcon({
-        html: `<div id="coche-animado" style="font-size: 24px; transition: transform 0.1s linear; transform: rotate(${anguloAnterior}deg);">🚗</div>`,
+        html: `<div id="coche-animado" style="font-size: 26px; transition: transform 0.1s linear; transform: rotate(${anguloAnterior}deg);">🚗</div>`,
         className: 'icono-coche-custom',
         iconSize: [30, 30],
         iconAnchor: [15, 15]
     });
 
-    // Nota: aquí asumimos que cocheMarker está definido globalmente arriba
-    window.cocheMarker = L.marker([coordenadas[0].lat, coordenadas[0].lng], {icon: iconoCocheRealista}).addTo(mapaInstance);
+    cocheMarker = L.marker([coordenadas[0].lat, coordenadas[0].lng], {icon: iconoCocheRealista}).addTo(mapaInstance);
+    cocheMarker.bindPopup(msjSalida).openPopup();
     
     let i = 0;
     function moverCoche() {
@@ -901,7 +837,7 @@ function animarCocheEnRuta(coordenadas, mapaInstance) {
             const puntoActual = coordenadas[i];
             const puntoSiguiente = coordenadas[i + 1];
 
-            window.cocheMarker.setLatLng([puntoSiguiente.lat, puntoSiguiente.lng]);
+            if (cocheMarker) cocheMarker.setLatLng([puntoSiguiente.lat, puntoSiguiente.lng]);
 
             const dy = puntoSiguiente.lat - puntoActual.lat;
             const dx = puntoSiguiente.lng - puntoActual.lng;
@@ -923,19 +859,25 @@ function animarCocheEnRuta(coordenadas, mapaInstance) {
             const latLngSiguiente = L.latLng(puntoSiguiente.lat, puntoSiguiente.lng);
             const distanciaMetros = latLngActual.distanceTo(latLngSiguiente);
             
-            let tiempoEspera = distanciaMetros * 15; 
-            if (tiempoEspera < 30) tiempoEspera = 30; 
-            if (tiempoEspera > 800) tiempoEspera = 800;
+            // Velocidad rápida
+            let tiempoEspera = distanciaMetros * 3; 
+            if (tiempoEspera < 10) tiempoEspera = 10; 
+            if (tiempoEspera > 200) tiempoEspera = 200; 
 
             i++; 
             setTimeout(moverCoche, tiempoEspera);
         } else {
-            window.cocheMarker.bindPopup("<b>📍 ¡Paquete entregado!</b><br>El repartidor ha llegado a su destino.").openPopup();
+            if (cocheMarker) cocheMarker.bindPopup(msjLlegada).openPopup();
+            
+            // Llamamos a la siguiente fase
+            if(callbackFinal) {
+                callbackFinal();
+            }
         }
     }
-    setTimeout(moverCoche, 1500); 
+    
+    setTimeout(moverCoche, 2000); 
 }
-
 /*INDEXEDDB (OFFLINE)*/
 
 function initDB() {

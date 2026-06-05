@@ -511,6 +511,56 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // ====== GESTIÓN DE BORRADOS (ADMIN) SEPARADA DEL HTML ======
+
+    // 1. Interceptar el borrado de usuarios (Formulario)
+    const formsEliminarUsuario = document.querySelectorAll('.form-eliminar-usuario');
+    formsEliminarUsuario.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault(); // Detenemos el envío inmediato 
+            
+            Swal.fire({
+                title: '¿Eliminar cuenta?',
+                text: "Si el usuario tiene pedidos, la operación será bloqueada por seguridad.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, eliminar permanentemente',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    this.submit(); // Si el administrador confirma, enviamos el formulario
+                }
+            });
+        });
+    });
+
+    // Interceptar el borrado de servicios/productos
+    const botonesEliminarProducto = document.querySelectorAll('.btn-eliminar-producto');
+    
+    botonesEliminarProducto.forEach(boton => {
+        boton.addEventListener('click', function(e) {
+            e.preventDefault(); // Detenemos la navegación inmediata
+            const urlDestino = this.getAttribute('href'); 
+
+            Swal.fire({
+                title: '¿Eliminar tarifa?',
+                text: "El servicio desaparecerá inmediatamente del catálogo.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = urlDestino; // Hacemos la redirección real
+                }
+            });
+        });
+    });
+
 }); // FIN DEL DOMContentLoaded
 
 

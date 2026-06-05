@@ -145,15 +145,15 @@ class AccesoBD {
             $sqlDir = "INSERT INTO direcciones (calle_texto, latitud, longitud) VALUES (?, ?, ?)";
             $psDir = $this->conexionBD->prepare($sqlDir);
             
-            $psDir->execute([$textoOrigen, $latOrigen, $lonOrigen]);
+            $psDir->execute([$textoOrigen, (float)$latOrigen, (float)$lonOrigen]);
             $idDirOrigen = $this->conexionBD->lastInsertId();
 
-            $psDir->execute([$textoDestino, $latDestino, $lonDestino]);
+            $psDir->execute([$textoDestino, (float)$latDestino, (float)$lonDestino]);
             $idDirDestino = $this->conexionBD->lastInsertId();
 
             $sqlPedido = "INSERT INTO pedidos (persona, fecha, importe, estado, id_direccion_origen, id_direccion_destino) VALUES (?, CURDATE(), ?, 1, ?, ?)";
             $psPedido = $this->conexionBD->prepare($sqlPedido);
-            $psPedido->execute([$idUsuario, $importeTotal, $idDirOrigen, $idDirDestino]);
+            $psPedido->execute([(int)$idUsuario, (float)$importeTotal, (int)$idDirOrigen, (int)$idDirDestino]);
             $idPedidoNuevo = $this->conexionBD->lastInsertId();
 
             $sqlDetalle = "INSERT INTO detalle (id_pedido, id_producto, cantidad, precio_unitario) VALUES (?, ?, ?, ?)";
@@ -162,10 +162,33 @@ class AccesoBD {
             $sqlRestarStock = "UPDATE productos SET existencias = existencias - ? WHERE id = ?";
             $psStock = $this->conexionBD->prepare($sqlRestarStock);
 
-            foreach ($carrito as $prod) {
-                $psDetalle->execute([$idPedidoNuevo, $prod->getCodigo(), $prod->getCantidad(), $prod->getPrecio()]);
-                $psStock->execute([$prod->getCantidad(), $prod->getCodigo()]);
+            // --- AQUÍ ESTÁ LA SOLUCIÓN AL ERROR GETCODIGO ---
+            foreach ($carrito as $clave => $prod) {
+                
+                 if (is_array($prod)) {
+                    // Cogemos la clave 'codigo', 'id' o la posición del array por si acaso
+                    $id_prod = $prod['codigo'] ?? $prod['id'] ?? $clave;
+                    $cant    = $prod['cantidad'] ?? 1;
+                    $prec    = $prod['precio'] ?? 0.0;
+                } 
+                else {
+                    continue; // Si hay basura en el carrito, la ignoramos
+                }
+
+                // Ejecutamos los inserts con los datos blindados a enteros y decimales
+                $psDetalle->execute([
+                    (int)$idPedidoNuevo, 
+                    (int)$id_prod, 
+                    (int)$cant, 
+                    (float)$prec
+                ]);
+                
+                $psStock->execute([
+                    (int)$cant, 
+                    (int)$id_prod
+                ]);
             }
+            // ------------------------------------------------
 
             $this->conexionBD->commit();
             return $idPedidoNuevo;
@@ -174,6 +197,10 @@ class AccesoBD {
             if ($this->conexionBD->inTransaction()) {
                 $this->conexionBD->rollBack();
             }
+            
+            // Chivato de error por si falla algo en la base de datos
+            error_log("CRÍTICO en guardarPedido: " . $e->getMessage());
+            
             return -1;
         }
     }

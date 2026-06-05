@@ -4,7 +4,7 @@
 
 // Medida de seguridad antiespionaje: Evitar acceso directo a la vista
 if (!isset($listaCarrito) || !isset($misTarjetas)) {
-    header("Location: ../controladores/checkoutController.php");
+    header("Location: ../controladores/guardarRuta.php");
     exit;
 }
 ?>

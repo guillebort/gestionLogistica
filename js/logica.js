@@ -5,9 +5,6 @@
 const DB_NAME = 'LogisTFG_Offline';
 const STORE_NAME = 'entregas_pendientes';
 
-let map = null;
-let controlRuta = null;
-let cocheMarker = null;
 
 /*EVENTOS (Esperamos a que cargue el DOM)*/
 document.addEventListener('DOMContentLoaded', () => {
@@ -75,24 +72,29 @@ document.addEventListener('DOMContentLoaded', () => {
     activarAutocompletado('input_destino', 'lista_destino', 'lat_destino', 'lon_destino');
     activarAutocompletadoUnico('input_direccion', 'lista_sugerencias');
 
-    // LÓGICA DEL MAPA DEL REPARTIDOR (Rutas individuales 2 Fases) 
-    const mapaElem = document.getElementById('mapa-repartidor');
-    
-    // COORDENADAS FIJAS DE LA EMPRESA (Av. de la Universidad, Burjassot)
-    const latEmpresa = 39.5126;
-    const lonEmpresa = -0.4244;
-    
-    // El coche arranca físicamente aparcado en la central
-    let ubicacionActualCoche = L.latLng(latEmpresa, lonEmpresa);
+    // --- NUEVO CÓDIGO CORREGIDO ---
+    let mapaElem = document.getElementById('mapa-repartidor');
+    // Coordenadas fijas de la empresa (Burjassot)
+    let latEmpresa = 39.5085;
+    let lonEmpresa = -0.4182;
+    let map = null;
+    let cocheMarker = null;
+    let ubicacionActualCoche = null;
 
-    if (mapaElem) {
-        map = L.map('mapa-repartidor').setView([latEmpresa, lonEmpresa], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap'
-        }).addTo(map);
-
-        L.marker([latEmpresa, lonEmpresa]).addTo(map).bindPopup("<b>🏢 Sede Central (Burjassot)</b>").openPopup();
+    // Comprobamos si la "L" (Leaflet) existe antes de usarla
+    if (typeof L !== 'undefined') {
+        ubicacionActualCoche = L.latLng(latEmpresa, lonEmpresa);
+        
+        // Inicializamos el mapa SOLO si estamos en la vista del repartidor
+        if (mapaElem) {
+            map = L.map('mapa-repartidor').setView([latEmpresa, lonEmpresa], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap'
+            }).addTo(map);
+            L.marker([latEmpresa, lonEmpresa]).addTo(map).bindPopup("<b>🏢 Sede Central (Burjassot)</b>").openPopup();
+        }
     }
+    // ------------------------------
 
     // CONECTAMOS LOS BOTONES DE LOS PEDIDOS (.btn-simular-ruta)
     const botonesRuta = document.querySelectorAll('.btn-simular-ruta');
@@ -476,26 +478,28 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // =========================================================================
-    // ENVIAR CARRITO AL SERVIDOR AL GUARDAR LA RUTA
-    // =========================================================================
-    const formRuta = document.querySelector('form[action*="guardarRuta.php"]');
-    if (formRuta) {
-        formRuta.addEventListener('submit', function(e) {
-            // Buscamos si ya existe el campo oculto
-            let inputCarrito = document.getElementById('carrito_datos_hidden');
+    // Aseguramos que el formulario siempre tenga el carrito antes de enviar
+    const formEnvio = document.querySelector('form[action*="guardarRuta.php"]');
+    if (formEnvio) {
+        formEnvio.addEventListener('submit', function(e) {
+            let carritoData = localStorage.getItem('carrito');
+            let inputHidden = document.getElementById('carrito_datos_hidden');
             
-            // Si no existe, lo creamos y lo añadimos al formulario
-            if (!inputCarrito) {
-                inputCarrito = document.createElement('input');
-                inputCarrito.type = 'hidden';
-                inputCarrito.name = 'carrito_datos';
-                inputCarrito.id = 'carrito_datos_hidden';
-                this.appendChild(inputCarrito);
+            if (!carritoData || carritoData === '[]') {
+                e.preventDefault();
+                alert("El carrito está vacío. Añade productos.");
+                return false;
             }
             
-            // Le metemos el contenido del carrito del LocalStorage
-            inputCarrito.value = localStorage.getItem('carrito') || '[]';
+            // Si no existe el input, lo creamos dinámicamente
+            if (!inputHidden) {
+                inputHidden = document.createElement('input');
+                inputHidden.type = 'hidden';
+                inputHidden.name = 'carrito_datos';
+                inputHidden.id = 'carrito_datos_hidden';
+                this.appendChild(inputHidden);
+            }
+            inputHidden.value = carritoData; // Aquí guardamos el puto carrito
         });
     }
 
@@ -890,16 +894,15 @@ function guardarEnIndexedDB(payload) {
     });
 }
 
-/* REGISTRO DEL SERVICE WORKER (PWA)*/
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-            .then(registration => {
-                console.log('✅ ServiceWorker registrado con éxito con el scope: ', registration.scope);
-            })
-            .catch(err => {
-                console.log('❌ El registro del ServiceWorker ha fallado: ', err);
-            });
+        // Solo registramos el SW si la URL contiene "/repartidor/"
+        // Así evitamos que salte el error 404 en las vistas de clientes o admin
+        if (window.location.pathname.includes('/repartidor/')) {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('✅ ServiceWorker registrado con éxito.', reg.scope))
+                .catch(err => console.error('❌ Error del ServiceWorker: ', err));
+        }
     });
 }
 
@@ -931,5 +934,31 @@ document.addEventListener('DOMContentLoaded', () => {
     // Si la URL actual no es el login, activamos el temporizador
     if (!window.location.href.includes("login")) {
         controlInactividad();
+    }
+});
+
+// EVENTO PARA EL BOTÓN DE PAGAR (datosEnvio.php)
+document.addEventListener('DOMContentLoaded', function() {
+    const btnPagarRuta = document.getElementById('btnPagarRuta');
+    const inputCarritoHidden = document.getElementById('carrito_datos_hidden');
+
+    if (btnPagarRuta && inputCarritoHidden) {
+        btnPagarRuta.addEventListener('click', function(e) {
+            // Obtenemos el carrito del LocalStorage
+            let carritoGuardado = localStorage.getItem('carrito');
+            
+            // Si el carrito está vacío, no dejamos pagar
+            if (!carritoGuardado || carritoGuardado === '[]') {
+                e.preventDefault(); // Detenemos el envío
+                alert("Tu carrito está vacío. Añade algún servicio antes de pagar.");
+                window.location.href = '../tienda/productos.php';
+                return;
+            }
+
+            // Si hay carrito, lo metemos en el input oculto para que viaje por POST
+            inputCarritoHidden.value = carritoGuardado;
+            
+            // El formulario seguirá su curso natural hacia guardarRuta.php
+        });
     }
 });

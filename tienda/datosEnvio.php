@@ -92,12 +92,14 @@ if (!isset($u)) {
                                 </div>
                             </div>
 
-                            <div class="d-grid gap-2 mt-5 pt-3 border-top">
-                                <button type="submit" class="btn btn-primary btn-lg shadow rounded-pill fw-bold">
-                                    Guardar Ruta y Pagar ➔
-                                </button>
-                                <a href="carrito.php" class="text-center text-secondary text-decoration-none mt-2 small fw-medium">← Volver al carrito</a>
-                            </div>
+                         <div class="d-grid gap-2 mt-5 pt-3 border-top">
+                            <input type="hidden" name="carrito_datos" id="carrito_datos_hidden" value="">
+                            
+                            <button type="submit" id="btnPagarRuta" class="btn btn-primary btn-lg shadow rounded-pill fw-bold">
+                                Guardar Ruta y Pagar ➔
+                            </button>
+                            <a href="carrito.php" class="text-center text-secondary text-decoration-none mt-2 small fw-medium">← Volver al carrito</a>
+                        </div>
                         </form>
                     </div>
                 </div>
@@ -106,6 +108,7 @@ if (!isset($u)) {
     </main>
 
     <?php include '../includes/pie.php'; ?>
+    
     <script src="../js/logica.js?v=<?= time() ?>"></script>
 </body>
 </html>

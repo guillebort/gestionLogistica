@@ -384,64 +384,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    /* LÓGICA DE AUTENTICACIÓN Y REGISTRO AJAX (SPA UX)*/
-    const formsAuth = document.querySelectorAll('form[action="../controladores/login.php"], form[action="../controladores/loginAdminController.php"], form[action="../controladores/registro.php"]');
     
-    formsAuth.forEach(form => {
-        form.addEventListener('submit', function(e) {
-            e.preventDefault(); // Detenemos la recarga tradicional
-            
-            // Si es el formulario de registro, validamos contraseñas aquí mismo antes de llamar a la API
-            const inputPass1 = this.querySelector('input[name="clave"]');
-            const inputPass2 = this.querySelector('input[name="clave2"]');
-            if (inputPass1 && inputPass2 && inputPass1.value !== inputPass2.value) {
-                mostrarErrorAuth(this, "⚠️ Las contraseñas no coinciden.");
-                return;
-            }
-
-            const btnSubmit = this.querySelector('button[type="submit"]');
-            const originalText = btnSubmit.innerHTML;
-            
-            // 1. Mostrar estado de carga (Spinner)
-            btnSubmit.disabled = true;
-            btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Procesando...';
-            
-            // 2. Ocultar errores previos
-            let errorDiv = this.parentElement.querySelector('.alert-ajax-error');
-            if (errorDiv) errorDiv.classList.add('d-none');
-
-            // 3. Enviar datos al endpoint REST
-            const formData = new FormData(this);
-            
-            fetch(this.action, {
-                method: 'POST',
-                headers: { 'Accept': 'application/json' },
-                body: formData
-            })
-            .then(async response => {
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.message || "Error al conectar con la base de datos");
-                return data;
-            })
-            .then(data => {
-                if (data.status === "success") {
-                    btnSubmit.classList.remove('btn-primary', 'btn-dark');
-                    btnSubmit.classList.add('btn-success');
-                    btnSubmit.innerHTML = '¡Completado! 🚀';
-                    
-                    setTimeout(() => {
-                        window.location.href = data.data.redirect;
-                    }, 500);
-                }
-            })
-            .catch(error => {
-                btnSubmit.disabled = false;
-                btnSubmit.innerHTML = originalText;
-                mostrarErrorAuth(this, error.message);
-            });
-        });
-    });
-
     // Función auxiliar para mostrar el error y hacer la animación
     function mostrarErrorAuth(formulario, mensaje) {
         let errorDiv = formulario.parentElement.querySelector('.alert-ajax-error');
@@ -458,59 +401,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => formulario.classList.remove('animate__animated', 'animate__shakeX'), 1000);
     }
 
-    /* LÓGICA PARA GUARDAR RUTA (CHECKOUT)*/
-    const formRuta = document.querySelector('form[action="../controladores/guardarRuta.php"]');
     
-    if (formRuta) {
-        formRuta.addEventListener('submit', function(e) {
-            e.preventDefault(); // Evitamos la recarga
-            
-            const btnSubmit = this.querySelector('button[type="submit"]');
-            const originalText = btnSubmit.innerHTML;
-            
-            // Verificamos que las coordenadas no sean 0.0 (que hayan usado el autocompletado de OpenStreetMap)
-            const latO = document.getElementById('lat_origen').value;
-            const latD = document.getElementById('lat_destino').value;
-            
-            if (latO === "0.0" || latD === "0.0") {
-                alert("⚠️ Por favor, selecciona una dirección válida de la lista de sugerencias para calcular las coordenadas GPS exactas.");
-                return;
-            }
-
-            btnSubmit.disabled = true;
-            btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Calculando ruta...';
-
-            const formData = new FormData(this);
-
-            fetch(this.action, {
-                method: 'POST',
-                headers: { 'Accept': 'application/json' },
-                body: formData
-            })
-            .then(async response => {
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.message || "Error al procesar la ruta");
-                return data;
-            })
-            .then(data => {
-                if (data.status === "success") {
-                    btnSubmit.classList.replace('btn-primary', 'btn-success');
-                    btnSubmit.innerHTML = '¡Ruta Confirmada! ➔';
-                    
-                    // Transición suave hacia la pasarela de pago
-                    setTimeout(() => {
-                        window.location.href = data.data.redirect;
-                    }, 400);
-                }
-            })
-            .catch(error => {
-                btnSubmit.disabled = false;
-                btnSubmit.innerHTML = originalText;
-                alert("Error: " + error.message);
-            });
-        });
-    }
-
     // ====== GESTIÓN DE BORRADOS (ADMIN) SEPARADA DEL HTML ======
 
     // 1. Interceptar el borrado de usuarios (Formulario)
@@ -560,6 +451,53 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     });
+
+    // =========================================================================
+    // LÓGICA DE CHECKOUT: ALTERNAR TARJETAS GUARDADAS Y NUEVAS
+    // =========================================================================
+    const radiosTarjeta = document.querySelectorAll('input[name="opcion_tarjeta"]');
+    const formNuevaTarjeta = document.getElementById('formulario-nueva-tarjeta');
+
+    if (radiosTarjeta.length > 0 && formNuevaTarjeta) {
+        radiosTarjeta.forEach(radio => {
+            radio.addEventListener('change', function() {
+                const inputsNuevos = formNuevaTarjeta.querySelectorAll('input[type="text"], input[type="password"]');
+                
+                if (this.value === 'nueva') {
+                    // Mostrar formulario y hacer campos obligatorios
+                    formNuevaTarjeta.style.display = 'block';
+                    inputsNuevos.forEach(input => input.required = true);
+                } else {
+                    // Ocultar formulario y quitar obligatoriedad
+                    formNuevaTarjeta.style.display = 'none';
+                    inputsNuevos.forEach(input => input.required = false);
+                }
+            });
+        });
+    }
+
+    // =========================================================================
+    // ENVIAR CARRITO AL SERVIDOR AL GUARDAR LA RUTA
+    // =========================================================================
+    const formRuta = document.querySelector('form[action*="guardarRuta.php"]');
+    if (formRuta) {
+        formRuta.addEventListener('submit', function(e) {
+            // Buscamos si ya existe el campo oculto
+            let inputCarrito = document.getElementById('carrito_datos_hidden');
+            
+            // Si no existe, lo creamos y lo añadimos al formulario
+            if (!inputCarrito) {
+                inputCarrito = document.createElement('input');
+                inputCarrito.type = 'hidden';
+                inputCarrito.name = 'carrito_datos';
+                inputCarrito.id = 'carrito_datos_hidden';
+                this.appendChild(inputCarrito);
+            }
+            
+            // Le metemos el contenido del carrito del LocalStorage
+            inputCarrito.value = localStorage.getItem('carrito') || '[]';
+        });
+    }
 
 }); // FIN DEL DOMContentLoaded
 

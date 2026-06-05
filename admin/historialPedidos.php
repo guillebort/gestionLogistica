@@ -1,34 +1,13 @@
-<?php
-require_once '../modelos/AccesoBD.php';
-session_start();
-$con = AccesoBD::getInstance();
-if (!isset($_SESSION['codigo']) || $_SESSION['rol'] != 1) {
-    header("Location: ../tienda/login.php");
-    exit;
-}
-
-// Recogemos parámetros GET para el filtro
-$idUsuario = filter_input(INPUT_GET, 'idUsuario', FILTER_VALIDATE_INT);
-$idProducto = filter_input(INPUT_GET, 'idProducto', FILTER_VALIDATE_INT);
-$fecha = filter_input(INPUT_GET, 'fecha', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-$operadorFecha = $_GET['operadorFecha'] ?? '=';
-
-// Listas para rellenar los desplegables (selects)
-$usuarios = $con->obtenerTodosLosUsuarios(); 
-$productos = $con->obtenerProductosBD();
-
-// Obtener la tabla filtrada (ya no pasamos la variable lógica $logica)
-$pedidosFiltrados = $con->obtenerPedidosFiltrados($idUsuario, $idProducto, $fecha, $operadorFecha);
-?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <title>Historial de Envíos - LogisTFG</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/estilo.css">
 </head>
-<body>
+<body class="bg-light" style="font-family: 'Inter', sans-serif;">
     
     <?php include '../includes/menuAdmin.php'; ?>
 
@@ -44,72 +23,68 @@ $pedidosFiltrados = $con->obtenerPedidosFiltrados($idUsuario, $idProducto, $fech
             </span>
         </div>
 
-        <!-- FORMULARIO DE FILTRADO OPTIMIZADO -->
-     <div class="card shadow-sm border-0 mb-4 bg-white">
-    <div class="card-body p-4">
-        <form action="historialPedidos.php" method="GET" class="row g-3 align-items-end">
-            
-            <div class="col-md-3">
-                <label class="form-label small fw-bold text-muted mb-1">👤 Cliente</label>
-                <select name="idUsuario" class="form-select">
-                    <option value="">Todos los clientes...</option>
-                    <?php foreach($usuarios as $u) { 
-                        $columnaRol = isset($u['id_rol']) ? $u['id_rol'] : (isset($u['rol']) ? $u['rol'] : null);
-                        if ($columnaRol != 0 && strtolower((string)$columnaRol) != 'cliente') {
-                            continue; 
-                        }
-                    ?>
-                        <option value="<?= $u['id'] ?>" <?= (isset($_GET['idUsuario']) && $_GET['idUsuario'] == $u['id']) ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($u['nombre'] . ' ' . $u['apellidos']) ?>
-                        </option>
-                    <?php } ?>
-                </select>
-            </div>
+        <div class="card shadow-sm border-0 mb-4 bg-white rounded-4">
+            <div class="card-body p-4">
+                <form action="../controladoresAdmin/historialPedidosController.php" method="GET" class="row g-3 align-items-end">
+                    
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold text-muted mb-1">👤 Cliente</label>
+                        <select name="idUsuario" class="form-select bg-light border-0">
+                            <option value="">Todos los clientes...</option>
+                            <?php foreach($usuarios as $u) { 
+                                $columnaRol = isset($u['id_rol']) ? $u['id_rol'] : (isset($u['rol']) ? $u['rol'] : null);
+                                if ($columnaRol != 0 && strtolower((string)$columnaRol) != 'cliente') continue; 
+                            ?>
+                                <option value="<?= $u['id'] ?>" <?= (isset($_GET['idUsuario']) && $_GET['idUsuario'] == $u['id']) ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($u['nombre'] . ' ' . $u['apellidos']) ?>
+                                </option>
+                            <?php } ?>
+                        </select>
+                    </div>
 
-            <div class="col-md-3">
-                <label class="form-label small fw-bold text-muted mb-1">🏷️ Servicio</label>
-                <select name="idProducto" class="form-select">
-                    <option value="">Cualquier servicio...</option>
-                    <?php foreach($productos as $p) { ?>
-                        <option value="<?= $p->getId() ?>" <?= (isset($_GET['idProducto']) && $_GET['idProducto'] == $p->getId()) ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($p->getDescripcion()) ?>
-                        </option>
-                    <?php } ?>
-                </select>
-            </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold text-muted mb-1">🏷️ Servicio</label>
+                        <select name="idProducto" class="form-select bg-light border-0">
+                            <option value="">Cualquier servicio...</option>
+                            <?php foreach($productos as $p) { ?>
+                                <option value="<?= $p->getId() ?>" <?= (isset($_GET['idProducto']) && $_GET['idProducto'] == $p->getId()) ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($p->getDescripcion()) ?>
+                                </option>
+                            <?php } ?>
+                        </select>
+                    </div>
 
-            <div class="col-md-4">
-                <label class="form-label small fw-bold text-muted mb-1">📅 Búsqueda por Fecha</label>
-                <div class="input-group">
-                    <select name="operadorFecha" class="form-select" style="max-width: 130px;">
-                        <option value="=" <?= (isset($_GET['operadorFecha']) && $_GET['operadorFecha'] == '=') ? 'selected' : '' ?>>Exacto</option>
-                        <option value=">=" <?= (isset($_GET['operadorFecha']) && $_GET['operadorFecha'] == '>=') ? 'selected' : '' ?>>Desde</option>
-                        <option value="<=" <?= (isset($_GET['operadorFecha']) && $_GET['operadorFecha'] == '<=') ? 'selected' : '' ?>>Hasta</option>
-                    </select>
-                    <input type="date" name="fecha" class="form-control" value="<?= isset($_GET['fecha']) ? htmlspecialchars($_GET['fecha']) : '' ?>">
-                </div>
-            </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold text-muted mb-1">📅 Búsqueda por Fecha</label>
+                        <div class="input-group">
+                            <select name="operadorFecha" class="form-select bg-light border-0" style="max-width: 130px;">
+                                <option value="=" <?= (isset($_GET['operadorFecha']) && $_GET['operadorFecha'] == '=') ? 'selected' : '' ?>>Exacto</option>
+                                <option value=">=" <?= (isset($_GET['operadorFecha']) && $_GET['operadorFecha'] == '>=') ? 'selected' : '' ?>>Desde</option>
+                                <option value="<=" <?= (isset($_GET['operadorFecha']) && $_GET['operadorFecha'] == '<=') ? 'selected' : '' ?>>Hasta</option>
+                            </select>
+                            <input type="date" name="fecha" class="form-control bg-light border-0" value="<?= isset($_GET['fecha']) ? htmlspecialchars($_GET['fecha']) : '' ?>">
+                        </div>
+                    </div>
 
-            <div class="col-md-2 d-flex gap-2">
-                <button type="submit" class="btn btn-primary w-100 fw-bold">🔍 Filtrar</button>
-                <a href="historialPedidos.php" class="btn btn-light border" title="Limpiar todo">✖️</a>
+                    <div class="col-md-2 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary w-100 fw-bold rounded-pill shadow-sm">🔍 Filtrar</button>
+                        <a href="../controladoresAdmin/historialPedidosController.php" class="btn btn-light rounded-pill border" title="Limpiar todo">✖️</a>
+                    </div>
+                </form>
             </div>
+        </div>
 
-        </form>
-    </div>
-</div>
-        <!-- TABLA DE RESULTADOS -->
-        <div class="card shadow-sm border-0 overflow-hidden">
+        <div class="card shadow-sm border-0 overflow-hidden rounded-4">
             <div class="card-body p-0 table-responsive">
                 <table class="table table-hover align-middle mb-0 bg-white">
-                    <thead>
+                    <thead class="table-light text-muted small text-uppercase">
                         <tr>
-                            <th># REF</th>
-                            <th>Fecha Emisión</th>
-                            <th>Cliente Origen</th>
-                            <th>Estado Operativo</th>
-                            <th>Importe Facturado</th>
-                            <th class="text-end">Acciones</th>
+                            <th class="ps-4 py-3 border-0"># REF</th>
+                            <th class="py-3 border-0">Fecha Emisión</th>
+                            <th class="py-3 border-0">Cliente Origen</th>
+                            <th class="py-3 border-0 text-center">Estado Operativo</th>
+                            <th class="py-3 border-0 text-end">Importe Facturado</th>
+                            <th class="pe-4 py-3 border-0 text-end">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -120,7 +95,6 @@ $pedidosFiltrados = $con->obtenerPedidosFiltrados($idUsuario, $idProducto, $fech
                                   </td></tr>"; 
                         } ?>
                         <?php foreach ($pedidosFiltrados as $pf) { 
-                            // Lógica visual del badge según el estado logístico
                             $estadoStr = strtolower($pf['estado_nombre']);
                             if ($estadoStr == 'entregado') {
                                 $claseBadge = 'bg-success text-success-emphasis bg-opacity-10 border border-success-subtle';
@@ -136,27 +110,25 @@ $pedidosFiltrados = $con->obtenerPedidosFiltrados($idUsuario, $idProducto, $fech
                                 $icono = '🕒';
                             }
                         ?>
-                            <tr>
+                            <tr class="border-bottom border-secondary border-opacity-10">
                                 <td class="ps-4 fw-bold text-dark font-monospace">#<?= $pf['id'] ?></td>
-                                <td>
-                                    <div class="text-secondary small fw-semibold"><?= date('d/m/Y', strtotime($pf['fecha'])) ?></div>
-                                </td>
+                                <td><div class="text-secondary small fw-semibold"><?= date('d/m/Y', strtotime($pf['fecha'])) ?></div></td>
                                 <td>
                                     <div class="fw-medium text-dark d-flex align-items-center gap-2">
-                                        <div class="bg-light rounded-circle text-center" style="width: 28px; height:28px; line-height:28px;">👤</div>
+                                        <div class="bg-light rounded-circle text-center d-flex justify-content-center align-items-center" style="width: 28px; height:28px;">👤</div>
                                         <?= htmlspecialchars($pf['cliente']) ?>
                                     </div>
                                 </td>
-                                <td>
+                                <td class="text-center">
                                     <span class="badge rounded-pill px-3 py-2 fw-semibold <?= $claseBadge ?>">
                                         <?= $icono ?> <?= htmlspecialchars($pf['estado_nombre']) ?>
                                     </span>
                                 </td>
-                                <td class="fw-bold text-success">
+                                <td class="text-end fw-bold text-success">
                                     <?= number_format($pf['importe'], 2) ?> €
                                 </td>
                                 <td class="pe-4 text-end">
-                                    <button class="btn btn-outline-dark btn-sm rounded-pill px-3 fw-semibold shadow-sm" onclick="imprimirAlbaran(<?= $pf['id'] ?>)">
+                                    <button class="btn btn-outline-dark btn-sm rounded-pill px-3 fw-semibold shadow-sm btn-imprimir-albaran" data-id="<?= $pf['id'] ?>">
                                         🖨️ PDF
                                     </button>
                                 </td>
@@ -168,6 +140,6 @@ $pedidosFiltrados = $con->obtenerPedidosFiltrados($idUsuario, $idProducto, $fech
         </div>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../js/logica.js"></script>
+    <script src="../js/logicaAdmin.js"></script>
 </body>
 </html>

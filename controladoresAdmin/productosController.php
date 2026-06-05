@@ -1,19 +1,16 @@
 <?php
-// admin/productos.php
 session_start();
 
-// Control de seguridad por rol
 if (!isset($_SESSION['rol']) || $_SESSION['rol'] != 1) {
-    header("Location: ../login.php");
+    header("Location: ../tienda/login.php");
     exit();
 }
 
 require_once '../modelos/AccesoBD.php';
-$bd = new AccesoBD();
+$bd = AccesoBD::getInstance();
 $mensaje = '';
 $tipo_mensaje = 'success';
 
-// 1. LÓGICA DE BORRADO (GET)
 if (isset($_GET['eliminar'])) {
     $id_eliminar = (int)$_GET['eliminar'];
     if ($bd->eliminarProducto($id_eliminar)) {
@@ -25,13 +22,11 @@ if (isset($_GET['eliminar'])) {
     }
 }
 
-// 2. LÓGICA DE GUARDADO (POST)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
     if ($_POST['accion'] === 'guardar_producto') {
         $nombre = trim($_POST['nombre'] ?? '');
         $precio = (float)($_POST['precio'] ?? 0);
         
-        // Conversión del textarea a formato <li> para la base de datos
         $caracteristicas_brutas = $_POST['caracteristicas'] ?? '';
         $caracteristicas = '';
         if (!empty($caracteristicas_brutas)) {
@@ -44,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
         }
 
         if (!empty($nombre) && $precio > 0) {
-            if ($bd->guardarProducto($nombre, $precio, $caracteristicas)) {
+            if ($bd->agregarProductoBD($nombre, $precio, 999, '', $caracteristicas, '')) {
                 $mensaje = "Nuevo servicio logístico añadido con éxito.";
                 $tipo_mensaje = "success";
             } else {
@@ -55,12 +50,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
             $mensaje = "Por favor, rellena todos los campos con valores válidos.";
             $tipo_mensaje = "warning";
         }
+    } elseif ($_POST['accion'] === 'actualizar_producto') {
+        $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+        $nombre = trim($_POST['nombre'] ?? '');
+        $precio = (float)($_POST['precio'] ?? 0);
+        
+        $caracteristicas_brutas = $_POST['caracteristicas'] ?? '';
+        $caracteristicas = '';
+        if (!empty($caracteristicas_brutas)) {
+            $lineas = explode("\n", str_replace("\r", "", $caracteristicas_brutas));
+            foreach ($lineas as $linea) {
+                if (trim($linea) !== '') {
+                    $caracteristicas .= "<li>" . htmlspecialchars(trim($linea)) . "</li>";
+                }
+            }
+        }
+        
+        if ($id && !empty($nombre) && $precio > 0) {
+            if ($bd->modificarProductoBD($id, $nombre, $precio, 999, $caracteristicas, '')) {
+                $mensaje = "Servicio actualizado correctamente en el catálogo.";
+                $tipo_mensaje = "success";
+            } else {
+                $mensaje = "Error interno al intentar actualizar el servicio.";
+                $tipo_mensaje = "danger";
+            }
+        } else {
+            $mensaje = "Por favor, rellena todos los campos con valores válidos.";
+            $tipo_mensaje = "warning";
+        }
     }
 }
 
-// 3. CARGA DE DATOS
 $listaProductos = $bd->obtenerProductosBD();
 
-// 4. INYECTAR LA VISTA
-require_once '..admin/productos.php';
+require_once '../admin/productos.php';
 ?>

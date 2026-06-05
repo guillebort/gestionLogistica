@@ -1,16 +1,3 @@
-<?php
-session_start();
-require_once '../modelos/AccesoBD.php';
-require_once '../modelos/Modelos.php';
-
-$con = AccesoBD::getInstance();
-if (!isset($_SESSION['codigo']) || $_SESSION['rol'] != 1) {
-    header("Location: ../tienda/login.php");
-    exit;
-}
-
-$mensajes = $con->obtenerMensajes();
-?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -39,13 +26,14 @@ $mensajes = $con->obtenerMensajes();
                             <th class="py-3 border-0">Remitente / Email</th>
                             <th class="py-3 border-0">Asunto</th>
                             <th class="pe-4 py-3 border-0">Mensaje</th>
-                            <th class="pe-3  border-0">Acción</th>
+                            <th class="pe-3 border-0">Acción</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if(empty($mensajes)): ?>
                             <tr>
-                                <td colspan="5" class="text-center py-5 text-muted"> <div class="fs-1 mb-2 opacity-50">📭</div>
+                                <td colspan="5" class="text-center py-5 text-muted"> 
+                                    <div class="fs-1 mb-2 opacity-50">📭</div>
                                     <p class="mb-0">No hay mensajes nuevos.</p>
                                 </td>
                             </tr>
@@ -88,13 +76,13 @@ $mensajes = $con->obtenerMensajes();
             <?php foreach ($mensajes as $m) { ?>
                 <div class="modal fade" id="modalResponder<?= $m['id'] ?>" tabindex="-1">
                     <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content border-0 shadow">
-                            <div class="modal-header border-bottom-0 bg-light">
+                        <div class="modal-content border-0 shadow rounded-4">
+                            <div class="modal-header border-bottom-0 bg-light rounded-top-4">
                                 <h5 class="modal-title fw-bold text-dark">Responder a <?= htmlspecialchars($m['email']) ?></h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                             </div>
                             <form action="../controladores/responderMensaje.php" method="POST">
-                                <div class="modal-body">
+                                <div class="modal-body p-4">
                                     <input type="hidden" name="email_cliente" value="<?= htmlspecialchars($m['email']) ?>">
                                     <input type="hidden" name="asunto_original" value="<?= htmlspecialchars($m['asunto']) ?>">
                                     <div class="mb-3">
@@ -102,9 +90,9 @@ $mensajes = $con->obtenerMensajes();
                                         <textarea name="respuesta" rows="5" class="form-control bg-light border-0 shadow-sm" required placeholder="Escribe aquí tu respuesta..."></textarea>
                                     </div>
                                 </div>
-                                <div class="modal-footer border-top-0">
-                                    <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">Cancelar</button>
-                                    <button type="submit" class="btn btn-primary rounded-pill fw-bold">🚀 Enviar Correo</button>
+                                <div class="modal-footer border-top-0 bg-light rounded-bottom-4">
+                                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="submit" class="btn btn-primary rounded-pill fw-bold px-4 shadow-sm">🚀 Enviar Correo</button>
                                 </div>
                             </form>
                         </div>
@@ -114,6 +102,6 @@ $mensajes = $con->obtenerMensajes();
         <?php endif; ?>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../js/logica.js"></script>
+    <script src="../js/logicaAdmin.js"></script>
 </body>
 </html>

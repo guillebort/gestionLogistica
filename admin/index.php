@@ -1,39 +1,12 @@
-<?php
-session_start();
-
-require_once '../includes/controlSesion.php';
-require_once '../modelos/AccesoBD.php';
-require_once '../modelos/Modelos.php';
-
-$codigoLogueado = $_SESSION['codigo'] ?? 0;
-$con = AccesoBD::getInstance();
-$usuarioActual = $con->obtenerUsuarioBD($codigoLogueado);
-
-if ($usuarioActual == null || $usuarioActual->getRol() != 1) {
-    header("Location: ../tienda/login.php");
-    exit;
-}
-
-// OBTENER DATOS AVANZADOS
-$pedidosPendientes = $con->obtenerPedidosPendientesMapa();
-$repartidores = $con->obtenerRepartidores();
-$stats = $con->obtenerEstadisticas();
-
-// Serializamos a JSON para que JavaScript pueda usar las coordenadas en el mapa Leaflet
-$pedidosJson = json_encode($pedidosPendientes);
-?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <title>Panel de Administración - LogisTFG</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Librerías de Leaflet para el Mapa (Open Source) -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/estilo.css">
-    
-   
 </head>
 <body class="bg-light" style="font-family: 'Inter', sans-serif;">
     
@@ -46,7 +19,6 @@ $pedidosJson = json_encode($pedidosPendientes);
             <p class="text-muted">Resumen de la actividad operativa y financiera.</p>
         </div>
 
-        <!-- DASHBOARD -->
         <div class="row g-4 mb-5">
             <div class="col-md-4">
                 <div class="card shadow-sm border-0 rounded-4 h-100">
@@ -89,10 +61,7 @@ $pedidosJson = json_encode($pedidosPendientes);
             </div>
         <?php } ?>
 
-        
         <div class="row g-4">
-            
-            <!-- MAPA -->
             <div class="col-lg-7">
                 <div class="card shadow-sm h-100 border-0 rounded-4">
                     <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
@@ -100,12 +69,11 @@ $pedidosJson = json_encode($pedidosPendientes);
                         <p class="text-muted small">Ubicación de entregas pendientes</p>
                     </div>
                     <div class="card-body p-4">
-                        <div id="mapa-logistico" class="shadow-sm border border-secondary border-opacity-25" data-pedidos='<?= htmlspecialchars($pedidosJson, ENT_QUOTES, "UTF-8") ?>'></div>
+                        <div id="mapa-logistico" style="height: 450px;" class="shadow-sm border border-secondary border-opacity-25 rounded-4" data-pedidos='<?= htmlspecialchars($pedidosJson, ENT_QUOTES, "UTF-8") ?>'></div>
                     </div>
                 </div>
             </div>
 
-            <!-- ASIGNACI0N REPARTIDOR -->
             <div class="col-lg-5">
                 <div class="card shadow-sm h-100 border-0 rounded-4">
                     <div class="card-header bg-white border-0 pt-4 pb-2 px-4 d-flex justify-content-between align-items-center">
@@ -116,7 +84,7 @@ $pedidosJson = json_encode($pedidosPendientes);
                         <span class="badge bg-primary rounded-pill px-3 py-2 shadow-sm"><?= count($pedidosPendientes) ?> Pdte.</span>
                     </div>
                     
-                    <div class="card-body p-4 overflow-auto scroll-invisible" style="max-height: 500px;">
+                    <div class="card-body p-4 overflow-auto scroll-invisible" style="max-height: 450px;">
                         <?php if (empty($pedidosPendientes)) { ?>
                             <div class="text-center py-5">
                                 <div style="font-size: 3rem; opacity: 0.5;" class="mb-2">🧹</div>
@@ -124,7 +92,6 @@ $pedidosJson = json_encode($pedidosPendientes);
                                 <p class="text-muted small">Todos los pedidos han sido asignados y están en ruta.</p>
                             </div>
                         <?php } else { ?>
-                            
                             <div class="d-flex flex-column gap-3">
                                 <?php foreach ($pedidosPendientes as $ped) { ?>
                                     <div class="bg-light p-3 rounded-4 border-0">
@@ -150,7 +117,6 @@ $pedidosJson = json_encode($pedidosPendientes);
                                     </div>
                                 <?php } ?>
                             </div>
-                            
                         <?php } ?>
                     </div>
                 </div>
@@ -159,5 +125,6 @@ $pedidosJson = json_encode($pedidosPendientes);
     </main>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="../js/logica.js"></script>
+    <script src="../js/logicaAdmin.js"></script>
 </body>
 </html>

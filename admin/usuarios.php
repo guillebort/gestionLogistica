@@ -1,79 +1,3 @@
-<?php
-session_start();
-require_once '../modelos/AccesoBD.php';
-require_once '../modelos/Modelos.php';
-
-// Control de flujo: Solo Administradores (rol = 1)
-$codigoLogueado = $_SESSION['codigo'] ?? 0;
-$con = AccesoBD::getInstance();
-$usuarioActual = $con->obtenerUsuarioBD($codigoLogueado);
-
-if ($usuarioActual == null || $usuarioActual->getRol() != 1) {
-    header("Location: ../tienda/login.php");
-    exit;
-}
-
-// Lógica para Activar/Desactivar, Eliminar o Cambiar Rol
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $accion = filter_input(INPUT_POST, 'accion', FILTER_SANITIZE_STRING);
-    $idUsu = filter_input(INPUT_POST, 'id_usuario', FILTER_VALIDATE_INT);
-
-    if ($accion === 'toggle_activo') {
-        $estadoActual = filter_input(INPUT_POST, 'estado_actual', FILTER_VALIDATE_INT);
-        $nuevoEstado = ($estadoActual == 1) ? 0 : 1;
-        $con->cambiarEstadoUsuario($idUsu, $nuevoEstado);
-        $_SESSION['mensajeAdmin'] = "✅ Estado del usuario actualizado.";
-        
-    } elseif ($accion === 'eliminar') {
-        if ($con->eliminarUsuarioSiSinPedidos($idUsu)) {
-            $_SESSION['mensajeAdmin'] = "✅ Usuario eliminado correctamente.";
-        } else {
-            $_SESSION['mensajeAdmin'] = "❌ No se puede eliminar: el usuario tiene pedidos registrados en el sistema.";
-        }
-        
-    } elseif ($accion === 'cambiar_rol') {
-        $nuevoRol = filter_input(INPUT_POST, 'nuevo_rol', FILTER_VALIDATE_INT);
-        // Evitar que el admin se quite el rol a sí mismo por accidente
-        if ($idUsu == $codigoLogueado && $nuevoRol != 1) {
-            $_SESSION['mensajeAdmin'] = "❌ No puedes quitarte el rol de administrador a ti mismo.";
-        } else {
-            if ($con->cambiarRolUsuario($idUsu, $nuevoRol)) {
-                $_SESSION['mensajeAdmin'] = "✅ Rol de usuario actualizado correctamente.";
-            } else {
-                $_SESSION['mensajeAdmin'] = "❌ Error al actualizar el rol.";
-            }
-        }
-    } elseif ($accion === 'crear_personal') {
-        $n_email = filter_input(INPUT_POST, 'nuevo_email', FILTER_SANITIZE_EMAIL);
-        $n_clave = $_POST['nueva_clave'] ?? '';
-        $n_nombre = filter_input(INPUT_POST, 'nuevo_nombre', FILTER_SANITIZE_STRING);
-        $n_apellidos = filter_input(INPUT_POST, 'nuevo_apellidos', FILTER_SANITIZE_STRING);
-        $n_telefono = filter_input(INPUT_POST, 'nuevo_telefono', FILTER_SANITIZE_STRING);
-        $n_domicilio = filter_input(INPUT_POST, 'nuevo_domicilio', FILTER_SANITIZE_STRING);
-        $n_poblacion = filter_input(INPUT_POST, 'nuevo_poblacion', FILTER_SANITIZE_STRING);
-        $n_provincia = filter_input(INPUT_POST, 'nuevo_provincia', FILTER_SANITIZE_STRING);
-        $n_cp = filter_input(INPUT_POST, 'nuevo_cp', FILTER_SANITIZE_STRING);
-        $n_rol = filter_input(INPUT_POST, 'nuevo_rol', FILTER_VALIDATE_INT);
-
-        if (!empty($n_email) && !empty($n_clave) && !empty($n_nombre) && isset($n_rol)) {
-            // Pasamos todos los datos capturados a la función del modelo
-            if ($con->registrarUsuarioBD($n_email, $n_clave, $n_nombre, $n_apellidos, $n_domicilio, $n_poblacion, $n_provincia, $n_cp, $n_telefono, $n_rol)) {
-                $_SESSION['mensajeAdmin'] = "✅ Personal registrado correctamente.";
-            } else {
-                $_SESSION['mensajeAdmin'] = "❌ Error: Ese correo ya existe en el sistema o los datos son inválidos.";
-            }
-        } else {
-            $_SESSION['mensajeAdmin'] = "❌ Error: Rellena los campos obligatorios.";
-        }
-    }
-    
-    header("Location: usuarios.php");
-    exit;
-}
-
-// Obtenemos todos los usuarios para llenar la tabla
-$usuarios = $con->obtenerTodosLosUsuarios();
-?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -98,7 +22,6 @@ $usuarios = $con->obtenerTodosLosUsuarios();
         </div>
 
         <?php if (isset($_SESSION['mensajeAdmin'])) { 
-            // Color dinámico según si es éxito o error
             $esError = strpos($_SESSION['mensajeAdmin'], '❌') !== false;
             $claseAlerta = $esError ? 'alert-danger text-danger-emphasis bg-danger-subtle' : 'alert-success text-success-emphasis bg-success-subtle';
         ?>
@@ -114,10 +37,9 @@ $usuarios = $con->obtenerTodosLosUsuarios();
         </div>
 
         <div class="collapse mb-5" id="formularioNuevoUsuario">
-            <div class="card border-0 shadow-sm">
+            <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-body p-4">
-                    
-                    <form action="usuarios.php" method="POST" class="row g-4" id="formNuevoUsuario">
+                    <form action="../controladoresAdmin/usuariosController.php" method="POST" class="row g-4" id="formNuevoUsuario">
                         <input type="hidden" name="accion" value="crear_personal">
                         
                         <div class="col-12 mb-0">
@@ -126,27 +48,27 @@ $usuarios = $con->obtenerTodosLosUsuarios();
                         
                         <div class="col-md-4">
                             <label class="form-label small fw-bold text-muted">Nombre</label>
-                            <input type="text" name="nuevo_nombre" class="form-control" required>
+                            <input type="text" name="nuevo_nombre" class="form-control " required>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label small fw-bold text-muted">Apellidos</label>
-                            <input type="text" name="nuevo_apellidos" class="form-control" required>
+                            <input type="text" name="nuevo_apellidos" class="form-control " required>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label small fw-bold text-muted">Teléfono</label>
-                            <input type="tel" name="nuevo_telefono" class="form-control" maxlength="9" required>
+                            <input type="tel" name="nuevo_telefono" class="form-control " maxlength="9" required>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label small fw-bold text-muted">Correo Electrónico</label>
-                            <input type="email" name="nuevo_email" class="form-control" required>
+                            <input type="email" name="nuevo_email" class="form-control " required>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label small fw-bold text-muted">Contraseña</label>
-                            <input type="password" name="nueva_clave" class="form-control" required>
+                            <input type="password" name="nueva_clave" class="form-control " required>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label small fw-bold text-muted">Rol</label>
-                            <select name="nuevo_rol" class="form-select" required>
+                            <select name="nuevo_rol" class="form-select " required>
                                 <option value="" selected disabled>Selecciona un rol...</option>
                                 <option value="1">Administrador</option>
                                 <option value="2">Repartidor</option>
@@ -156,35 +78,41 @@ $usuarios = $con->obtenerTodosLosUsuarios();
                         <div class="col-12 mt-4 mb-0">
                             <h6 class="fw-bold text-secondary border-bottom pb-2">📍 Ubicación</h6>
                         </div>
-                        <div class="mb-3">
+                        
+                        <!-- INCORPORACIÓN DE IDS PARA EL AUTOCOMPLETADO DE NOMINATIM -->
+                        <div class="mb-3 position-relative">
                             <label class="form-label small fw-bold text-muted">Dirección Completa</label>
-                            <input type="text" name="nuevo_domicilio" class="form-control " required>
-                            <ul id="lista_sugerencias" class="list-group position-absolute w-100 shadow-sm"></ul>
+                            <input type="text" name="nuevo_domicilio" id="input_direccion_admin" class="form-control " autocomplete="off" required>
+                            
+                            <!-- Lista oculta donde se renderizarán los resultados AJAX -->
+                            <ul id="lista_sugerencias_admin" class="list-group position-absolute w-100 shadow-sm" style="z-index: 1000; display: none; max-height: 200px; overflow-y: auto;"></ul>
                         </div>
                         <div class="row">
                             <div class="col-md-5 mb-3">
                                 <label class="form-label small fw-bold text-muted">Población</label>
-                                <input type="text" name="nuevo_poblacion" class="form-control " required>
+                                <input type="text" name="nuevo_poblacion" id="input_poblacion" class="form-control " required>
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label class="form-label small fw-bold text-muted">Provincia</label>
-                                <input type="text" name="nuevo_provincia" class="form-control" required>
+                                <input type="text" name="nuevo_provincia" id="input_provincia" class="form-control " required>
                             </div>
                             <div class="col-md-3 mb-3">
                                 <label class="form-label small fw-bold text-muted">C. Postal</label>
-                                <input type="text" name="nuevo_cp" class="form-control" maxlength="5" required>
+                                <input type="text" name="nuevo_cp" id="input_cp" class="form-control " maxlength="5" required>
                             </div>
                         </div>
                         
                         <div class="col-12 text-end mt-4">
-                            <button type="button" class="btn btn-light px-4 me-2" data-bs-toggle="collapse" data-bs-target="#formularioNuevoUsuario">Cancelar</button>
-                            <button type="submit" class="btn btn-primary fw-bold px-4">💾 Guardar Usuario</button>
+                            <button type="button" class="btn btn-light px-4 me-2 rounded-pill" data-bs-toggle="collapse" data-bs-target="#formularioNuevoUsuario">Cancelar</button>
+                            <button type="submit" class="btn btn-primary fw-bold px-4 rounded-pill shadow-sm">💾 Guardar Usuario</button>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
-        <!-- FIN NUEVO FORMULARIO COMPLETO -->
+
+        <div class="card shadow-sm border-0 overflow-hidden rounded-4">
+            <div class="card-body p-0 table-responsive">
                 <table class="table table-hover align-middle mb-0 bg-white">
                     <thead class="table-light text-muted small text-uppercase">
                         <tr>
@@ -211,8 +139,6 @@ $usuarios = $con->obtenerTodosLosUsuarios();
                                         <?= htmlspecialchars($usu['nombre'] . ' ' . $usu['apellidos']) ?>
                                     </div>
                                 </td>
-                                
-                                <!-- Columna Estado -->
                                 <td class="text-center">
                                     <?php if($usu['activo']): ?>
                                         <span class="badge bg-success bg-opacity-10 text-success-emphasis border border-success-subtle rounded-pill px-3 py-2">Activo</span>
@@ -221,9 +147,8 @@ $usuarios = $con->obtenerTodosLosUsuarios();
                                     <?php endif; ?>
                                 </td>
 
-                                <!-- Columna Cambio de Rol -->
                                 <td>
-                                    <form action="usuarios.php" method="POST" class="d-flex gap-2">
+                                    <form action="../controladoresAdmin/usuariosController.php" method="POST" class="d-flex gap-2">
                                         <input type="hidden" name="accion" value="cambiar_rol">
                                         <input type="hidden" name="id_usuario" value="<?= $usu['id'] ?>">
                                         <select name="nuevo_rol" class="form-select form-select-sm rounded-pill shadow-none bg-light border-0 px-3 fw-medium">
@@ -235,11 +160,9 @@ $usuarios = $con->obtenerTodosLosUsuarios();
                                     </form>
                                 </td>
 
-                                <!-- Columna Botones Activar/Borrar -->
                                 <td class="pe-4 text-center">
                                     <div class="d-flex justify-content-center gap-2">
-                                        <!-- Botón Activar/Desactivar -->
-                                        <form action="usuarios.php" method="POST">
+                                        <form action="../controladoresAdmin/usuariosController.php" method="POST">
                                             <input type="hidden" name="accion" value="toggle_activo">
                                             <input type="hidden" name="id_usuario" value="<?= $usu['id'] ?>">
                                             <input type="hidden" name="estado_actual" value="<?= $usu['activo'] ?>">
@@ -254,8 +177,7 @@ $usuarios = $con->obtenerTodosLosUsuarios();
                                             <?php endif; ?>
                                         </form>
 
-                                        <!-- Botón Eliminar -->
-                                        <form action="usuarios.php" method="POST" >
+                                        <form action="../controladoresAdmin/usuariosController.php" method="POST" class="form-eliminar-usuario">
                                             <input type="hidden" name="accion" value="eliminar">
                                             <input type="hidden" name="id_usuario" value="<?= $usu['id'] ?>">
                                             <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold" <?= $esAdminLogueado ? 'disabled' : '' ?>>
@@ -271,7 +193,12 @@ $usuarios = $con->obtenerTodosLosUsuarios();
             </div>
         </div>
     </main>
+    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- Es importante cargar logica.js primero para disponer de la función activarAutocompletadoUnico() -->
     <script src="../js/logica.js"></script>
+    <script src="../js/logicaAdmin.js"></script>
 </body>
 </html>

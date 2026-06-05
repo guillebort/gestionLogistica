@@ -50,7 +50,7 @@ if (empty($_SESSION['csrf_token'])) {
                         <div class="card-body py-5 px-4 px-md-5">
                             <div class="d-flex justify-content-between align-items-center mb-4">
                                 <h3 class="text-dark fw-bold mb-0">¡Bienvenido, <?php echo htmlspecialchars($u->getNombre() != null ? $u->getNombre() : "Cliente"); ?>!</h3>
-                                <a href="productos.php" class="btn btn-primary rounded-pill shadow-sm d-none d-md-block">Nuevo Envío 📦</a>
+                                <a href="../controladores/productoController.php" class="btn btn-primary rounded-pill shadow-sm d-none d-md-block fw-bold">Nuevo Envío 📦</a>
                             </div>
                             
                             <!-- Formulario Original de Modificación -->

@@ -1,37 +1,25 @@
 <?php
-// controladores/descargarAlbaran.php
 session_start();
-require_once '../vendor/autoload.php';
 require_once '../modelos/AccesoBD.php';
-require_once '../servicios/pdfService.php';
+require_once '../servicios/PdfService.php'; // Asegúrate de que la ruta coincida con tu proyecto
 
-use servicios\PdfService;
-
-// Verificamos permisos
-if (!isset($_SESSION['codigo'])) {
-    die("Acceso denegado.");
+if (!isset($_GET['id']) || !isset($_SESSION['codigo'])) {
+    die("Acceso no autorizado.");
 }
 
-$idPedido = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
-
-if (!$idPedido) {
-    die("ID de pedido no válido.");
-}
-
+$idPedido = (int)$_GET['id'];
 $con = AccesoBD::getInstance();
-$datosPedido = $con->obtenerAlbaranPedido($idPedido);
 
-if (!$datosPedido) {
-    die("No se encontró el pedido.");
+$pedido = $con->obtenerPedidoPorId($idPedido);
+$detalles = $con->obtenerDetallesPedido($idPedido);
+
+// SEGURIDAD: Solo el Administrador (rol 1) o el cliente dueño del pedido pueden descargarlo
+if ($_SESSION['rol'] != 1 && $pedido['id_usuario'] != $_SESSION['codigo']) {
+    die("Error de seguridad: Este albarán no pertenece a tu cuenta.");
 }
 
-$pdfService = new PdfService();
-$pdfOutput = $pdfService->generarAlbaranPdf($datosPedido);
-
-// Enviar el archivo binario al navegador
-header('Content-Type: application/pdf');
-header('Content-Disposition: inline; filename="Albaran_Pedido_'.$idPedido.'.pdf"');
-header('Cache-Control: private, max-age=0, must-revalidate');
-header('Pragma: public');
-echo $pdfOutput;
-exit;
+// Instanciamos el servicio PDF y generamos el documento
+$pdf = new PdfService();
+// La función generarTicket procesará los datos y forzará la descarga o visualización del PDF
+$pdf->generarTicket($pedido, $detalles);
+?>

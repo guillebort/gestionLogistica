@@ -7,7 +7,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // Control de Inactividad
-$tiempo_limite = 300; // 5 minutos en segundos
+$tiempo_limite = 900; // 5 minutos en segundos
 
 if (isset($_SESSION['ultimo_acceso'])) {
     $tiempo_transcurrido = time() - $_SESSION['ultimo_acceso'];

@@ -276,3 +276,42 @@ h1, h2, h3, h4, h5, h6 {
 .scroll-invisible::-webkit-scrollbar-track { background: transparent; }
 .scroll-invisible::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
 .scroll-invisible::-webkit-scrollbar-thumb:hover { background-color: #94a3b8; }
+
+
+/* TIENDA Y PIE */
+/* Efecto de elevación para las tarjetas (Hover Lift) */
+.hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.hover-lift:hover { 
+    transform: translateY(-10px); 
+    box-shadow: 0 1rem 3rem rgba(0,0,0,.15) !important; 
+}
+
+/* Transiciones suaves generales */
+.transition-all {
+    transition: all 0.3s ease-in-out;
+}
+
+/* Efectos Hover para los enlaces del Pie de Página */
+.hover-text-white:hover {
+    color: #ffffff !important;
+}
+.hover-bg-light:hover {
+    background-color: #f8f9fa !important;
+    color: #212529 !important;
+    border-color: #f8f9fa !important;
+}
+
+/* Degradado corporativo para el Hero de la página de inicio */
+.hero-overlay {
+    background: linear-gradient(to right, rgba(15, 23, 42, 0.9) 0%, rgba(15, 23, 42, 0.4) 100%);
+}
+
+/* Sombreado de textos sobre imágenes de fondo */
+.text-shadow-main {
+    text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
+}
+.text-shadow-sub {
+    text-shadow: 1px 1px 4px rgba(0,0,0,0.8);
+}

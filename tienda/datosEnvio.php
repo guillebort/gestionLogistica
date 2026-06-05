@@ -67,7 +67,7 @@ if (!isset($u)) {
                                     <input type="text" class="form-control form-control-lg rounded-4 shadow-sm" name="direccionOrigen" id="input_origen" 
                                            placeholder="Escribe la dirección de recogida..." required autocomplete="off">
                                     
-                                    <ul id="lista_origen" class="list-group position-absolute w-100 shadow-lg"></ul>
+                                    <ul id="lista_origen" class="list-group position-absolute w-100 shadow-lg bg-white border border-secondary mt-1" style="z-index: 1050; display: none; max-height: 200px; overflow-y: auto;"></ul>
                                     
                                     <!-- Campos ocultos de coordenadas -->
                                     <input type="hidden" name="latOrigen" id="lat_origen" value="0.0">
@@ -84,7 +84,7 @@ if (!isset($u)) {
                                            name="direccionDestino" id="input_destino" 
                                            placeholder="Escribe la dirección de entrega..." required autocomplete="off">
                                            
-                                    <ul id="lista_destino" class="list-group position-absolute w-100 shadow-lg"></ul>
+                                    <ul id="lista_destino" class="list-group position-absolute w-100 shadow-lg bg-white border border-secondary mt-1" style="z-index: 1050; display: none; max-height: 200px; overflow-y: auto;"></ul>
                                     
                                     <!-- Campos ocultos de coordenadas -->
                                     <input type="hidden" name="latDestino" id="lat_destino" value="0.0">

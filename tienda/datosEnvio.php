@@ -93,7 +93,7 @@ if (!isset($u)) {
                             </div>
 
                          <div class="d-grid gap-2 mt-5 pt-3 border-top">
-                            <input type="hidden" name="carrito_datos" id="carrito_datos_hidden" value="">
+                            <input type="hidden" name="carrito" id="carrito_datos_hidden" value="">
                             
                             <button type="submit" id="btnPagarRuta" class="btn btn-primary btn-lg shadow rounded-pill fw-bold">
                                 Guardar Ruta y Pagar ➔

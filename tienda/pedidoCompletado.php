@@ -40,11 +40,10 @@ $idPedido = htmlspecialchars($_GET['id']);
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Elimina la variable 'carrito' que usa js/logica.js
-            localStorage.removeItem('carrito');
+            // ¡CORREGIDO AQUÍ TAMBIÉN! Vacía 'mi-carrito'
+            localStorage.removeItem('mi-carrito');
             
             // Si en tu JS tienes una función para repintar el número de artículos del menú (el icono del carrito), llámala aquí.
-            // Por ejemplo: si se llama actualizarBadgeCarrito(), descomenta la siguiente línea:
             // if (typeof actualizarBadgeCarrito === 'function') actualizarBadgeCarrito();
         });
     </script>

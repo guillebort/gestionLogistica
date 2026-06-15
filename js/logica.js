@@ -944,8 +944,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (btnPagarRuta && inputCarritoHidden) {
         btnPagarRuta.addEventListener('click', function(e) {
-            // Obtenemos el carrito del LocalStorage
-            let carritoGuardado = localStorage.getItem('carrito');
+            // ¡CORREGIDO AQUÍ! Leemos 'mi-carrito' en lugar de 'carrito'
+            let carritoGuardado = localStorage.getItem('mi-carrito'); 
             
             // Si el carrito está vacío, no dejamos pagar
             if (!carritoGuardado || carritoGuardado === '[]') {
@@ -957,8 +957,36 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Si hay carrito, lo metemos en el input oculto para que viaje por POST
             inputCarritoHidden.value = carritoGuardado;
-            
             // El formulario seguirá su curso natural hacia guardarRuta.php
+        });
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Asegúrate de poner el ID correcto de tu etiqueta <form>
+    const formulario = document.getElementById('formularioEnvio'); 
+    const inputCarritoHidden = document.getElementById('carrito_datos_hidden');
+
+    if (formulario && inputCarritoHidden) {
+        formulario.addEventListener('submit', function(e) {
+            
+            // ATENCIÓN: Usa la clave exacta con la que guardas el carrito al añadir productos
+            // (Si en carrito.js usas localStorage.setItem('carrito', ...), usa 'carrito' aquí)
+            let carritoGuardado = localStorage.getItem('carrito'); 
+            
+            // Comprobamos si no hay nada guardado o si es un array vacío
+            if (!carritoGuardado || carritoGuardado === '[]') {
+                e.preventDefault(); // Cortamos de raíz el envío a PHP
+                alert("El carrito está vacío. Añade productos.");
+                window.location.href = '../tienda/productos.php'; // Volvemos a la tienda
+                return;
+            }
+
+            // Si hay carrito, lo metemos en el input oculto JUSTO antes de enviar a PHP
+            inputCarritoHidden.value = carritoGuardado;
+            
+            // Al no haber e.preventDefault() aquí, el formulario sigue su camino a guardarRuta.php
+            // llevando los datos correctamente.
         });
     }
 });

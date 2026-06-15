@@ -1,7 +1,18 @@
 <?php
+
+// --- INICIO DE DEPURACIÓN ---
+echo "Datos recibidos por el servidor:<br>";
+echo "<pre>";
+var_dump($_POST);
+echo "</pre>";
+// Si ves 'carrito' en la lista, el servidor lo recibe. Si no, no llega.
+die("--- Fin de la depuración ---"); 
+// --- FIN DE DEPURACIÓN ---
 session_start();
 require_once '../modelos/AccesoBD.php';
 require_once '../modelos/Modelos.php';
+
+
 
 // LEEMOS EL CARRITO DE FORMA "A PRUEBA DE BOMBAS"
 $carritoRaw = null;
@@ -13,8 +24,8 @@ if (!empty($jsonInput)) {
 }
 
 // Si no, probamos con $_POST
-if (empty($carritoRaw) && isset($_POST['carrito_datos'])) {
-    $carritoRaw = json_decode($_POST['carrito_datos'], true);
+if (empty($carritoRaw) && isset($_POST['carrito'])) {
+    $carritoRaw = json_decode($_POST['carrito'], true);
 }
 
 // SI LLEGA AQUÍ VACÍO, ES QUE EL JS NO HA ENVIADO NADA
